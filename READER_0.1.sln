@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32106.194
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "READER_0.1", "READER_0.1\READER_0.1.csproj", "{3809F225-DE38-49B2-80A2-31330F0BA634}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3809F225-DE38-49B2-80A2-31330F0BA634}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3809F225-DE38-49B2-80A2-31330F0BA634}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3809F225-DE38-49B2-80A2-31330F0BA634}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3809F225-DE38-49B2-80A2-31330F0BA634}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0D980367-404C-47C5-916D-F5F47E1B4C7D}
+	EndGlobalSection
+EndGlobal

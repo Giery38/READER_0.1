@@ -1,0 +1,207 @@
+﻿<UserControl
+    x:Class="READER_0._1.View.ExelView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:System="clr-namespace:System;assembly=mscorlib"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+    xmlns:local="clr-namespace:READER_0._1.View"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodel="clr-namespace:READER_0._1.ViewModel"
+    xmlns:viewmodel2="clr-namespace:READER_0._1.Model"
+    x:Name="UserControl"
+    d:DataContext="{d:DesignInstance Type=viewmodel:ExelViewModel}"
+    d:DesignHeight="650"
+    d:DesignWidth="950"
+    Background="AliceBlue"
+    mc:Ignorable="d">
+    <Grid Width="Auto" Height="Auto">
+        <Grid.Resources>
+            <System:Double x:Key="ListFilseWidth">200</System:Double>
+            <System:Double x:Key="ListListsHeiht">50</System:Double>
+            <Thickness x:Key="ListFilseWidtEqualMargin" Left="{StaticResource ListFilseWidth}" />
+            <Thickness x:Key="ListListsHeihtEqualMargin" Top="{StaticResource ListListsHeiht}" />
+        </Grid.Resources>
+        <Grid
+            Width="{Binding Source={StaticResource ListFilseWidth}}"
+            Height="Auto"
+            HorizontalAlignment="Left">
+
+            <ListView
+                x:Name="ListFiles"
+                Width="Auto"
+                Height="Auto"
+                d:ItemsSource="{d:SampleData}"
+                AllowDrop="True"
+                ItemsSource="{Binding ExelFiles}"
+                ScrollViewer.CanContentScroll="True"
+                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                ScrollViewer.IsDeferredScrollingEnabled="True"
+                SelectedItem="{Binding SelectedExelFiles, Mode=TwoWay}"
+                SelectionMode="Single">
+                <ListView.Resources>
+                    <Style TargetType="ListView">
+                        <EventSetter Event="Drop" Handler="ListFiles_Drop" />
+                        <Setter Property="AllowDrop" Value="True" />
+                    </Style>
+                </ListView.Resources>
+                <ListView.ItemContainerStyle>
+                    <Style x:Name="Focus" TargetType="{x:Type ListViewItem}">
+                        <Setter Property="IsEnabled" Value="{Binding Readed}" />
+                        <Setter Property="Focusable" Value="{Binding Readed}" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel Orientation="Vertical" />
+                    </ItemsPanelTemplate>
+                </ListView.ItemsPanel>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <TextBlock Text="{Binding FileName}" />
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+                <ListView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Command="{Binding DeleteFile}" Header="Delete me" />
+                    </ContextMenu>
+                </ListView.ContextMenu>
+            </ListView>
+            <Button
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Command="{Binding AddFileCommand}"
+                Content="Button" />
+        </Grid>
+        <Grid
+            Width="Auto"
+            Height="Auto"
+            Margin="{StaticResource ListFilseWidtEqualMargin}">
+            <Grid
+                Width="Auto"
+                Height="{Binding Source={StaticResource ListListsHeiht}}"
+                VerticalAlignment="Top">
+                <ListView
+                    Width="Auto"
+                    Height="Auto"
+                    Background="White"
+                    IsEnabled="True"
+                    ItemsSource="{Binding SelectedExelFiles.ExelPage}"
+                    ScrollViewer.CanContentScroll="True"
+                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                    ScrollViewer.IsDeferredScrollingEnabled="True"
+                    SelectedItem="{Binding SelectedPage}"
+                    SelectionMode="Single">
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock HorizontalAlignment="Center" Text="{Binding WorksheetName}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+            <Grid
+                Width="Auto"
+                Height="Auto"
+                Margin="{StaticResource ListListsHeihtEqualMargin}">
+                <StackPanel Margin="45,45,0,0" Orientation="Horizontal">
+                    <Grid
+                        x:Name="FileInfo"
+                        Width="250"
+                        Height="auto"
+                        MinHeight="300"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Background="Green">
+                        <Grid.Resources>
+                            <System:Boolean x:Key="OptionsEnable" />
+                            <System:Double x:Key="OptionsVisible" />
+                        </Grid.Resources>
+                        <StackPanel>
+                            <Grid Background="AntiqueWhite" Panel.ZIndex="1">
+                                <ComboBox ItemsSource="{Binding Path=ColumnsNamesInPage}"  SelectedItem="{Binding SelectedColumnName, Mode=TwoWay}" Panel.ZIndex="2" Width="108" HorizontalAlignment="Left" IsReadOnly="True" Margin="142,0,0,0">
+                                    <ComboBox.ItemContainerStyle>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Style.Triggers>
+                                                <Trigger Property="IsSelected" Value="true">
+                                                    <Setter Property="Foreground" Value="Green"></Setter>
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="False">
+                                                    <Setter Property="Foreground" Value="Yellow"></Setter>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ComboBox.ItemContainerStyle>
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding stringValue, Mode=OneWay}" IsEnabled="True" >
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <TextBlock
+                                    Height="Auto"
+                                    FontSize="14"
+                                    Text="Общая информация" />
+                            </Grid>
+                            <TextBlock Height="Auto" Text="Номера накладных" />
+                            <TextBlock Height="Auto" Text="{Binding SelectedPageInfo[ColumnsData]}" />
+                            <TextBlock Height="Auto" Text="Дубликаты" />
+                            <TextBlock Height="Auto" Text="{Binding SelectedPageInfo[ColumnsDataDplicates]}" />
+                            <TextBlock Height="Auto" Text="Номера накладных без дубликатов" />
+                            <TextBlock Height="Auto" Text="{Binding SelectedPageInfo[ColumnsDataNoDplicates]}" />
+                            <TextBlock Height="Auto" Text="Найдено накладных" />
+                            <TextBlock Height="Auto" Text="{Binding ExelFilesСontentInDirectoriesEquals.Count}" />
+                            <TextBlock Height="Auto" Text="Отсутсвующие  накладные" />
+                            <TextBlock
+                                Height="Auto"
+                                VerticalAlignment="Top"
+                                Text="{Binding ExelFilesСontentInDirectoriesNoEquals.Count}" />
+                        </StackPanel>
+                    </Grid>
+                    <Grid
+                        Width="150"
+                        Height="Auto"
+                        Margin="20,0,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top">
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock HorizontalAlignment="Left" Text="Папки с накладными" />
+                            <TreeView
+                                Width="150"
+                                Height="150"
+                                ItemsSource="{Binding Directories}">
+                                <TreeView.Resources>
+                                    <HierarchicalDataTemplate DataType="{x:Type viewmodel2:Directory}" ItemsSource="{Binding Files}">
+                                        <TreeViewItem Header="{Binding Name}" />
+                                    </HierarchicalDataTemplate>
+                                    <HierarchicalDataTemplate DataType="{x:Type viewmodel2:File}">
+                                        <TreeViewItem Header="{Binding FileName}" />
+                                    </HierarchicalDataTemplate>
+                                </TreeView.Resources>
+                            </TreeView>
+                            <Button
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Bottom"
+                                Command="{Binding AddDirectoryCommand}"
+                                Content="Button" />
+                            <Button
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Bottom"
+                                Command="{Binding CopyFileCommand}"
+                                Content="Копировать" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>
