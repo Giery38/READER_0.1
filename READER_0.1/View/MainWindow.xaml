@@ -3,18 +3,104 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:READER_0._1.View"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodel="clr-namespace:READER_0._1.ViewModel"
     xmlns:views="clr-namespace:READER_0._1.View"
     Title="Window1"
     Width="950"
-    Height="650"
+    Height="730"
     MinWidth="950"
-    MinHeight="650"
+    MinHeight="730"
+    d:DataContext="{d:DesignInstance Type=viewmodel:MainViewModel}"
     mc:Ignorable="d">
-    <Grid>
-        <views:ExelView DataContext="{Binding CurrentViewModel}" DropFileCommand="{Binding AddFileDropCommand}"/>
+    <Grid x:Name="MainGrid">
+        <Grid.Resources>
+            <DataTemplate DataType="{x:Type viewmodel:ExelViewModel}">
+                <views:ExelView
+                    DropFileCommand="{Binding AddExelFileDropCommand}"
+                    ScrollTableCommand="{Binding AddFileDropCommand}"
+                    SizeChangeCommand="{Binding SizeChangeCommand}" />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewmodel:WordViewModel}">
+                <views:WordView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewmodel:SettingsViewModel}">
+                <views:SettingsView />
+            </DataTemplate>
+            <Storyboard x:Key="ShowMainMenu" Completed="ShowMainMenu_Completed">
+                <DoubleAnimation
+                    Storyboard.TargetName="MainMenuSwap"
+                    Storyboard.TargetProperty="(Canvas.Left)"
+                    From="-200"
+                    To="0"
+                    Duration="0:0:0.08" />
+            </Storyboard>
+            <Storyboard x:Key="HideMainMenu">
+                <DoubleAnimation
+                    Storyboard.TargetName="MainMenuSwap"
+                    Storyboard.TargetProperty="(Canvas.Left)"
+                    From="0"
+                    To="-200"
+                    Duration="0:0:0.08" />
+            </Storyboard>
+        </Grid.Resources>
+        <Button
+            x:Name="ShowMainMenu_button"
+            Width="200"
+            Height="30"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Panel.ZIndex="3"
+            Click="Button_Click"
+            Content="Show Element" />
+        <Grid
+            x:Name="GridMainMenu"
+            Width="200"
+            HorizontalAlignment="Left"
+            Panel.ZIndex="2"
+            Background="Transparent"
+            IsHitTestVisible="False">
+            <Canvas x:Name="CanvasMainMenu">
+                <Grid
+                    x:Name="MainMenuSwap"
+                    Canvas.Left="-200"
+                    Canvas.Top="0"
+                    Width="{Binding ElementName=GridMainMenu, Path=ActualWidth}"
+                    Height="{Binding ElementName=CanvasMainMenu, Path=ActualHeight}"
+                    HorizontalAlignment="Left"
+                    Panel.ZIndex="3"
+                    Background="Beige"
+                    MouseLeave="Grid_MouseLeave">
+                    <Border Padding="0,60,0,0">
+                        <Grid>
+                            <TreeView x:Name="TreeViewMainMenu" Background="{Binding ElementName=MainMenuSwap, Path=Background}">
+                                <TreeViewItem Header="Excel">
+                                    <GroupItem>
+                                        <StackPanel Orientation="Vertical">
+                                            <Button Command="{Binding ShiftingInExelViewModelCommand}" Content="Excel" />
+                                        </StackPanel>
+                                    </GroupItem>
+                                </TreeViewItem>
+                                <TreeViewItem Header="Word">
+                                    <GroupItem>
+                                        <StackPanel Orientation="Vertical">
+                                            <Button Command="{Binding ShiftingInWordViewModelCommand}" Content="Word" />
+                                        </StackPanel>
+                                    </GroupItem>
+                                </TreeViewItem>
+                                <TreeViewItem Header="Test">Item 3</TreeViewItem>
+                            </TreeView>
+                            <Button
+                                Height="30"
+                                VerticalAlignment="Bottom"
+                                Command="{Binding ShiftingInSettingsViewModelCommand}"
+                                Content="Settings" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Canvas>
+        </Grid>
+        <ContentControl Panel.ZIndex="1" Content="{Binding CurrentViewModel}" />
     </Grid>
 
 </Window>

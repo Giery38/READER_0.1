@@ -8,23 +8,23 @@ using System.IO;
 using System.Text;
 using File = READER_0._1.Model.File;
 
-namespace READER_0._1.Command
+namespace READER_0._1.Command.CommandExel
 {
-    class AddFileExelCommand : CommandBase
-    {
+    class AddExelFileCommand : CommandBase
+    {        
         private readonly WindowFileBase windowFileBase;
         private readonly ExelViewModel exelViewModel;
-        private event EventHandler ChangeFileList;
+        private event Action ChangeFileList;
 
-        public AddFileExelCommand(ExelViewModel exelViewModel, WindowFileBase windowFileBase)
+        public AddExelFileCommand(ExelViewModel exelViewModel, WindowFileBase windowFileBase)
         {
             this.windowFileBase = windowFileBase;
             this.exelViewModel = exelViewModel;
             ChangeFileList += exelViewModel.UpdateFiles;
         }
         public override void Execute(object parameter)
-        {            
-            List<File> files = new List<File>();
+        {
+            List<ExelFile> files = new List<ExelFile>();
             File file;
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
@@ -40,12 +40,14 @@ namespace READER_0._1.Command
                 for (int i = 0; i < filePath.Length; i++)
                 {
                     file = new File(filePath[i], Path.GetFileNameWithoutExtension(filePath[i]), windowFileBase.FormatStrngToEnum(Path.GetExtension(filePath[i])));
-                    files.Add(file);
+                    if (file.Format == Formats.xls || file.Format == Formats.xlsx)
+                    {
+                        files.Add(file.ToExelFile());
+                    }                    
                 }                
-            }            
-            windowFileBase.AddFiles(files);
-            ChangeFileList?.Invoke(this, new EventArgs());     
-            
+            }
+            windowFileBase.exelWindowFileBase.AddFiles(files, (string)parameter);
+            ChangeFileList?.Invoke();            
         }        
     }
 }

@@ -8,11 +8,16 @@ namespace READER_0._1.ViewModel
 {
     public class ConverterListInListForView
     {
-        public string stringValue { get; private set; }
+        private string stringValue;
+        public string StringValue
+        {
+            get { return stringValue; }
+            set { stringValue = value; }
+        }
 
         private ConverterListInListForView(string ConvertedString)
         {
-            stringValue = ConvertedString;
+            StringValue = ConvertedString;
         }
         public ConverterListInListForView()
         {
@@ -31,12 +36,6 @@ namespace READER_0._1.ViewModel
                 listResult.Add(new ConverterListInListForView(item));
             }
             return listResult;
-        }
-
-        public string StringValue
-        {
-            get { return stringValue; }
-            set { stringValue = value; }
-        }
+        }       
     }
 }

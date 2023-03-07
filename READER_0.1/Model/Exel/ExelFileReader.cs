@@ -1,191 +1,312 @@
 ﻿using Excel = Microsoft.Office.Interop.Excel;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions; 
-using System.Windows;
-using System.Data;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
-using static READER_0._1.Model.Settings.ExelSettingsRead;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Printing;
-using System.Reflection;
-using System.Reflection.Emit;
 using READER_0._1.Tools;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Packaging;
+using System.Windows.Forms;
+using System.Text.RegularExpressions;
+using System.IO;
+using READER_0._1.Model.Settings.Exel;
 
 namespace READER_0._1.Model.Exel
 {
-    class ExelFileReader
+    public class ExelFileReader
     {
         public ExelFile ExelFile { get; private set; }
 
-        private Settings.ExelSettingsRead Settings;
+        private ExelSettingsRead settings;
 
-        private List<ExelFilePageTable> exelFilePageTableReadedThread;
-        public ExelFileReader(ExelFile exelFile)
+        private WorkbookPart workbookPart;
+
+        static private string TempFolderPath;
+
+        public ExelFileReader(ExelFile exelFile, string tempFolderPath, ExelSettingsRead settings)
         {
             ExelFile = exelFile;
-            Settings = new Settings.ExelSettingsRead();
-            exelFilePageTableReadedThread = new List<ExelFilePageTable>();
+            this.settings = settings;
+            TempFolderPath = tempFolderPath;
         }
         [DllImport("user32.dll")]
-        static extern int GetWindowThreadProcessId(int hWnd, out int lpdwProcessId);
-
-        static Process GetExcelProcess(Excel.Application excelApp)
+        static extern int GetWindowThreadProcessId(int hWnd, out int lpdwProcessId);       
+        static Process GetExcelProcess(Excel.Application exelApplication)
         {
-            GetWindowThreadProcessId(excelApp.Hwnd, out int id);
+            GetWindowThreadProcessId(exelApplication.Hwnd, out int id);
             return Process.GetProcessById(id);
         }
-        public List<ExelFilePage> ReadWorksheetsExel(bool MultiWorksheet)
+        public List<ExelFilePage> Read()
         {
-            Excel.Application xlApp = new Excel.Application();
-            Process appProcess = GetExcelProcess(xlApp);
-            Excel.Workbook xlWb = xlApp.Workbooks.Open(ExelFile.Path);
-            List<Excel.Worksheet> xlShts = new List<Excel.Worksheet>();
-            List<ExelFilePage> exelFilePages = new List<ExelFilePage>();
-            List<List<object>> text = new List<List<object>>();
-            //Dictionary<Excel.Worksheet, List<List<object>>> textInWorksheet = new Dictionary<Excel.Worksheet, List<List<object>>>();
-            for (int page = 1; page < xlWb.Sheets.Count + 1; page++)
+            Excel.Application exelApplication = new Excel.Application();
+            Excel.Workbook exelWorkbook = exelApplication.Workbooks.Open(ExelFile.Path, ReadOnly: true);
+            Process applicationProcess = GetExcelProcess(exelApplication);
+            
+            GetWindowThreadProcessId(exelApplication.Hwnd, out int idProcess);
+            string tempFileName = "id022-" + idProcess + "id022-" + ExelFile.FileName + "-temp" + "." + ExelFile.Format.ToString();
+            string tempFilePath = Path.Combine(TempFolderPath, tempFileName);            
+            while (System.IO.File.Exists(tempFilePath))
             {
-                xlShts.Add((Excel.Worksheet)xlWb.Sheets[page]);
+                tempFileName += "1";
+                tempFilePath = Path.Combine(TempFolderPath, tempFileName + ExelFile.Format.ToString());
             }
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            for (int page = 0; page < xlShts.Count; page++)
+            try
             {
-                exelFilePages.Add(new ExelFilePage(xlShts[page]));                
-                ReadWorksheetExel(xlShts[page]);
-                exelFilePages[page].AddTabel(exelFilePageTableReadedThread);
-                if (MultiWorksheet == false)
+                exelWorkbook.SaveCopyAs(tempFilePath);
+            }
+            catch (Exception)
+            {
+                System.IO.File.Delete(tempFilePath);
+                exelWorkbook.SaveCopyAs(tempFilePath);
+            }             
+            System.IO.File.SetAttributes(tempFilePath, FileAttributes.Hidden);
+            ExelFile.SetTempCopyPath(tempFilePath);
+            exelWorkbook.Close();
+
+            exelWorkbook = exelApplication.Workbooks.Open(tempFilePath);                        
+            List<Excel.Worksheet> exelWorksheets = new List<Excel.Worksheet>();
+            Dictionary<int, object[,]> DataInPage = new Dictionary<int, object[,]>();
+            for (int page = 1; page < exelWorkbook.Sheets.Count + 1; page++)
+            {
+                exelWorksheets.Add((Excel.Worksheet)exelWorkbook.Sheets[page]);
+            }
+            for (int page = 0; page < exelWorksheets.Count; page++)
+            {
+                DataInPage.TryAdd(exelWorksheets[page].Index, GetDataInPage(exelWorksheets[page]));
+                if (settings.MultiWorksheet == false)
                 {
                     break;
                 }
             }
-            stopwatch.Stop();          
-            xlWb.Close();
-            xlApp.Quit();
-            appProcess.Kill();
+            exelWorksheets = null;
+            exelWorkbook.Close();
+            exelApplication.Quit();
+            applicationProcess.Kill();
+            Marshal.ReleaseComObject(exelWorkbook);
+            Marshal.ReleaseComObject(exelApplication);
+
             GC.Collect();
+            List<ExelFilePage> exelFilePages = new List<ExelFilePage>();
+            using (SpreadsheetDocument document = SpreadsheetDocument.Open(ExelFile.TempCopyPath, true))
+            {
+                this.workbookPart = document.WorkbookPart;
+                List<WorksheetPart> worksheetsParts = workbookPart.WorksheetParts.ToList();                     
+                foreach (int index in DataInPage.Keys)
+                {                   
+                    exelFilePages.Add(ReadWorksheetExel(workbookPart.GetPartById("rId" + index.ToString()) as WorksheetPart, DataInPage[index]));                   
+                }
+            }
+                       
             return exelFilePages;
-        }
-        private void ReadWorksheetExel(Excel.Worksheet worksheet)
+        }        
+        private static string ConvertToLetter(int columnNumber)
         {
-            exelFilePageTableReadedThread.Clear();
-            Excel.Worksheet xlSht = worksheet;
-            var tt = worksheet.Name;
-            //Excel.Range cells = (Excel.Range)xlSht.Cells[xlSht.Columns.Rows.Count, 1];                   
-            Excel.Range last = xlSht.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell, Type.Missing);
+            int dividend = columnNumber;
+            string columnLetter = string.Empty;
+
+            while (dividend > 0)
+            {
+                int modulo = (dividend - 1) % 26;
+                columnLetter = Convert.ToChar('A' + modulo) + columnLetter;
+                dividend = (dividend - modulo) / 26;
+            }
+
+            return columnLetter;
+        }
+        private static int ConvertToNumber(string columnName)
+        {
+            int result = 0;
+            for (int i = 0; i < columnName.Length; i++)
+            {
+                char c = columnName[i];
+                result = result * 26 + (c - 'A' + 1);
+            }
+            return result;
+        }
+        private object[,] GetDataInPage(Excel.Worksheet worksheet)
+        {
+            Excel.Range last = worksheet.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell, Type.Missing);
             string range1 = last.AddressLocal;
-            Excel.Range rangeExel = xlSht.get_Range("A1", last);
+            Excel.Range rangeExel = worksheet.get_Range("A1", last);
             string range = rangeExel.AddressLocal;
-            object[,] arrData = (object[,])xlSht.Range[range].Value;
-            if (arrData == null)
-            {
-                return ;
-            }
-            Excel.ListObjects smartTables = xlSht.ListObjects;            
-            List<Tuple<int,int>> positions = SearchPositionColumnName(arrData, "Номера отправки");
-            positions = RemovePositionInTablesRange(rangeExel, smartTables, positions);
-            List<ExelFilePageTable> exelFilePageTable = new List<ExelFilePageTable>();
-            List<Thread> threadsReadTable = new List<Thread>();
-            int i = 0;
-            foreach (Tuple<int,int> position in positions)
-            {                
-                Thread readTable = new Thread(() => CreateTable(position, rangeExel, arrData, worksheet));
-                threadsReadTable.Add(readTable);
-                while (ThreadHelper.SerchThreadLive(threadsReadTable).Count >= 7)
-                {
-                    Thread.Sleep(500);
-                }
-                threadsReadTable[i].Name = "Чтение таблици " + i;
-                threadsReadTable[i].Start();
-                i++;
-            }
-            while (threadsReadTable.Find(item => item.IsAlive == true) != null)
-            {
-
-            }
-            threadsReadTable.Clear();
-        }       
-        private int SerchCountThreadLive(List<Thread> threads)
-        {
-            int count = 0;
-            for (int i = 0; i < threads.Count; i++)
-            {
-                if (threads[i].IsAlive == true)
-                {
-                    count++;
-                }               
-            }
-            return count;
-        }
-        private void CreateTable(Tuple<int, int> nameColumnPosition, Excel.Range range, object[,] arrData, Excel.Worksheet worksheet)
-        {
-            Dictionary<string, Tuple<int, int>> TitlePosition = TableHeaderRead(nameColumnPosition, range);
-            Tuple<int, int> firstRowInTable = GetFirstRowInTable(nameColumnPosition, range);
-            Tuple<int, int> lirstRowInTable = GetLastRowInTable(firstRowInTable, range);
-            if (TitlePosition != null)
-            {
-                ExelFilePageTable exelFilePageTable = new ExelFilePageTable(TitlePosition.Keys.ToList());
-                foreach (string key in TitlePosition.Keys)
-                {
-                    Tuple<int, int> firstPosition = new Tuple<int, int>(firstRowInTable.Item1, TitlePosition[key].Item2);
-                    Tuple<int, int> lastPosition = new Tuple<int, int>(lirstRowInTable.Item1, TitlePosition[key].Item2);
-                    List<MergeCell> mergeCellsTemp = new List<MergeCell>();
-                    List<object> columnData = ReadColumn(arrData, firstPosition, lastPosition, range, out mergeCellsTemp);                    
-                    exelFilePageTable.AddMergeCells(mergeCellsTemp);
-                    exelFilePageTable.AddColumn(columnData, key);
-                }
-                exelFilePageTableReadedThread.Add(exelFilePageTable);
-            }
+            object[,] arrData = (object[,])worksheet.Range[range].Value;
+            return arrData;
         }
 
-        private List<Tuple<int, int>> RemovePositionInTablesRange(Excel.Range range, Excel.ListObjects tables, List<Tuple<int, int>> positions)
+        private ExelFilePage ReadWorksheetExel(WorksheetPart worksheetPart, object[,] arrData)
+        {                      
+            List<Tuple<int, int>> positions = SearchPositionColumnName(arrData, settings.SearchableColumn);            
+            string relationshipId = workbookPart.GetIdOfPart(worksheetPart);
+            Sheet sheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => s.Id == relationshipId);
+            ExelFilePage exelFilePage = new ExelFilePage(sheet.Name);
+            foreach (Tuple<int, int> position in positions)
+            {
+                exelFilePage.AddTabel(CreateTable(position, arrData, worksheetPart));                                
+            }
+            return exelFilePage;
+        }        
+        private ExelFilePageTable CreateTable(Tuple<int, int> positionNameColumn, object[,] arrData, WorksheetPart worksheetPart)
         {
-            List<Tuple<int, int>> positionsOutsideInRange = new List<Tuple<int, int>>();
-            for (int i = 1; i < tables.Count + 1; i++)
+            Dictionary<string, Tuple<int, int>> titlePositions = ReadTableHeader(positionNameColumn,arrData, worksheetPart);
+            int startRow = GetFirstRowInTable(titlePositions, worksheetPart);
+            int lastRow  = GetLastRowInTable(new Tuple<int, int>(startRow, titlePositions.Values.First().Item2), arrData, worksheetPart);            
+            ExelFilePageTable exelFilePageTable = new ExelFilePageTable(titlePositions.Keys.ToList());
+            exelFilePageTable.SetRangeBody(GetRangeBodyTable(positionNameColumn, arrData, startRow, lastRow, worksheetPart));
+            foreach (string key in titlePositions.Keys)
             {
-                for (int j = 0; j < positions.Count; j++)
-                {
-                    bool positionInRAnge  = CheckingCellInRange(range, tables[i].Range, positions[j]);
-                    if (positionInRAnge == false)
-                    {
-                        positionsOutsideInRange.Add(positions[j]);
-                    }
-                }
+                exelFilePageTable.AddColumn(ReadColumn(titlePositions[key],startRow,lastRow, arrData, worksheetPart), key);
             }
-            if (positionsOutsideInRange.Count == 0 )
+            
+            return exelFilePageTable;
+        }
+        private Exel.Range GetRangeBodyTable(Tuple<int, int> positionNameColumn, object[,] arrData, int startRow, int lastRow, WorksheetPart worksheetPart)
+        {
+            Exel.Range headerRange =  GetTableHeaderRange(positionNameColumn, arrData, worksheetPart);
+            Tuple<int, int> firstCell = headerRange.Start;
+            Tuple<int, int> lastCell = headerRange.End;
+            Exel.Range rangeBody = new Exel.Range(new Tuple<int, int>(startRow, firstCell.Item2), new Tuple<int, int>(lastRow, lastCell.Item2));
+            return rangeBody;
+        }
+
+        private List<object> ReadColumn(Tuple<int, int> titlePosition,int startRow,int lastRow, object[,] arrData, WorksheetPart worksheetPart)
+        {
+            Tuple<int, int> ReadCell = titlePosition;
+            List<object> DataColumn = new List<object>();
+            MergeCells mergeCells = null;
+            DocumentFormat.OpenXml.Spreadsheet.MergeCell mergeCell = null;
+            Cell cell = null;
+            object value;
+            if (worksheetPart.Worksheet.Elements<MergeCells>().Count<MergeCells>() > 0)
             {
-                return positions;
-            }
-            else
-            {
-                return positionsOutsideInRange;
+                mergeCells = worksheetPart.Worksheet.Elements<MergeCells>().First();
             }            
+            for (int row = startRow; row <= lastRow; row++)
+            {
+                ReadCell = new Tuple<int, int>(row, titlePosition.Item2);
+                value = arrData[ReadCell.Item1, ReadCell.Item2];
+                if (value == null && mergeCells != null)
+                {
+                    cell = worksheetPart.Worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == ConvertToLetter(ReadCell.Item2) + ReadCell.Item1.ToString());
+                    mergeCell = GetCellInMergeCells(cell, mergeCells);
+                    if (mergeCell != null)
+                    {
+                        value = GetVelueMergeCell(GetCellInMergeCells(cell, mergeCells), arrData);
+                    }
+                    
+                }
+                if (value != null && value.ToString() == "-2146826246")
+                {
+                    value = null;
+                }
+                DataColumn.Add(value);
+            }
+            return DataColumn;
+        }
+        private Dictionary<string, Tuple<int, int>> ReadTableHeader(Tuple<int, int> positionNameColumn, object[,] arrData, WorksheetPart worksheetPart)
+        {            
+            Exel.Range headerRange =  GetTableHeaderRange(positionNameColumn, arrData, worksheetPart);
+            Tuple<int, int> firstCell = headerRange.Start;
+            Tuple<int, int> lastCell = headerRange.End;
+            Dictionary<string, Tuple<int, int>> titlePosition = new Dictionary<string, Tuple<int, int>>();
+            for (int i = firstCell.Item2; i < lastCell.Item2 - firstCell.Item2 + 1 + firstCell.Item2; i++)
+            {
+                positionNameColumn = CheckRealPositionNameColumn(new Tuple<int, int>(firstCell.Item1, i), arrData);
+                if (positionNameColumn != null)
+                {
+                    titlePosition.TryAdd(arrData[positionNameColumn.Item1, positionNameColumn.Item2].ToString(),positionNameColumn);
+                }
+            }
+            return titlePosition;
+        }
+        private Exel.Range GetTableHeaderRange(Tuple<int, int> positionNameColumn, object[,] arrData, WorksheetPart worksheetPart)
+        {
+            Tuple<int, int>  firstCell = positionNameColumn;
+            Tuple<int, int>  lastCell = positionNameColumn;
+            Worksheet worksheet = worksheetPart.Worksheet;
+            MergeCells mergeCells = worksheet.Elements<MergeCells>().FirstOrDefault();
+            SheetData sheetData = worksheet.GetFirstChild<SheetData>();
+            int rightBorderEnd;
+            int leftBorderEnd;
+            bool isLastCell = false;
+            int rowIndex = positionNameColumn.Item1;
+            int startColumn = positionNameColumn.Item2;
+            Row row = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex == rowIndex);
+            List<Cell> cells = row.Elements<Cell>().ToList();
+            string columnName;
+            string cellReference;
+            Cell cell;
+            while (isLastCell == false)
+            {
+                columnName = ConvertToLetter(startColumn);
+                cellReference = columnName + rowIndex.ToString();
+                cell = cells.Find(cell => cell.CellReference == cellReference);
+                if (cell == null)
+                {
+                    isLastCell = true;
+                    rightBorderEnd = startColumn - 1;
+                    lastCell = new Tuple<int, int>(rowIndex, rightBorderEnd);
+                }
+                startColumn++;
+            }
+            startColumn = positionNameColumn.Item2;
+            isLastCell = false;
+            while (isLastCell == false)
+            {
+                columnName = ConvertToLetter(startColumn);
+                cellReference = columnName + rowIndex.ToString();
+                cell = cells.Find(cell => cell.CellReference == cellReference);
+                if (cell == null)
+                {
+                    isLastCell = true;
+                    leftBorderEnd = startColumn + 1;
+                    firstCell = new Tuple<int, int>(rowIndex, leftBorderEnd);
+                }
+                startColumn--;
+            }
+            return new Exel.Range(firstCell, lastCell);
+        }
+        
+        private object GetVelueMergeCell(DocumentFormat.OpenXml.Spreadsheet.MergeCell mergeCell, object[,] arrData)
+        {
+            string[] mergeCellReference = mergeCell.Reference.Value.Split(':');
+            Tuple<int, int> mergeCellValuePosition = new Tuple<int, int>(Int32.Parse(mergeCellReference[0].Substring(1, 1)), ConvertToNumber(mergeCellReference[0].Substring(0, 1)));
+            return arrData[mergeCellValuePosition.Item1, mergeCellValuePosition.Item2];
         }
 
-        private bool CheckingCellInRange(Excel.Range range, Excel.Range rangeTable, Tuple<int,int> cellPosition)
+
+        private DocumentFormat.OpenXml.Spreadsheet.MergeCell GetCellInMergeCells(Cell cell, MergeCells mergeCells)
         {
-            Excel.Range cellPositionInRange = (Excel.Range)range[cellPosition.Item1, cellPosition.Item2];
-            Excel.Range resultIntersect = range.Application.Intersect(rangeTable, cellPositionInRange);
-            if (resultIntersect != null)
+            foreach (DocumentFormat.OpenXml.Spreadsheet.MergeCell mergeCell in mergeCells.Elements())
             {
-                return true;
+                if (IsCellInMergeCell(cell, mergeCell) == true)
+                {
+                    return mergeCell;
+                }
             }
-            else
+            return null;
+        }
+        private bool IsCellInMergeCell(Cell cell, DocumentFormat.OpenXml.Spreadsheet.MergeCell mergeCell)
+        {
+            if (cell == null)
             {
                 return false;
             }
-        }
+            string[] mergeCellReference = mergeCell.Reference.Value.Split(':');
+            string[] cellReference = cell.CellReference.Value.Split(':');            
+            if (mergeCellReference[0] == cellReference[0] || mergeCellReference[1] == cellReference[0])
+            {
+                return true;
+            }
 
+            return false;
+        }               
         private List<Tuple<int, int>> SearchPositionColumnName(object[,] dataInWorksheet, string nameColumnSearch)
         {
             List<string> namesColumnSearch = new List<string>();
             List<Tuple<int, int>> positions = new List<Tuple<int, int>>();
-            Settings.SearchingColumnName.TryGetValue(nameColumnSearch, out namesColumnSearch);                        
+            settings.SearchingColumnName.TryGetValue(nameColumnSearch, out namesColumnSearch);                        
             var columnCount = dataInWorksheet.GetLength(1);
             var rowCount = dataInWorksheet.Length / columnCount;
             for (int column = 1; column < columnCount + 1; column++)
@@ -196,208 +317,199 @@ namespace READER_0._1.Model.Exel
                     {
                         if (namesColumnSearch.Find(item => item == dataInWorksheet[row, column].ToString()) != null)
                         {
+                            var tt = namesColumnSearch.Find(item => item == dataInWorksheet[row, column].ToString());
+                            var gg = dataInWorksheet[row, column].ToString();
                             positions.Add(new Tuple<int, int>(row, column));
                         }
                     }
                 }
             }
             return positions;
-        }
-        
-        private List<object> ReadColumn(object[,] arrData, Tuple<int, int> firstRowInTable, Tuple<int, int> lirstRowInTable, Excel.Range range, out List<MergeCell> mergeCells)
+        }                          
+        private int GetLastRowInTable(Tuple<int, int> startCell, object[,] arrData, WorksheetPart worksheetPart)
         {
-            List<object> DataInColumn = new List<object>();
-            mergeCells = new List<MergeCell>();
-            object mergeCellValue = new object();
-            Tuple<int, int> startPosition = new Tuple<int, int>(0,0);
-            int size = 1;
-            for (int i = firstRowInTable.Item1; i <= firstRowInTable.Item1 + (lirstRowInTable.Item1 - firstRowInTable.Item1); i++)
-            {
-                Excel.Range cell = (Excel.Range)range[i, lirstRowInTable.Item2];
-                if (arrData[i, lirstRowInTable.Item2] != null && (bool)cell.MergeCells == true)
-                {
-                    startPosition = new Tuple<int,int>(i, lirstRowInTable.Item2);
-                    mergeCellValue = arrData[i, lirstRowInTable.Item2];
-                }
-                if (size > 1 && (bool)cell.MergeCells == false)
-                {                    
-                    mergeCells.Add(new MergeCell(startPosition,size));                    
-                    size = 0;
-                    DataInColumn.Add(mergeCellValue);
-                }
-                if (arrData[i, lirstRowInTable.Item2] == null && (bool)cell.MergeCells == true)
-                {
-                    size++;
-                }
-                else
-                {
-                    DataInColumn.Add(arrData[i, lirstRowInTable.Item2]);
-                }                
-            }
-            return DataInColumn;
-         }
-        private List<object> ReadColumn(object[,] arrData, Tuple<int, int> firstRowInTable, Tuple<int, int> lirstRowInTable, Excel.Worksheet worksheet)
-        {
-            List<object> DataInColumn = new List<object>();
-            for (int i = firstRowInTable.Item1; i <= firstRowInTable.Item1 + (lirstRowInTable.Item1 - firstRowInTable.Item1); i++)
+            var rows = arrData.GetLength(0);
+            Cell cell = worksheetPart.Worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == "A1");
+            SheetData sheetData = worksheetPart.Worksheet.Elements<SheetData>().First();            
+            string columnName;
+            string cellReference;
+            Border border = new Border();
+            for (int i = startCell.Item1; i < rows; i++)
             {                
-                DataInColumn.Add(arrData[i, lirstRowInTable.Item2]);
+                if (arrData[startCell.Item1, startCell.Item2] == null)
+                {
+                    columnName = ConvertToLetter(startCell.Item2);
+                    cellReference = columnName + startCell.Item1.ToString();
+                    cell = worksheetPart.Worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == cellReference);
+                    if (cell != null)
+                    {
+                        border = GetBorder(cell,worksheetPart);
+                        if (border.TopBorder != null && border.BottomBorder == null)
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }                                         
+                startCell = new Tuple<int, int>(startCell.Item1 + 1, startCell.Item2);
             }
-            return DataInColumn;
+            if (startCell.Item1 - 1 >= 1)
+            {
+                return startCell.Item1 - 1;
+            }
+            return 1;
         }
-        private Tuple<int, int> GetLastRowInTable(Tuple<int, int> nameColumnPosition, Excel.Range range) // 1.27
-        {
-            Tuple<int, int> StartCell = new Tuple<int, int>(nameColumnPosition.Item1 + 1, nameColumnPosition.Item2);
-            Excel.Range StartCellInRange = (Excel.Range)range[StartCell.Item1, StartCell.Item2];        
-            for (int i = 0; i < range.Rows.Count; i++)
-            {
-                if ((Excel.XlLineStyle)StartCellInRange.Borders.get_Item(Excel.XlBordersIndex.xlEdgeBottom).LineStyle != Excel.XlLineStyle.xlContinuous &&
-                    (Excel.XlLineStyle)StartCellInRange.Borders.get_Item(Excel.XlBordersIndex.xlEdgeTop).LineStyle == Excel.XlLineStyle.xlContinuous)
-                {
-                    return new Tuple<int, int>(StartCell.Item1 - 1, StartCell.Item2);
-                }
-                StartCell = new Tuple<int, int>(StartCell.Item1 + 1, StartCell.Item2);
-                StartCellInRange = (Excel.Range)range[StartCell.Item1, StartCell.Item2];                   
-            }
-            return StartCell;
-        }
-        private Tuple<int,int> GetFirstRowInTable(Tuple<int, int> nameColumnPosition, Excel.Range range) // 0.02
-        {
-            Tuple<int, int> FirstRowInTable = new Tuple<int, int>(nameColumnPosition.Item1 + 1, nameColumnPosition.Item2);
-            Excel.Range nameColumnPositionInRange = (Excel.Range)range[FirstRowInTable.Item1, FirstRowInTable.Item2];
-            for (int i = 0; i < range.Rows.Count; i++)
-            {
-                if ((bool)nameColumnPositionInRange.MergeCells == true)
-                {                    
-                    FirstRowInTable = new Tuple<int, int>(FirstRowInTable.Item1 + i, FirstRowInTable.Item2);
-                    nameColumnPositionInRange = (Excel.Range)range[FirstRowInTable.Item1, FirstRowInTable.Item2];
-                }
-                else
-                {
-                    break;
-                }
-            }
-            return FirstRowInTable;
-        }
-        private Dictionary<string, Tuple<int, int>> TableHeaderRead(Tuple<int, int> nameColumnPosition, Excel.Range range) //0.04
-        {
-            Tuple<int, int> firstCell = new Tuple<int, int>(0, 0);
-            Tuple<int, int> lastCell = new Tuple<int, int>(0, 0);
-            Dictionary<string, Tuple<int, int>> nameAndPosition = new Dictionary<string, Tuple<int, int>>();
-            List<string> TableNames = new List<string>();
-            List<Tuple<int, int>> TableNamesPosition = new List<Tuple<int, int>>();
-            int startRow = firstCell.Item1;
-            TableHeaderRange(nameColumnPosition, range, out firstCell, out lastCell);
-            Tuple<int, int> positionName = new Tuple<int, int>(0,0);
-            Tuple<int, int> positionNameTrue = null;
-            string name = null;
-            if (firstCell.Item1 == lastCell.Item1 && firstCell.Item2 == lastCell.Item2)
-            {
-                CheckHeaderOnNameCell(firstCell, range, out name, out positionNameTrue);
-                if (name != null && positionNameTrue != null)
-                {
-                    nameAndPosition.TryAdd(name, positionNameTrue);
-                }
-            }
-            for (int column = firstCell.Item2; column <= firstCell.Item2 + lastCell.Item2 - firstCell.Item2; column++)
-            {
-                positionName = new Tuple<int,int>(firstCell.Item1, column);
-                positionNameTrue = null;
-                name = null;
-                CheckHeaderOnNameCell(positionName, range, out name, out positionNameTrue);
-                if (name != null && positionNameTrue != null)
-                {
-                    nameAndPosition.TryAdd(name, positionNameTrue);
-                }
-            }
-            if (nameAndPosition.Count > 0)
-            {
-                return nameAndPosition;
-            }
-            else
+
+        private Border GetBorder(Cell cell, WorksheetPart worksheetPart)
+        {          
+            if (cell == null)
             {
                 return null;
             }
-        }
-        private void CheckHeaderOnNameCell(Tuple<int, int> nameColumnPosition, Excel.Range range, out string HeaderName,out Tuple<int,int> nameColumnPositionTrue)
-        {
-            nameColumnPositionTrue = null;
-            HeaderName = "error";
-            int row = nameColumnPosition.Item1;
-            string valueInCell = null;          
-            for (int i = row - 1; i < row + 3; i++) 
+            Border result = new Border();
+            string cellReference = cell.CellReference;
+            string column = cellReference.Substring(0, 1);
+            int row = int.Parse(cellReference.Substring(1));
+            Cell cellTop = worksheetPart.Worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == column + (row - 1).ToString());
+            Cell cellBottom = worksheetPart.Worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == column + (row + 1).ToString());
+            Border cellTopBorder = GetImaginaryBorder(cellTop);
+            Border cellBorder = GetImaginaryBorder(cell);           
+            Border cellBottomBorder = GetImaginaryBorder(cellBottom);
+            if (cellTopBorder != null)
             {
-                if (i <= 0)
+                if (cellBorder.TopBorder != null || cellTopBorder.BottomBorder != null)
                 {
-                    i = 1;
-                }
-                Excel.Range cellInRange = (Excel.Range)range[i, nameColumnPosition.Item2];
-                if (cellInRange != null)
-                {
-                    if (cellInRange.Value != null)
-                    {
-                        valueInCell = (string)cellInRange.Value.ToString();
-                    }
-                    string nameColumn = CheckValueCellOfNameColumn(valueInCell);
-                    if (nameColumn != "error")
-                    {
-                        HeaderName = nameColumn;
-                        nameColumnPositionTrue = new Tuple<int, int>(i, nameColumnPosition.Item2);
-                        break;
-                    }
-                }                                
+                    result.TopBorder = new TopBorder();
+                }                
             }
+            if (cellBottomBorder != null)
+            {
+                if (cellBorder.BottomBorder != null || cellBottomBorder.TopBorder != null)
+                {
+                    result.BottomBorder = new BottomBorder();
+                }
+            }
+            return result;
         }
-        private string CheckValueCellOfNameColumn(string valueInCell)
+        private Border GetImaginaryBorder(Cell cell)
         {
-            foreach (string key in Settings.SearchingColumnName.Keys)
+            if (cell == null)
+            {
+                return null;
+            }            
+            Borders borders = workbookPart.WorkbookStylesPart.Stylesheet.Borders;
+            CellFormat cellFormat = (CellFormat)workbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ElementAt((int)cell.StyleIndex.Value);
+            Border border = borders.ChildElements.GetItem((int)cellFormat.BorderId.Value) as Border;
+            Border result = new Border();
+            if (border.LeftBorder.HasAttributes == true)
+            {
+                result.LeftBorder = new LeftBorder();
+            }
+            if (border.TopBorder.HasAttributes == true)
+            {
+                result.TopBorder = new TopBorder();
+            }
+            if (border.RightBorder.HasAttributes == true)
+            {
+                result.RightBorder = new RightBorder();
+            }
+            if (border.BottomBorder.HasAttributes == true)
+            {
+                result.BottomBorder = new BottomBorder();
+            }
+            return result;// проверить верх и низ получить общие границы, сделать вывод 
+        }
+
+        private int GetFirstRowInTable(Dictionary<string, Tuple<int, int>> titlePosition, WorksheetPart worksheetPart)
+        {            
+            Worksheet worksheet = worksheetPart.Worksheet;
+            MergeCells mergeCells = null;
+            if (worksheet.Elements<MergeCells>().Count<MergeCells>() > 0)
+            {
+                mergeCells = worksheet.Elements<MergeCells>().First();
+            }      
+            int maxRow = 0;
+            int maxRowInMergeCell = 0;
+            string columnName;
+            string cellReference;
+            Cell cell;
+            DocumentFormat.OpenXml.Spreadsheet.MergeCell mergeCell;
+            foreach (string title in titlePosition.Keys)
+            {
+                if (mergeCells != null)
+                {
+                    columnName = ConvertToLetter(titlePosition[title].Item2);
+                    cellReference = columnName + titlePosition[title].Item1.ToString();
+                    cell = worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == cellReference);                    
+                    mergeCell = GetCellInMergeCells(cell, mergeCells);
+                    if (mergeCell != null)
+                    {
+                        maxRowInMergeCell = GetLastRowInMergeCell(mergeCell);
+                        if (maxRowInMergeCell > maxRow)
+                        {
+                            maxRow = maxRowInMergeCell;
+                        }
+                    }
+                }                
+                if (titlePosition[title].Item1 > maxRow)
+                {
+                    maxRow = titlePosition[title].Item1;
+                }                
+            }
+            return maxRow + 1;
+        }
+
+        private int GetLastRowInMergeCell(DocumentFormat.OpenXml.Spreadsheet.MergeCell mergeCell)
+        {
+            string input = mergeCell.Reference;
+            string[] parts = input.Split(':');
+            string firstCoordinate = Regex.Match(parts[0], @"\d+").Value;
+            string secondCoordinate = Regex.Match(parts[1], @"\d+").Value;
+            int firstNumber = int.Parse(firstCoordinate);
+            int secondNumber = int.Parse(secondCoordinate);
+            int maxNumber = Math.Max(firstNumber, secondNumber);
+            return maxNumber;
+        }               
+        private Tuple<int, int> CheckRealPositionNameColumn(Tuple<int, int> nameColumnPosition, object[,] arrData)
+        {
+            var rows = arrData.GetLength(0);
+            //var columns = arrData.GetLength(1);            
+            Tuple<int, int> realPosition = nameColumnPosition;
+            if (arrData[nameColumnPosition.Item1, nameColumnPosition.Item2] != null && CheckValueCellOfNameColumn(arrData[nameColumnPosition.Item1, nameColumnPosition.Item2].ToString()))
+            {
+                return realPosition;
+            }
+            if (nameColumnPosition.Item1 - 1 > 0 && arrData[nameColumnPosition.Item1 - 1, nameColumnPosition.Item2] != null && CheckValueCellOfNameColumn(arrData[nameColumnPosition.Item1 - 1, nameColumnPosition.Item2].ToString()) == true)
+            {
+                return new Tuple<int, int>(nameColumnPosition.Item1 - 1, nameColumnPosition.Item2);
+            }
+            if (nameColumnPosition.Item1 + 1 <= rows && arrData[nameColumnPosition.Item1 + 1, nameColumnPosition.Item2] != null && CheckValueCellOfNameColumn(arrData[nameColumnPosition.Item1 + 1, nameColumnPosition.Item2].ToString()) == true)
+            {
+                return new Tuple<int, int>(nameColumnPosition.Item1 + 1, nameColumnPosition.Item2);
+            }
+            return null;
+        }
+        private bool CheckValueCellOfNameColumn(string valueInCell)
+        {
+            foreach (string key in settings.SearchingColumnName.Keys)
             {
                 if (valueInCell == null)
                 {
                     break;
                 }
-                for (int i = 0; i < Settings.SearchingColumnName[key].Count; i++)
+                for (int i = 0; i < settings.SearchingColumnName[key].Count; i++)
                 {
-                    if (Settings.SearchingColumnName[key].Find(item => item == valueInCell) != null)
+                    if (settings.SearchingColumnName[key].Find(item => item == valueInCell) != null)
                     {
-                        return key;
+                        return true;
                     }
                 }                
             }
-            return "error";
-        }
-
-        private void TableHeaderRange(Tuple<int, int> nameColumnPosition, Excel.Range range, out Tuple<int, int> firstCell, out Tuple<int, int> lastCell)//0.0091
-        {
-            firstCell = nameColumnPosition;
-            while (ItsLastHeaderCell(range, firstCell) == false)
-            {
-                firstCell = new Tuple<int, int>(firstCell.Item1, firstCell.Item2 - 1);
-            }
-            firstCell = new Tuple<int, int>(firstCell.Item1, firstCell.Item2 + 1);
-            lastCell = nameColumnPosition;
-            while (ItsLastHeaderCell(range, lastCell) == false)
-            {
-                lastCell = new Tuple<int, int>(lastCell.Item1, lastCell.Item2 + 1);
-            }
-            lastCell = new Tuple<int, int>(lastCell.Item1, lastCell.Item2 - 1);
-        }
-        private bool ItsLastHeaderCell(Excel.Range range, Tuple<int, int> position)
-        {
-            if (position.Item2 == 0)
-            {
-                return true;
-            }
-            Excel.Range exelPositin = (Excel.Range)range[position.Item1, position.Item2];
-            if ((exelPositin.Value == null && (bool)exelPositin.MergeCells == false) || position.Item2 == 1)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+            return false;
+        }              
     }
 }
 

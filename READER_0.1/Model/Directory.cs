@@ -19,13 +19,12 @@ namespace READER_0._1.Model
             Files = files;
         }
 
-        public List<Model.File> SearchFileToName(ExelFile ExelFile, int IndexPage,string nameColumn, Formats FormatsFileSearch, SearchParametr searchParametr)
+        public List<Model.File> SearchFileToName(List<string> SearchData, Formats FormatsFileSearch)
         {
             List<string> filesPathInDirectory = System.IO.Directory.GetFiles(Path, "*." + FormatsFileSearch.ToString(), SearchOption.TopDirectoryOnly).ToList<string>();
             List<string> filesInDirectoryName = new List<string>();
             List<Model.File> filesInDirectory = new List<Model.File>();
-            List<Model.File> filesEquals = new List<Model.File>();
-            List<Model.File> filesNoEquals = new List<Model.File>();
+            List<Model.File> filesEquals = new List<Model.File>();           
             for (int i = 0; i < filesPathInDirectory.Count; i++)
             {
                 filesInDirectoryName.Add(System.IO.Path.GetFileNameWithoutExtension(filesPathInDirectory[i]));                
@@ -35,45 +34,38 @@ namespace READER_0._1.Model
                     filesInDirectory.Add(file);
                 }                
             }
-            List<string> ColumnsData = ListObjectConvertListString(ExelFile.ExelPage[IndexPage].GetColumnsDataNoDplicates(nameColumn));
+            // List<string> ColumnsData = ExelFile.ExelPage[IndexPage].GetColumnsDataNoDplicates(nameColumn).ConvertAll(x => Convert.ToString(x)).OfType<string>().ToList();// переделать
+            List<string> ColumnsData = SearchData;
             for (int i = 0; i < ColumnsData.Count; i++)
             {
                 Model.File addedFileEquals = filesInDirectory.Find(item => item.FileName == ColumnsData[i]);               
                 if (addedFileEquals != null)
                 {
                     filesEquals.Add(addedFileEquals);
-                }
-                else
-                {
-                    Model.File addedFileNoEquals = new Model.File("", ColumnsData[i], FormatsFileSearch);
-                    filesNoEquals.Add(addedFileNoEquals);
-                }
+                }              
             }
-            if (searchParametr == SearchParametr.Equals)
+            return filesEquals;
+        }
+
+        internal static bool Exists(string tempFolderPath)
+        {
+            throw new NotImplementedException();
+        }
+       
+        public override bool Equals(object obj)
+        {
+            try
             {
-                return filesEquals;
+                return Path.Equals(((Directory)obj).Path);
             }
-            else
+            catch (Exception)
             {
-                return filesNoEquals;
+                return false;
             }
         }
-        private List<string> ListObjectConvertListString(List<object> ListObject)
+        public override int GetHashCode()
         {
-            List<string> listString = new List<string>();
-            for (int i = 0; i < ListObject.Count; i++)
-            {
-                if (ListObject[i] != null)
-                {
-                    listString.Add(ListObject[i].ToString());
-                }                
-            }
-            return listString;
-        }
-        public enum SearchParametr
-        {
-            Equals,
-            NoEquals
+            return Path.GetHashCode();
         }
     }
 }

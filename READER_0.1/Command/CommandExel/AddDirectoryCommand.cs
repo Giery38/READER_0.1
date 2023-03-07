@@ -10,13 +10,13 @@ using System.Linq;
 using WinForms = System.Windows.Forms;
 using System.Runtime.InteropServices;
 
-namespace READER_0._1.Command
+namespace READER_0._1.Command.CommandExel
 {
     class AddDirectoryCommand : CommandBase
     {
         private readonly WindowFileBase windowFileBase;
         private readonly ExelViewModel exelViewModel;
-        protected event EventHandler ChangeDirectoryList;
+        protected event Action ChangeDirectoryList;
         public AddDirectoryCommand(ExelViewModel exelViewModel, WindowFileBase windowFileBase)
         {
             this.windowFileBase = windowFileBase;
@@ -39,22 +39,23 @@ namespace READER_0._1.Command
                     filesToDirectory.Add(new Model.File(allFoundFiles[i], Path.GetFileNameWithoutExtension(allFoundFiles[i]), windowFileBase.FormatStrngToEnum(".pdf")));
                 }
                 Model.Directory directory = new Model.Directory(directoryPath, directoryName, filesToDirectory);
-                if (exelViewModel.SelectedExelFiles != null && exelViewModel.SelectedPage != null) // убрать это если нужно создать самодостаточную папку
+                if (exelViewModel.SelectedExelFile != null && exelViewModel.SelectedPage != null) // убрать это если нужно создать самодостаточную папку
                 {
-                    AddDirectoryToBindingFile(directory);
+                    windowFileBase.exelWindowFileBase.AddDirectory(directory, exelViewModel.SelectedExelFile);
                 }
-                ChangeDirectoryList?.Invoke(this, new EventArgs());
+                ChangeDirectoryList?.Invoke();
             }
         }
+        /*
         private void AddDirectoryToBindingFile(Model.Directory directory) 
         {
-            windowFileBase.AddDirectory(directory, exelViewModel.SelectedExelFiles);
-            int indexPage = GetIndexPage(exelViewModel.SelectedExelFiles, exelViewModel.SelectedPage);
-            List<Model.File> EqualsFile = directory.SearchFileToName(exelViewModel.SelectedExelFiles, indexPage, "ShipmentNumbers", Formats.pdf, Model.Directory.SearchParametr.Equals);
-            List<Model.File> NoEqualsFile = directory.SearchFileToName(exelViewModel.SelectedExelFiles, indexPage, "ShipmentNumbers", Formats.pdf, Model.Directory.SearchParametr.NoEquals);
+            windowFileBase.exelWindowFileBase.AddDirectory(directory, exelViewModel.SelectedExelFile);
+            int indexPage = GetIndexPage(exelViewModel.SelectedExelFile, exelViewModel.SelectedPage);
+            List<Model.File> EqualsFile = directory.SearchFileToName(exelViewModel.SelectedExelFile, indexPage, exelViewModel.SelectedColumnName.StringValue, Formats.pdf, Model.Directory.SearchParametr.Equals); 
+            List<Model.File> NoEqualsFile = directory.SearchFileToName(exelViewModel.SelectedExelFile, indexPage, exelViewModel.SelectedColumnName.StringValue, Formats.pdf, Model.Directory.SearchParametr.NoEquals);
             windowFileBase.exelWindowFileBase.AddСontentInDirectoriesEquals(exelViewModel.SelectedPage, EqualsFile);
             windowFileBase.exelWindowFileBase.AddСontentInDirectoriesNoEquals(exelViewModel.SelectedPage, NoEqualsFile);
-        }
+        }*/
         private int GetIndexPage(ExelFile exelFile, ExelFilePage exelFilePage)
         {
             int index = 0;

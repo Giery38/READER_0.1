@@ -15,10 +15,10 @@ namespace READER_0._1.Command
             return true;
         }
         public abstract void Execute(object parameter);
+
         protected void OnCanExecutedChanged()
         {
             CanExecuteChanged?.Invoke(this, new EventArgs());
         }
-
     }
 }

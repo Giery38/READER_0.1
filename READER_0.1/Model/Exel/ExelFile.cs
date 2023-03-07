@@ -8,9 +8,21 @@ namespace READER_0._1.Model.Exel
 {
     public class ExelFile : File
     {
-        public List<ExelFilePage> ExelPage { get; private set; }
+        public  List<ExelFilePage> ExelPage { get; private set; }
 
-        public bool Readed { get; private set; }
+        private bool readed; 
+        public bool Readed
+        {
+            get
+            {
+                return readed;
+            }
+            private set
+            {
+                readed = value;
+                OnPropertyChanged(nameof(Readed));
+            }
+        }
 
         public ExelFile(string path, string fileName, Formats format) : base(path, fileName, format)
         {
@@ -21,7 +33,14 @@ namespace READER_0._1.Model.Exel
         {
             ExelPage = new List<ExelFilePage>();
         }
-
+        public ExelFile(ExelFile exelFile)
+        {
+            FileName = exelFile.FileName;
+            Path = exelFile.Path;
+            Readed = exelFile.Readed;
+            Format = exelFile.Format;
+            ExelPage = exelFile.ExelPage;            
+        }
         public void SetReaded(bool value)
         {
             Readed = value;

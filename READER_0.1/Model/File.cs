@@ -4,14 +4,17 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.ComponentModel;
+using READER_0._1.Model.Word;
 
 namespace READER_0._1.Model
 {
-    public class File
+    public class File : INotifyPropertyChanged
     {
-        public string Path { get;}
-        public string FileName { get;}
-        public Formats Format { get; }
+        public string Path { get; protected set; }
+        public string FileName { get; protected set; }
+        public Formats Format { get; protected set; }
+        public string TempCopyPath { get; protected set; }
+
         public File(string path, string fileName, Formats format)
         {
             Path = path;
@@ -26,10 +29,21 @@ namespace READER_0._1.Model
             Format = Formats.error;
         }
 
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
         public void CopyeTo(string DestinationPath)
         {
             DestinationPath += "//" + System.IO.Path.GetFileName(Path);
-            System.IO.File.Copy(Path, DestinationPath);
+            System.IO.File.Copy(Path, DestinationPath, true);
+        }
+
+        public void SetTempCopyPath(string tempCopyPath) 
+        {
+            TempCopyPath = tempCopyPath;
         }
 
         public ExelFile ToExelFile()
@@ -37,7 +51,7 @@ namespace READER_0._1.Model
             if (this.Format == Formats.xlsx ||
                 this.Format == Formats.xls)
             {
-                ExelFile exelFile = new ExelFile(Path, FileName, Formats.xlsx);
+                ExelFile exelFile = new ExelFile(Path, FileName, this.Format);
                 return exelFile;
             }
             else
@@ -45,6 +59,35 @@ namespace READER_0._1.Model
                 throw new Exception("Не подходящий формат файла");
             }
 
+        }
+        public WordFile ToWordFile()
+        {
+            if (this.Format == Formats.doc ||
+                this.Format == Formats.docx)
+            {
+                WordFile wordFile = new WordFile(Path, FileName, this.Format);
+                return wordFile;
+            }
+            else
+            {
+                throw new Exception("Не подходящий формат файла");
+            }
+
+        }
+        public override bool Equals(object obj)
+        {
+            try
+            {
+                return Path.Equals(((File)obj).Path);
+            }
+            catch (Exception)
+            {
+                return false;
+            }            
+        }
+        public override int GetHashCode()
+        {
+            return Path.GetHashCode();
         }
     }
 }

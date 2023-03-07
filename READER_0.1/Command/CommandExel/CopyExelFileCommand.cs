@@ -8,13 +8,13 @@ using System.Runtime.InteropServices;
 using System.IO;
 using System.Windows;
 
-namespace READER_0._1.Command
+namespace READER_0._1.Command.CommandExel
 {
-    class CopyFileCommand : CommandBase
+    class CopyExelFileCommand : CommandBase
     {
         private readonly WindowFileBase windowFileBase;
         private readonly ExelViewModel exelViewModel;
-        public CopyFileCommand(ExelViewModel exelViewModel, WindowFileBase windowFileBase)
+        public CopyExelFileCommand(ExelViewModel exelViewModel, WindowFileBase windowFileBase)
         {
             this.windowFileBase = windowFileBase;
             this.exelViewModel = exelViewModel;

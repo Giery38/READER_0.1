@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows;
-using static READER_0._1.Model.Settings.ExelSettingsRead;
+using static READER_0._1.Model.Settings.Exel.ExelSettingsRead;
 
 namespace READER_0._1.Model.Exel
 {
@@ -13,42 +13,115 @@ namespace READER_0._1.Model.Exel
     {
         public List<ExelFile> ExelFiles { get; private set; }
         public List<Directory> Directories { get; private set; }
-        public Dictionary<ExelFile, List<Directory>> ExelFilesСontentInDirectories { get; private set; }
+        public Dictionary<ExelFile, List<Directory>> DirectoriesBelongExelFile { get; private set; }
+        public Dictionary<string, List<ExelFile>> FoldersWithFiles { get; private set; }
         public Dictionary<ExelFilePage, List<Model.File>> ExelFilesСontentInDirectoriesEquals { get; private set; }
         public Dictionary<ExelFilePage, List<Model.File>> ExelFilesСontentInDirectoriesNoEquals { get; private set; }
+        public List<SearchFilesResult> SearchFilesResults { get; private set; }
+        //
         private List<Thread> threadsReadFiles;
+        //
+        private readonly Settings.Exel.ExelSettingsRead exelSettingsRead;
+        static public string TempFolderPath { get; private set; }
 
-        public ExelWindowFileBase()
+        public ExelWindowFileBase(string tempFolderPath, Settings.Exel.ExelSettingsRead exelSettingsRead)
         {
             ExelFiles = new List<ExelFile>();
             Directories = new List<Directory>();
-            ExelFilesСontentInDirectories = new Dictionary<ExelFile, List<Directory>>();
+            DirectoriesBelongExelFile = new Dictionary<ExelFile, List<Directory>>();
+            FoldersWithFiles = new Dictionary<string, List<ExelFile>>
+            {
+                { "Файлы", new List<ExelFile>() }
+            };
+            SearchFilesResults = new List<SearchFilesResult>();
             ExelFilesСontentInDirectoriesEquals = new Dictionary<ExelFilePage, List<Model.File>>();
             ExelFilesСontentInDirectoriesNoEquals = new Dictionary<ExelFilePage, List<Model.File>>();
             threadsReadFiles = new List<Thread>();
-        }
-        public void AddFiles(object sender, FilesReachedEventArgs AddedFiles)
+            //
+            this.exelSettingsRead = exelSettingsRead;
+            TempFolderPath = tempFolderPath;
+        }       
+
+        public void AddSearchFilesResult(SearchFilesResult searchFilesResult)
         {
-            ChangeExelFileList(sender, AddedFiles.ChendgeFiles, Operation.Add);           
+            SearchFilesResults.Add(searchFilesResult);
         }
-        public void RemoveFiles(object sender, FilesReachedEventArgs RemovedFiles)
+
+        public void AddFiles(List<ExelFile> AddedFiles)
         {
-            ChangeExelFileList(sender, RemovedFiles.ChendgeFiles, Operation.Remove);
+            if (AddedFiles.Count != 0)
+            {                
+                AddedFiles = AddedFiles.Except(ExelFiles).ToList();                
+                ExelFiles.AddRange(AddedFiles);                
+                Thread readExelFiles = new Thread(() => ReadExelFiles(AddedFiles));
+                readExelFiles.Start();
+            }
         }
-        public void AddDirectories(object sender, FilesReachedEventArgs AddedDirectories)
+        public void AddFiles(List<ExelFile> AddedFiles, string FolderName)
         {
-            ChangeDirectoriesList(sender, AddedDirectories.ChendgeDirectory, Operation.Add, AddedDirectories.File);
+            if (AddedFiles.Count != 0)
+            {
+                AddedFiles = AddedFiles.Except(ExelFiles).ToList();
+                ExelFiles.AddRange(AddedFiles);
+                FoldersWithFiles[FolderName].AddRange(AddedFiles);
+                Thread readExelFiles = new Thread(() => ReadExelFiles(AddedFiles));
+                readExelFiles.Start();
+            }
         }
-        public void RemoveDirectories(object sender, FilesReachedEventArgs RemovedDirectories)
+        public void RemoveFiles(List<ExelFile> RemovedFiles)
         {
-            ChangeDirectoriesList(sender, RemovedDirectories.ChendgeDirectory, Operation.Remove, RemovedDirectories.File);
+            if (true)
+            {
+                ExelFiles = ExelFiles.Except(RemovedFiles).ToList();
+            }
+        }        
+        public void AddDirectory(List<Directory> AddedDirectory) // если папка являетьсья самодостаточным элементом 
+        {
+            if (AddedDirectory.Count != 0)
+            {               
+                Directories.AddRange(AddedDirectory);
+            }
         }
-        
+        public void AddDirectory(Directory AddedDirectory)
+        {
+            if (AddedDirectory != null)
+            {
+                if (Directories.Find(item => item == AddedDirectory) == null)
+                {
+                    Directories.Add(AddedDirectory);
+                }
+            }
+        }
+        public void AddDirectory(Directory AddedDirectory, ExelFile BindingFile)
+        {
+            if (AddedDirectory != null)
+            {
+                List<Directory> directories = new List<Directory>();
+                directories.Add(AddedDirectory);
+                directories.Distinct();
+                Directories.Add(AddedDirectory);
+                Directories.Distinct();
+                DirectoriesBelongExelFile.TryAdd(BindingFile, directories);
+            }
+        }
+        public void RemoveDirectory(List<Directory> RemovedDirectory)
+        {
+            if (RemovedDirectory.Count != 0)
+            {
+                Directories = Directories.Except(RemovedDirectory).ToList();
+            }
+        }
+
+        public void AddFolder(string nameFolder)
+        {
+            FoldersWithFiles.TryAdd(nameFolder, new List<ExelFile>());
+        }
+
         public void AddСontentInDirectoriesEquals(ExelFilePage keyPage, List<Model.File> AddedList)
         {                        
             bool availabilitySelectedPageContentEquals = ExelFilesСontentInDirectoriesEquals.TryAdd(keyPage, AddedList);
             if (availabilitySelectedPageContentEquals == false)
-            {
+            {               
                 AddedList = RemoveDublicateInLists(ExelFilesСontentInDirectoriesEquals[keyPage], AddedList);
                 ExelFilesСontentInDirectoriesEquals[keyPage].AddRange(AddedList);
             }            
@@ -63,20 +136,7 @@ namespace READER_0._1.Model.Exel
                 AddedList = RemoveDublicateInLists(ExelFilesСontentInDirectoriesEquals[keyPage], AddedList);
                 ExelFilesСontentInDirectoriesNoEquals[keyPage].AddRange(AddedList);
             }            
-        }
-
-        private List<string> RemoveDublicateInLists(List<string> MainList, List<string> ChekingList)
-        {
-            List<string> result = new List<string>();
-            for (int i = 0; i < ChekingList.Count; i++)
-            {
-                if (MainList.Find(item => item == ChekingList[i]) == null)
-                {
-                    result.Add(ChekingList[i]);
-                }
-            }
-            return result;
-        }
+        }        
         private List<Model.File> RemoveDublicateInLists(List<Model.File> MainList, List<Model.File> ChekingList)
         {
             List<Model.File> result = new List<Model.File>();
@@ -88,104 +148,33 @@ namespace READER_0._1.Model.Exel
                 }
             }
             return result;
-        }
-        private void ChangeDirectoriesList(object sender, List<Directory> Directories, Operation operation, File file)
-        {
-            if (sender is WindowFileBase)
-            {
-                for (int i = 0; i < Directories.Count; i++)
-                {
-                    if (operation == Operation.Remove)
-                    {
-                        this.Directories.Remove(Directories[i]);
-                    }
-                    else if (operation == Operation.Add)
-                    {
-                        this.Directories.Add(Directories[i]);                        
-                    }
-                }
-                ExelFile exelFileBinnding = file.ToExelFile();
-                exelFileBinnding = ExelFiles.Find(item => item.Path == exelFileBinnding.Path);
-                bool added = ExelFilesСontentInDirectories.TryAdd(exelFileBinnding, Directories);
-                if (added == false)
-                {
-                    for (int i = 0; i < Directories.Count; i++)
-                    {
-                        if (ExelFilesСontentInDirectories[exelFileBinnding].Find(item => item.Path == Directories[i].Path) == null)
-                        {
-                            ExelFilesСontentInDirectories[exelFileBinnding].AddRange(Directories);
-                        }
-                        else
-                        {
-                            MessageBox.Show("Папка уже есть в списке.");
-                        }
-                    }                                       
-                }
-                this.Directories.Distinct();
-            }
-        }
-        
-        private void ChangeExelFileList(object sender, List<File> Files, Operation operation)
-        {
-            if (sender is WindowFileBase)
-            {
-                List<ExelFile> exelFileReaed = new List<ExelFile>();
-                for (int i = 0; i < Files.Count; i++)
-                {
-                    if (Files[i].Format == Formats.xls ||
-                        Files[i].Format == Formats.xlsx)
-                    {                        
-                        if (operation == Operation.Remove)
-                        {
-                            ExelFiles.Remove(Files[i].ToExelFile());
-                        }
-                        else if(operation == Operation.Add)
-                        {
-                            ExelFile exelFile = Files[i].ToExelFile();
-                            ExelFiles.Add(exelFile);
-                            exelFileReaed.Add(exelFile);
-                            /*
-                            Thread readExelFile = new Thread(() => ReadExelFile(exelFile));
-                            readExelFile.Name = "Чтение файла " + exelFile.FileName;
-                            if (ThreadHelper.SerchThreadLive(threadsReadFiles).Count == threadsReadFiles.Count)
-                            {
-                                threadsReadFiles.Clear();
-                            }
-                            threadsReadFiles.Add(readExelFile);
-                            readExelFile.Start();
-                            */
-                        }
-                    }
-                }
-                if (exelFileReaed.Count > 0)
-                {
-                    Thread readExelFiles = new Thread(() => ReadExelFiles(exelFileReaed));
-                    readExelFiles.Start();
-                }
-                ExelFiles.Distinct();               
-            }        
-        }
+        }        
+               
         private void ReadExelFiles(List<ExelFile> exelFileReaed)
         {
             foreach (ExelFile exelFile in exelFileReaed)
             {
                 Thread readExelFile = new Thread(() => ReadExelFile(exelFile));
-                readExelFile.Name = "Чтение файла " + exelFile.FileName;
-                threadsReadFiles.Add(readExelFile);
-                var rr = ThreadHelper.SerchThreadLive(threadsReadFiles).Count;
-                while (ThreadHelper.SerchThreadLive(threadsReadFiles).Count > 3)
-                {
-                    Thread.Sleep(3000);
-                }
+                readExelFile.IsBackground = true;
+                readExelFile.Name = "Чтение Excel файла " + exelFile.FileName;
+                threadsReadFiles.Add(readExelFile);             
                 readExelFile.Start();
-            }            
+                readExelFile.Join();
+            }    
+            
         }
-
+        public void ChangeFolerName(string NewName, int Index)
+        {
+            List<string> gg = FoldersWithFiles.Keys.ToList();
+            List<ExelFile> gga = FoldersWithFiles[gg[Index]];
+            FoldersWithFiles.Remove(gg[Index]);
+            FoldersWithFiles.Add(NewName, gga);
+        }
         private void ReadExelFile(ExelFile exelFile)
         {                       
             int id = ExelFiles.FindIndex(file => file.FileName == exelFile.FileName);
-            ExelFileReader exelFileReader = new ExelFileReader(ExelFiles[id]);
-            ExelFiles[id].AddPage(exelFileReader.ReadWorksheetsExel(true));
+            ExelFileReader exelFileReader = new ExelFileReader(ExelFiles[id], TempFolderPath, exelSettingsRead);
+            ExelFiles[id].AddPage(exelFileReader.Read());
             ExelFiles[id].SetReaded(true);
         }
         private enum Operation
