@@ -1,7 +1,10 @@
 ﻿using READER_0._1.Tools;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows;
@@ -10,71 +13,93 @@ using static READER_0._1.Model.Settings.Exel.ExelSettingsRead;
 namespace READER_0._1.Model.Exel
 {
     public class ExelWindowFileBase
-    {
-        public List<ExelFile> ExelFiles { get; private set; }
+    {     
         public List<Directory> Directories { get; private set; }
         public Dictionary<ExelFile, List<Directory>> DirectoriesBelongExelFile { get; private set; }
-        public Dictionary<string, List<ExelFile>> FoldersWithFiles { get; private set; }
+        public List<Directory> FoldersWithFiles { get; private set; }        
+        public ExelReaderManager ExelReaderManager { get; private set; }
         public Dictionary<ExelFilePage, List<Model.File>> ExelFilesСontentInDirectoriesEquals { get; private set; }
         public Dictionary<ExelFilePage, List<Model.File>> ExelFilesСontentInDirectoriesNoEquals { get; private set; }
         public List<SearchFilesResult> SearchFilesResults { get; private set; }
         //
-        private List<Thread> threadsReadFiles;
+        public List<Thread> ThreadsReadFiles { get; private set; } //
         //
         private readonly Settings.Exel.ExelSettingsRead exelSettingsRead;
         static public string TempFolderPath { get; private set; }
 
         public ExelWindowFileBase(string tempFolderPath, Settings.Exel.ExelSettingsRead exelSettingsRead)
         {
-            ExelFiles = new List<ExelFile>();
             Directories = new List<Directory>();
             DirectoriesBelongExelFile = new Dictionary<ExelFile, List<Directory>>();
-            FoldersWithFiles = new Dictionary<string, List<ExelFile>>
+            FoldersWithFiles = new List<Directory>()
             {
-                { "Файлы", new List<ExelFile>() }
+                { new Directory("Файлы")}
             };
+            ExelReaderManager = new ExelReaderManager(tempFolderPath, exelSettingsRead);
             SearchFilesResults = new List<SearchFilesResult>();
             ExelFilesСontentInDirectoriesEquals = new Dictionary<ExelFilePage, List<Model.File>>();
             ExelFilesСontentInDirectoriesNoEquals = new Dictionary<ExelFilePage, List<Model.File>>();
-            threadsReadFiles = new List<Thread>();
+            ThreadsReadFiles = new List<Thread>();
             //
             this.exelSettingsRead = exelSettingsRead;
             TempFolderPath = tempFolderPath;
+            //                       
         }       
-
+        public void AddThreadsReadFile(Thread thread)
+        {
+            ThreadsReadFiles.Add(thread);
+        }
+        
         public void AddSearchFilesResult(SearchFilesResult searchFilesResult)
         {
             SearchFilesResults.Add(searchFilesResult);
         }
-
-        public void AddFiles(List<ExelFile> AddedFiles)
+              
+        public void AddFile(List<ExelFile> AddedFiles, string FolderName)
         {
-            if (AddedFiles.Count != 0)
-            {                
-                AddedFiles = AddedFiles.Except(ExelFiles).ToList();                
-                ExelFiles.AddRange(AddedFiles);                
-                Thread readExelFiles = new Thread(() => ReadExelFiles(AddedFiles));
-                readExelFiles.Start();
-            }
-        }
-        public void AddFiles(List<ExelFile> AddedFiles, string FolderName)
-        {
-            if (AddedFiles.Count != 0)
+            if (AddedFiles.Count == 0)
             {
-                AddedFiles = AddedFiles.Except(ExelFiles).ToList();
-                ExelFiles.AddRange(AddedFiles);
-                FoldersWithFiles[FolderName].AddRange(AddedFiles);
-                Thread readExelFiles = new Thread(() => ReadExelFiles(AddedFiles));
-                readExelFiles.Start();
+                return;
             }
-        }
-        public void RemoveFiles(List<ExelFile> RemovedFiles)
-        {
-            if (true)
+            foreach (ExelFile file in AddedFiles)
             {
-                ExelFiles = ExelFiles.Except(RemovedFiles).ToList();
+                Directory folderWithFiles = FoldersWithFiles.Find(item => item.Name == FolderName);
+                folderWithFiles.AddFile(file);
+            }           
+        }
+        public void AddFile(ExelFile AddedFile, string FolderName)
+        {
+            Directory folderWithFiles = FoldersWithFiles.Find(item => item.Name == FolderName);
+            folderWithFiles.AddFile(AddedFile);
+        }
+        public void RemoveFile(ExelFile RemovedFile, string FolderName)
+        {
+            Thread readFileThread = ExelReaderManager.FindThreadsReadFile(RemovedFile.Path);
+            if (readFileThread != null)
+            {
+                if (readFileThread.IsAlive == true)
+                {
+                    readFileThread.Interrupt();
+                    readFileThread.Join();
+                }
+                else
+                {
+                    ThreadsReadFiles.Remove(readFileThread);
+                }
+            }                   
+            Directory folderWithFiles = FoldersWithFiles.Find(item => item.Name == FolderName);
+            folderWithFiles.Files.Remove(RemovedFile);
+            SearchFilesResults.RemoveAll(item => item.ExelFile == RemovedFile);
+        }
+        public void RemoveFolderWithFiles(string folderName)
+        {
+            Directory folderWithFiles = FoldersWithFiles.Find(item => item.Name == folderName);
+            foreach (ExelFile file in folderWithFiles.Files.ToList())
+            {
+                RemoveFile(file, folderName);
             }
-        }        
+            FoldersWithFiles.Remove(folderWithFiles);
+        } 
         public void AddDirectory(List<Directory> AddedDirectory) // если папка являетьсья самодостаточным элементом 
         {
             if (AddedDirectory.Count != 0)
@@ -92,17 +117,31 @@ namespace READER_0._1.Model.Exel
                 }
             }
         }
-        public void AddDirectory(Directory AddedDirectory, ExelFile BindingFile)
+        public bool TryAddDirectory(Directory AddedDirectory, ExelFile BindingFile)
         {
-            if (AddedDirectory != null)
+            if (AddedDirectory == null)
             {
-                List<Directory> directories = new List<Directory>();
-                directories.Add(AddedDirectory);
-                directories.Distinct();
-                Directories.Add(AddedDirectory);
-                Directories.Distinct();
-                DirectoriesBelongExelFile.TryAdd(BindingFile, directories);
+                return false;
             }
+            Directories.Add(AddedDirectory);
+            Directories.Distinct();
+            if (DirectoriesBelongExelFile.Keys.FirstOrDefault(item => item.Path == BindingFile.Path) != null)
+            {
+                if (DirectoriesBelongExelFile[BindingFile].Find(item => item.Path == AddedDirectory.Path) == null)
+                {
+                    DirectoriesBelongExelFile[BindingFile].Add(AddedDirectory);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                DirectoriesBelongExelFile.TryAdd(BindingFile, new List<Directory>() { AddedDirectory });
+                return true;
+            }        
         }
         public void RemoveDirectory(List<Directory> RemovedDirectory)
         {
@@ -113,8 +152,8 @@ namespace READER_0._1.Model.Exel
         }
 
         public void AddFolder(string nameFolder)
-        {
-            FoldersWithFiles.TryAdd(nameFolder, new List<ExelFile>());
+        {         
+            FoldersWithFiles.Add(new Directory(nameFolder));
         }
 
         public void AddСontentInDirectoriesEquals(ExelFilePage keyPage, List<Model.File> AddedList)
@@ -148,39 +187,25 @@ namespace READER_0._1.Model.Exel
                 }
             }
             return result;
-        }        
-               
-        private void ReadExelFiles(List<ExelFile> exelFileReaed)
+        }                              
+        public void SetFolerName(string oldName, string newName)
         {
-            foreach (ExelFile exelFile in exelFileReaed)
+            Directory folderWithFiles = FoldersWithFiles.Find(item => item.Name == oldName);
+            if (FoldersWithFiles.Find(item => item.Name == newName) == null)
             {
-                Thread readExelFile = new Thread(() => ReadExelFile(exelFile));
-                readExelFile.IsBackground = true;
-                readExelFile.Name = "Чтение Excel файла " + exelFile.FileName;
-                threadsReadFiles.Add(readExelFile);             
-                readExelFile.Start();
-                readExelFile.Join();
-            }    
-            
+                folderWithFiles.SetName(newName);
+            }            
         }
-        public void ChangeFolerName(string NewName, int Index)
+        public bool TryReadExelFile(ExelFile exelFile)
         {
-            List<string> gg = FoldersWithFiles.Keys.ToList();
-            List<ExelFile> gga = FoldersWithFiles[gg[Index]];
-            FoldersWithFiles.Remove(gg[Index]);
-            FoldersWithFiles.Add(NewName, gga);
-        }
-        private void ReadExelFile(ExelFile exelFile)
-        {                       
-            int id = ExelFiles.FindIndex(file => file.FileName == exelFile.FileName);
-            ExelFileReader exelFileReader = new ExelFileReader(ExelFiles[id], TempFolderPath, exelSettingsRead);
-            ExelFiles[id].AddPage(exelFileReader.Read());
-            ExelFiles[id].SetReaded(true);
-        }
-        private enum Operation
-        {
-            Add,
-            Remove
-        }
+            bool result = false;
+            Thread readExelFile = new Thread(() =>
+            {
+                result = ExelReaderManager.TryReadExelFile(exelFile);
+            });            
+            readExelFile.Start();
+            readExelFile.Join();
+            return result;
+        }         
     }   
 }

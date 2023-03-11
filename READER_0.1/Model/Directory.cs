@@ -18,7 +18,30 @@ namespace READER_0._1.Model
             Name = name;
             Files = files;
         }
+        public Directory(string name)
+        {
+            Name = name;
+            Files = new List<File>();
+        }
+        public void AddFile(List<File> addedFiles)
+        {
+            Files.AddRange(addedFiles);
+            
+        }
+        public void AddFile(List<ExelFile> addedFiles)
+        {
+            Files.AddRange(addedFiles);
 
+        }
+        public void AddFile(ExelFile addedFile)
+        {
+            Files.Add(addedFile);
+
+        }
+        public void SetName(string name)
+        {
+            Name = name;
+        }
         public List<Model.File> SearchFileToName(List<string> SearchData, Formats FormatsFileSearch)
         {
             List<string> filesPathInDirectory = System.IO.Directory.GetFiles(Path, "*." + FormatsFileSearch.ToString(), SearchOption.TopDirectoryOnly).ToList<string>();
@@ -56,7 +79,11 @@ namespace READER_0._1.Model
         {
             try
             {
-                return Path.Equals(((Directory)obj).Path);
+                if (Path != null)
+                {
+                    return Path.Equals(((Directory)obj).Path);
+                }
+                return Name.Equals(((Directory)obj).Name);
             }
             catch (Exception)
             {

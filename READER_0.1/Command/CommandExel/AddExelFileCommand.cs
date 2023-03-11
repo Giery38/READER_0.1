@@ -12,15 +12,11 @@ namespace READER_0._1.Command.CommandExel
 {
     class AddExelFileCommand : CommandBase
     {        
-        private readonly WindowFileBase windowFileBase;
         private readonly ExelViewModel exelViewModel;
-        private event Action ChangeFileList;
 
-        public AddExelFileCommand(ExelViewModel exelViewModel, WindowFileBase windowFileBase)
+        public AddExelFileCommand(ExelViewModel exelViewModel)
         {
-            this.windowFileBase = windowFileBase;
             this.exelViewModel = exelViewModel;
-            ChangeFileList += exelViewModel.UpdateFiles;
         }
         public override void Execute(object parameter)
         {
@@ -37,17 +33,18 @@ namespace READER_0._1.Command.CommandExel
             if (respons == true)
             {
                 string[] filePath = openFileDialog.FileNames;
+                string extension;
                 for (int i = 0; i < filePath.Length; i++)
                 {
-                    file = new File(filePath[i], Path.GetFileNameWithoutExtension(filePath[i]), windowFileBase.FormatStrngToEnum(Path.GetExtension(filePath[i])));
+                    extension = Path.GetExtension(filePath[i]).Replace(".", "");
+                    file = new File(filePath[i], Path.GetFileNameWithoutExtension(filePath[i]), (Formats)Enum.Parse(typeof(Formats), extension, true));
                     if (file.Format == Formats.xls || file.Format == Formats.xlsx)
                     {
                         files.Add(file.ToExelFile());
                     }                    
                 }                
             }
-            windowFileBase.exelWindowFileBase.AddFiles(files, (string)parameter);
-            ChangeFileList?.Invoke();            
+            exelViewModel.AddExelFile(files, (string)parameter);
         }        
     }
 }

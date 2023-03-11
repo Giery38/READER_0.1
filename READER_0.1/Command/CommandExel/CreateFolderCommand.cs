@@ -22,7 +22,7 @@ namespace READER_0._1.Command.CommandExel
         }
         public override void Execute(object parameter)
         {
-            List<string> folderViewsConvert = windowFileBase.exelWindowFileBase.FoldersWithFiles.Keys.ToList();
+            List<string> folderViewsConvert = windowFileBase.exelWindowFileBase.FoldersWithFiles.Where(x => x is Directory).Select(x => ((Directory)x).Name).ToList();   
             string name = "Новая папка";
             while (folderViewsConvert.Find(item => item == name) != null)
             {

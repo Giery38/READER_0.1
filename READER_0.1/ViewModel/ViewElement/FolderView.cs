@@ -3,13 +3,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace READER_0._1.ViewModel.ViewElement
 {
-    public class FolderView : ViewModelBase
+    public class FolderView : INotifyPropertyChanged
     {
         public ObservableCollection<object> Files { get; private set; }
         private Type type;                                                                      
@@ -18,7 +19,13 @@ namespace READER_0._1.ViewModel.ViewElement
             Name = name;
             Files = new ObservableCollection<object>();           
         }
-        private string name;
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private string name;       
         public string Name
         {
             get
@@ -29,6 +36,19 @@ namespace READER_0._1.ViewModel.ViewElement
             {
                 name = value;
                 OnPropertyChanged(nameof(Name));
+            }
+        }
+        private bool correctName = true;
+        public bool CorrectName
+        {
+            get
+            {
+                return correctName;
+            }
+            set
+            {
+                correctName = value;
+                OnPropertyChanged(nameof(CorrectName));
             }
         }
         public FolderView(string name, Type type) //форматная папка
@@ -62,6 +82,17 @@ namespace READER_0._1.ViewModel.ViewElement
             {
                 AddFile(file);
             }
+        }
+        public void RemoveFile(object removedFile)
+        {
+            Files.Remove(removedFile);
+        }
+        public void RemoveFile(List<object> removedFiles)
+        {
+            foreach (var file in removedFiles)
+            {
+                Files.Remove(file);
+            }            
         }
     }
 }

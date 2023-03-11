@@ -1,4 +1,5 @@
 ﻿using ExcelDataReader;
+using READER_0._1.View.Elements;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -24,12 +25,11 @@ namespace READER_0._1.View
         public ExelView()
         {
             InitializeComponent();
-        }       
-
+        }        
+        public static readonly DependencyProperty FolderViewNameChangeProperty =
+           DependencyProperty.RegisterAttached("FolderViewNameChangeCommand", typeof(ICommand), typeof(ExelView), new PropertyMetadata(null));
         public static readonly DependencyProperty DropFileCommandProperty =
-            DependencyProperty.RegisterAttached("DropFileCommand", typeof(ICommand), typeof(ExelView), new PropertyMetadata(null));
-        public static readonly DependencyProperty ScrollTableCommandProperty =
-           DependencyProperty.RegisterAttached("ScrollTableCommand", typeof(ICommand), typeof(ExelView), new PropertyMetadata(null));
+            DependencyProperty.RegisterAttached("DropFileCommand", typeof(ICommand), typeof(ExelView), new PropertyMetadata(null));      
         public static readonly DependencyProperty SizeChangeCommandProperty =
            DependencyProperty.RegisterAttached("SizeChangeCommand", typeof(ICommand), typeof(ExelView), new PropertyMetadata(null));
         public ICommand DropFileCommand
@@ -43,15 +43,15 @@ namespace READER_0._1.View
                 SetValue(DropFileCommandProperty, value);
             }
         }
-        public ICommand ScrollTableCommand
+        public ICommand FolderViewNameChangeCommand
         {
             get
             {
-                return (ICommand)GetValue(ScrollTableCommandProperty);
+                return (ICommand)GetValue(FolderViewNameChangeProperty);
             }
             set
             {
-                SetValue(ScrollTableCommandProperty, value);
+                SetValue(FolderViewNameChangeProperty, value);
             }
         }
         public ICommand SizeChangeCommand
@@ -67,60 +67,84 @@ namespace READER_0._1.View
         }
 
         private void FolderFiles_Drop(object sender, DragEventArgs e)
-        {
-            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            /*
+        {            
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
             ListView listViewSender = (ListView)sender;
-            Tuple<string, string[]> addedFiles = new Tuple<string, string[]>(listViewSender.Tag.ToString(), files); // первое тег, второе список файлов
-            DropFileCommand?.Execute(addedFiles);
-            */
-            FileStream stream = File.Open(files[0], FileMode.Open, FileAccess.Read);
-            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-            IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream);
-
-            DataTable dataTable = new DataTable();
-
-            // Добавляем столбцы в DataTable
-            dataTable.Columns.Add("Column1", typeof(string));
-            dataTable.Columns.Add("Column2", typeof(int));
-            dataTable.Columns.Add("Column3", typeof(double));
-
-            // Создаем списки данных
-            List<string> column1Data = new List<string>() { "Value1", "Value2", "Value3" };
-            List<int> column2Data = new List<int>() { 1, 2, 3 };
-            List<double> column3Data = new List<double>() { 1.1, 2.2, 3.3 };
-
-            // Заполняем DataTable данными из списков
-            for (int i = 0; i < column1Data.Count; i++)
-            {
-                DataRow row = dataTable.NewRow();
-                row["Column1"] = column1Data[i];
-                row["Column2"] = column2Data[i];
-                row["Column3"] = column3Data[i];
-                dataTable.Rows.Add(row);
-            }
-                        
-            DataSet result = excelReader.AsDataSet();
-            excelReader.Close();
-            stream.Close();
-            DataGrid myDataGrid = this.FindName("ghghghgh") as DataGrid;
-            var tt = result.Tables[0].DefaultView;
-            //myDataGrid.ItemsSource = result.Tables[0].DefaultView;
-            myDataGrid.ItemsSource = dataTable.DefaultView;
-        }
-        private void Table_Scroll(object sender, ScrollChangedEventArgs e)
+            (string folderName, string[] filePaths) addedFiles = (listViewSender.Tag.ToString(), files);           
+            DropFileCommand?.Execute(addedFiles);                                 
+        } 
+        
+        private void FolderFiles_NameChange(object sender, TextChangedEventArgs e)
         {
-            double verticalPosition = e.VerticalOffset;                
+            TextBox textBox = sender as TextBox;
+            (string oldName, string newName) info = (textBox.Tag.ToString(), textBox.Text.ToString());
+            FolderViewNameChangeCommand?.Execute(info);
         }
-        private void SizeTable_Change(object sender, SizeChangedEventArgs e)
-        {                 
-            SizeChangeCommand?.Execute(sender);
-            ListView ss = new ListView();        
-            
+        private void Table_AutoGeneratedColumns(object sender, EventArgs e)
+        {
+            DataGrid dataGrid = sender as DataGrid;
+            if (dataGrid != null)
+            {
+                ScrollViewer scrollViewer = GetScrollViewer(dataGrid);
+                if (scrollViewer != null)
+                {
+                    scrollViewer.ScrollToVerticalOffset(0);
+                }
+            }
+        }
+       
+        private ScrollViewer GetScrollViewer(DependencyObject parent)
+        {
+            int childCount = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < childCount; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+                if (child is ScrollViewer)
+                {
+                    return (ScrollViewer)child;
+                }
+                else
+                {
+                    ScrollViewer result = GetScrollViewer(child);
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                }
+            }
+            return null;
+        }
+        
+        private void ListFiles_ListViewItem_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            ListViewItem listViewItem = sender as ListViewItem;            
+            ListView listView = ItemsControl.ItemsControlFromItemContainer(listViewItem) as ListView;
+            object selectedObject = listView.SelectedItem;
+            ListViewItem selectedItem = listView.ItemContainerGenerator.ContainerFromItem(selectedObject) as ListViewItem;
+            if (selectedItem != null)
+            {
+                
+            }
+            e.Handled = true;
         }
 
+        private void ListFiles_ListViewItem_ContextMenuClosing(object sender, ContextMenuEventArgs e)
+        {
 
+        }
+
+        private void DeleteFolderButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = sender as Button;
+            var confirmDialog = new ConfirmDialog($"Вы уверены, что хотите удалить папку {button.CommandParameter}?");
+            confirmDialog.ShowDialog();
+            bool choiceResult = confirmDialog.IsConfirmed;
+            if (button.Command.CanExecute(choiceResult))
+            {
+                // Выполнение команды
+                button.Command.Execute(button.CommandParameter);
+            }
+        }               
     }
     public static class ScrollViewerBinding
     {

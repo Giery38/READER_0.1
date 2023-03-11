@@ -11,6 +11,7 @@ using READER_0._1.Tools;
 using System.IO;
 using Microsoft.Office.Interop.Word;
 using READER_0._1.Model.Exel;
+using System.Threading;
 
 namespace READER_0._1.Model.Word
 {
@@ -37,7 +38,7 @@ namespace READER_0._1.Model.Word
         }
         */
         public void Read()
-        {
+        {           
             string tempFileName = "fas21" + WordFile.FileName + "-temp" + "." + WordFile.Format.ToString();
             string tempFilePath = Path.Combine(TempFolderPath, tempFileName);           
             while (System.IO.File.Exists(tempFilePath))

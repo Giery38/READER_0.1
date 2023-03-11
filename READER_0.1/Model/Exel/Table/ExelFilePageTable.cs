@@ -79,37 +79,22 @@ namespace READER_0._1.Model.Exel
                 }
             }
             return rows;
-        }
-
-        public static List<SearchWord> ShuffleAndInsert(List<SearchWord> list, int count) // test
-        {
-            var rnd = new Random();
-
-            // меняем местами заданное количество элементов списка
-            for (int i = 0; i < count; i++)
-            {
-                int index1 = rnd.Next(list.Count);
-                int index2 = rnd.Next(list.Count);
-                var temp = list[index1];
-                list[index1] = list[index2];
-                list[index2] = temp;
-            }
-
-            // генерируем случайное количество новых элементов и вставляем их в список
-            int newItemsCount = rnd.Next(1, 6);
-            for (int i = 0; i < newItemsCount; i++)
-            {
-                var newItem = new SearchWord { Data = $"New Data {i}", Name = $"New Name {i}" };
-                int insertIndex = rnd.Next(list.Count + 1);
-                list.Insert(insertIndex, newItem);
-            }
-
-            return list;
-        }
-
+        }       
         public void AddRow(List<ExelFilePageTableRow> addedRows)
         {
             Rows.AddRange(addedRows);
+            for (int i = 0; i < addedRows.Count; i++)
+            {
+                AddRow(addedRows[i].RowData);
+            }            
+        }       
+        public void AddRow(List<object> addedList)
+        {
+            int lastRow = GetLastRowInColumn(TableColumns.Keys.First());
+            for (int i = 0; i < addedList.Count; i++)
+            {
+                TableCells.TryAdd(new Tuple<int, int>(lastRow, i), addedList[i]);
+            }
         }
 
         public void AddRow(List<SearchWord> searchWords)
@@ -248,12 +233,7 @@ namespace READER_0._1.Model.Exel
             }
             return rowData;
         }
-
-        public int GetRowCount()
-        {
-            return TableCells.Keys.Count / TableColumns.Count;
-        }
-
+       
         public void AddDataInColumn(List<object> Data, string Column)
         {
             int columnNumer;
@@ -267,6 +247,10 @@ namespace READER_0._1.Model.Exel
 
         private int GetLastRowInColumn(string Column)
         {
+            if (TableCells.Count == 0 || TableColumns.Count == 0)
+            {
+                return 0;
+            }
             int columnNumer;
             TableColumns.TryGetValue(Column, out columnNumer);
             int row = 0;

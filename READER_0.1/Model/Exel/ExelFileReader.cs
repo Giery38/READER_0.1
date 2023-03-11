@@ -25,6 +25,13 @@ namespace READER_0._1.Model.Exel
 
         static private string TempFolderPath;
 
+        public bool Closed { get; private set; } = false;
+
+        private Excel.Application usedAppliacation;
+        private Excel.Workbook usedWorkbook;
+        private Process usedProcess;
+        private SpreadsheetDocument usedDocument;
+
         public ExelFileReader(ExelFile exelFile, string tempFolderPath, ExelSettingsRead settings)
         {
             ExelFile = exelFile;
@@ -37,13 +44,106 @@ namespace READER_0._1.Model.Exel
         {
             GetWindowThreadProcessId(exelApplication.Hwnd, out int id);
             return Process.GetProcessById(id);
-        }
+        }   
+        
         public List<ExelFilePage> Read()
-        {
+        {            
             Excel.Application exelApplication = new Excel.Application();
+            usedAppliacation = exelApplication;
             Excel.Workbook exelWorkbook = exelApplication.Workbooks.Open(ExelFile.Path, ReadOnly: true);
+            usedWorkbook = exelWorkbook;
             Process applicationProcess = GetExcelProcess(exelApplication);
+            usedProcess = applicationProcess;
+            if (Closed == true)
+            {
+                return null;
+            }           
+            string tempFilePath = CreateTempFile(exelApplication, exelWorkbook);
+            exelWorkbook.Close();
+
+            exelWorkbook = exelApplication.Workbooks.Open(tempFilePath);
+            List<Excel.Worksheet> exelWorksheets = GetWorksheets(exelWorkbook);
+            Dictionary<int, object[,]> DataInPage = GetDataInPages(exelWorksheets);
+            exelWorksheets = null;
+            exelWorkbook.Close();
+            exelApplication.Quit();
+            applicationProcess.Kill();
+            usedProcess = null;
+            Marshal.ReleaseComObject(exelWorkbook);
+            usedWorkbook = null;
+            Marshal.ReleaseComObject(exelApplication);
+            usedAppliacation = null;     
             
+            GC.Collect();       
+            List<ExelFilePage> exelFilePages = ReadWorksheets(DataInPage);           
+            return exelFilePages;
+        }       
+        public void Close()
+        {
+            Closed = true;
+            try
+            {
+                if (usedAppliacation != null)
+                {
+                    usedAppliacation.Quit();
+                    Marshal.ReleaseComObject(usedAppliacation);
+                }                
+            }
+            catch (Exception)
+            {
+
+            }
+            try
+            {
+                if (usedWorkbook != null)
+                {
+                    usedWorkbook.Close();
+                    Marshal.ReleaseComObject(usedWorkbook);
+                }               
+            }
+            catch (Exception)
+            {
+               
+            }
+            try
+            {
+                if (usedProcess != null)
+                {
+                    usedProcess.Kill();
+                }
+               
+            }
+            catch (Exception)
+            {
+
+            }
+            try
+            {
+                if (usedDocument != null)
+                {
+                    usedDocument.Close();
+                    usedDocument.Dispose();
+                    Marshal.ReleaseComObject(usedDocument);
+                }                
+            }
+            catch (Exception)
+            {
+               
+            }
+            try
+            {
+                if (ExelFile.TempCopyPath != null)
+                {
+                    System.IO.File.Delete(ExelFile.TempCopyPath);
+                }
+            }
+            catch (Exception)
+            {
+
+            }            
+        }
+        private string CreateTempFile(Excel.Application exelApplication, Excel.Workbook exelWorkbook)
+        {
             GetWindowThreadProcessId(exelApplication.Hwnd, out int idProcess);
             string tempFileName = "id022-" + idProcess + "id022-" + ExelFile.FileName + "-temp" + "." + ExelFile.Format.ToString();
             string tempFilePath = Path.Combine(TempFolderPath, tempFileName);            
@@ -55,23 +155,31 @@ namespace READER_0._1.Model.Exel
             try
             {
                 exelWorkbook.SaveCopyAs(tempFilePath);
+                
             }
             catch (Exception)
             {
                 System.IO.File.Delete(tempFilePath);
                 exelWorkbook.SaveCopyAs(tempFilePath);
-            }             
+            }
             System.IO.File.SetAttributes(tempFilePath, FileAttributes.Hidden);
             ExelFile.SetTempCopyPath(tempFilePath);
-            exelWorkbook.Close();
+            return tempFilePath;
+        }
 
-            exelWorkbook = exelApplication.Workbooks.Open(tempFilePath);                        
+        private List<Excel.Worksheet> GetWorksheets(Excel.Workbook exelWorkbook)
+        {
             List<Excel.Worksheet> exelWorksheets = new List<Excel.Worksheet>();
-            Dictionary<int, object[,]> DataInPage = new Dictionary<int, object[,]>();
             for (int page = 1; page < exelWorkbook.Sheets.Count + 1; page++)
             {
                 exelWorksheets.Add((Excel.Worksheet)exelWorkbook.Sheets[page]);
             }
+            return exelWorksheets;
+        }
+
+        private Dictionary<int, object[,]> GetDataInPages(List<Excel.Worksheet> exelWorksheets)
+        {
+            Dictionary<int, object[,]> DataInPage = new Dictionary<int, object[,]>();
             for (int page = 0; page < exelWorksheets.Count; page++)
             {
                 DataInPage.TryAdd(exelWorksheets[page].Index, GetDataInPage(exelWorksheets[page]));
@@ -80,27 +188,36 @@ namespace READER_0._1.Model.Exel
                     break;
                 }
             }
-            exelWorksheets = null;
-            exelWorkbook.Close();
-            exelApplication.Quit();
-            applicationProcess.Kill();
-            Marshal.ReleaseComObject(exelWorkbook);
-            Marshal.ReleaseComObject(exelApplication);
-
-            GC.Collect();
-            List<ExelFilePage> exelFilePages = new List<ExelFilePage>();
-            using (SpreadsheetDocument document = SpreadsheetDocument.Open(ExelFile.TempCopyPath, true))
+            return DataInPage;
+        }
+        private List<ExelFilePage> ReadWorksheets(Dictionary<int, object[,]> DataInPage)
+        {
+            if (Closed == true)
             {
-                this.workbookPart = document.WorkbookPart;
-                List<WorksheetPart> worksheetsParts = workbookPart.WorksheetParts.ToList();                     
-                foreach (int index in DataInPage.Keys)
-                {                   
-                    exelFilePages.Add(ReadWorksheetExel(workbookPart.GetPartById("rId" + index.ToString()) as WorksheetPart, DataInPage[index]));                   
-                }
+                return null;
             }
-                       
+            List<ExelFilePage> exelFilePages = new List<ExelFilePage>();
+            SpreadsheetDocument document = SpreadsheetDocument.Open(ExelFile.TempCopyPath, true);            
+            usedDocument = document;
+            this.workbookPart = document.WorkbookPart;
+            List<WorksheetPart> worksheetsParts = workbookPart.WorksheetParts.ToList();
+            foreach (int index in DataInPage.Keys)
+            {                
+                if (DataInPage[index] != null)
+                {                    
+                    exelFilePages.Add(ReadWorksheetExel(workbookPart.GetPartById("rId" + index.ToString()) as WorksheetPart, DataInPage[index]));
+                }
+
+            }
+            if (document != null)
+            {
+                document.Close();
+                document.Dispose();
+            }
+            usedDocument = null;
             return exelFilePages;
-        }        
+        }
+
         private static string ConvertToLetter(int columnNumber)
         {
             int dividend = columnNumber;
@@ -124,7 +241,7 @@ namespace READER_0._1.Model.Exel
                 result = result * 26 + (c - 'A' + 1);
             }
             return result;
-        }
+        }       
         private object[,] GetDataInPage(Excel.Worksheet worksheet)
         {
             Excel.Range last = worksheet.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell, Type.Missing);
@@ -136,11 +253,11 @@ namespace READER_0._1.Model.Exel
         }
 
         private ExelFilePage ReadWorksheetExel(WorksheetPart worksheetPart, object[,] arrData)
-        {                      
+        {            
             List<Tuple<int, int>> positions = SearchPositionColumnName(arrData, settings.SearchableColumn);            
             string relationshipId = workbookPart.GetIdOfPart(worksheetPart);
             Sheet sheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => s.Id == relationshipId);
-            ExelFilePage exelFilePage = new ExelFilePage(sheet.Name);
+            ExelFilePage exelFilePage = new ExelFilePage(sheet.Name);          
             foreach (Tuple<int, int> position in positions)
             {
                 exelFilePage.AddTabel(CreateTable(position, arrData, worksheetPart));                                
@@ -271,10 +388,17 @@ namespace READER_0._1.Model.Exel
         private object GetVelueMergeCell(DocumentFormat.OpenXml.Spreadsheet.MergeCell mergeCell, object[,] arrData)
         {
             string[] mergeCellReference = mergeCell.Reference.Value.Split(':');
-            Tuple<int, int> mergeCellValuePosition = new Tuple<int, int>(Int32.Parse(mergeCellReference[0].Substring(1, 1)), ConvertToNumber(mergeCellReference[0].Substring(0, 1)));
+            (string column, int row) = GetColumnAndRow(mergeCellReference[0]);           
+            Tuple<int, int> mergeCellValuePosition = new Tuple<int, int>(row, ConvertToNumber(column));
+            //Tuple<int, int> mergeCellValuePosition = new Tuple<int, int>(Int32.Parse(mergeCellReference[0].Substring(1, 1)), ConvertToNumber(column));
             return arrData[mergeCellValuePosition.Item1, mergeCellValuePosition.Item2];
         }
-
+        private static (string column, int row) GetColumnAndRow(string cellReference)
+        {
+            string column = new string(cellReference.TakeWhile(char.IsLetter).ToArray());
+            int row = int.Parse(cellReference.Substring(column.Length));
+            return (column, row);
+        }
 
         private DocumentFormat.OpenXml.Spreadsheet.MergeCell GetCellInMergeCells(Cell cell, MergeCells mergeCells)
         {
@@ -370,9 +494,7 @@ namespace READER_0._1.Model.Exel
                 return null;
             }
             Border result = new Border();
-            string cellReference = cell.CellReference;
-            string column = cellReference.Substring(0, 1);
-            int row = int.Parse(cellReference.Substring(1));
+            (string column, int row) = GetColumnAndRow(cell.CellReference);
             Cell cellTop = worksheetPart.Worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == column + (row - 1).ToString());
             Cell cellBottom = worksheetPart.Worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == column + (row + 1).ToString());
             Border cellTopBorder = GetImaginaryBorder(cellTop);
@@ -396,10 +518,10 @@ namespace READER_0._1.Model.Exel
         }
         private Border GetImaginaryBorder(Cell cell)
         {
-            if (cell == null)
+            if (cell == null || cell.StyleIndex == null)
             {
                 return null;
-            }            
+            }        
             Borders borders = workbookPart.WorkbookStylesPart.Stylesheet.Borders;
             CellFormat cellFormat = (CellFormat)workbookPart.WorkbookStylesPart.Stylesheet.CellFormats.ElementAt((int)cell.StyleIndex.Value);
             Border border = borders.ChildElements.GetItem((int)cellFormat.BorderId.Value) as Border;
@@ -420,7 +542,7 @@ namespace READER_0._1.Model.Exel
             {
                 result.BottomBorder = new BottomBorder();
             }
-            return result;// проверить верх и низ получить общие границы, сделать вывод 
+            return result;
         }
 
         private int GetFirstRowInTable(Dictionary<string, Tuple<int, int>> titlePosition, WorksheetPart worksheetPart)

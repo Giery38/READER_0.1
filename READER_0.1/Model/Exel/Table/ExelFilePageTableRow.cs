@@ -20,8 +20,7 @@ namespace READER_0._1.Model.Exel
         public void AddRowData(object AddedObject)
         {
             RowData.Add(AddedObject);
-        }
-
+        }       
         public object SearchCell(object cellData)
         {
             for (int i = 0; i < RowData.Count; i++)

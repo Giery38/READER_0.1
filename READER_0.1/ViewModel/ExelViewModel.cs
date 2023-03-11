@@ -20,15 +20,13 @@ namespace READER_0._1.ViewModel
 {
     class ExelViewModel : ViewModelBase
     {
-        private readonly WindowFileBase windowFileBase;
-        public ObservableCollection<ExelFile> ExelFiles { get; private set; }
+        private readonly WindowFileBase windowFileBase;       
         public ObservableCollection<ExelFilePage> ExelFilePages { get; private set; }
         public ObservableCollection<Directory> Directories { get; private set; }
         public ObservableCollection<FolderView> FoldersView { get; private set; }
         public ObservableCollection<string> ExelFilesСontentInDirectoriesEquals { get; private set; }
         public ObservableCollection<string> ExelFilesСontentInDirectoriesNoEquals { get; private set; }
-        public ObservableCollection<ConverterListInListForView> ColumnsNamesInPage { get; private set; }
-        public DataView DataView { get; private set; }
+        public ObservableCollection<ConverterListInListForView> ColumnsNamesInPage { get; private set; }       
         public ObservableCollection<string> TableInfo { get; private set; } 
         //
         public ICommand AddFileCommand { get; }
@@ -37,6 +35,9 @@ namespace READER_0._1.ViewModel
         public ICommand CopyFileCommand { get; }
         public ICommand CreateViewFolderCommand { get; }
         public ICommand SizeChangeCommand { get; }
+        public ICommand FolderViewNameChangeCommand { get; }
+        public ICommand RemoveExelFileCommand { get; }
+        public ICommand RemoveFolderViewCommand { get; }
         //
         private ConverterListInListForView converterListInListForView;
         //
@@ -46,15 +47,13 @@ namespace READER_0._1.ViewModel
         public ExelViewModel(WindowFileBase windowFileBase)
         {
             this.windowFileBase = windowFileBase;
-            //obs
-            ExelFiles = new ObservableCollection<ExelFile>();
+            //obs           
             ExelFilePages = new ObservableCollection<ExelFilePage>();
             Directories = new ObservableCollection<Directory>();
             ExelFilesСontentInDirectoriesEquals = new ObservableCollection<string>();
             ExelFilesСontentInDirectoriesNoEquals = new ObservableCollection<string>();
             ColumnsNamesInPage = new ObservableCollection<ConverterListInListForView>();
-            FoldersView = new ObservableCollection<FolderView>();
-            DataView = new DataView();
+            FoldersView = new ObservableCollection<FolderView>();           
             TableInfo = new ObservableCollection<string>(new List<string>
             {
                 "Все",
@@ -63,19 +62,20 @@ namespace READER_0._1.ViewModel
             });
             //
             //command
-            AddFileCommand = new AddExelFileCommand(this, windowFileBase);
-            AddDirectoryCommand = new AddDirectoryCommand(this, windowFileBase);
-            CopyFileCommand = new CopyExelFileCommand(this, windowFileBase);
-            AddExelFileDropCommand = new AddExelFileDropCommand(this, windowFileBase);
+            AddFileCommand = new AddExelFileCommand(this);
+            AddDirectoryCommand = new AddDirectoryCommand(this);
+            CopyFileCommand = new CopyExelFileCommand(this);
+            AddExelFileDropCommand = new AddExelFileDropCommand(this);
             CreateViewFolderCommand = new CreateFolderCommand(this, windowFileBase);
             SizeChangeCommand = new SizeChangeCommand(this, windowFileBase);
+            FolderViewNameChangeCommand = new FolderViewNameChangeCommand(this, windowFileBase);
+            RemoveExelFileCommand = new RemoveExelFileCommand(this);
+            RemoveFolderViewCommand = new RemoveFolderViewCommand(this);
             //
             converterListInListForView = new ConverterListInListForView();            
             //
             exelSettingsRead = windowFileBase.settings.ExelSettingsRead;
-            loadedTabels = new List<Thread>();
-            //
-            FoldersView.CollectionChanged += PropertyChangedFolderSubscription;
+            loadedTabels = new List<Thread>();           
             //start
             UpdateFiles();          
         }
@@ -100,6 +100,20 @@ namespace READER_0._1.ViewModel
                 changePageTables.Start();
             }
         }
+        private DataView dataView;
+        public DataView DataView
+        {
+            get 
+            {
+                return dataView;
+            }
+            set
+            {                
+                dataView = value;
+                OnPropertyChanged(nameof(DataView));
+            }
+        }
+
         private double loadingTable = 0;
         public double LoadingTable
         {
@@ -167,10 +181,134 @@ namespace READER_0._1.ViewModel
                     selectedColumnName = value;
                     OnPropertyChanged(nameof(SelectedColumnName));
                     ChangePageInfo(SelectedColumnName.StringValue);
-                    UpdateDirectory();
+                    UpdateDirectories();
                 }                         
             }
         }
+        private Dictionary<string, List<object>> selectedPageInfo = new Dictionary<string, List<object>>
+        {
+            { "ColumnsData", new List<object>() },
+            { "ColumnsDataDplicates", new List<object>()  },
+            { "ColumnsDataNoDplicates", new List<object>()  }
+        };
+        public Dictionary<string, List<object>> SelectedPageInfo
+        {
+            get
+            {
+                return selectedPageInfo;
+            }
+            set
+            {
+                selectedPageInfo = value;
+                OnPropertyChanged(nameof(SelectedPageInfo));
+            }
+        }
+        //viewmodelbase 
+
+        public void AddExelFile(List<ExelFile> AddedFiles, string FolderName)
+        {
+            foreach (ExelFile exelFile in AddedFiles)
+            {
+                AddExelFile(exelFile, FolderName);
+            }       
+        }
+        public void AddExelFile(ExelFile AddedFile, string FolderName)
+        {
+            windowFileBase.exelWindowFileBase.AddFile(AddedFile, FolderName);
+            FoldersView.FirstOrDefault(item => item.Name == FolderName).Files.Add(AddedFile);
+            ReadExelFile(AddedFile);
+        }
+        public void RemoveExelFile(List<ExelFile> removedFiles, string FolderName)
+        {
+            foreach (ExelFile exelFile in removedFiles)
+            {
+                windowFileBase.exelWindowFileBase.RemoveFile(exelFile,FolderName);
+            }
+            UpdateFiles();
+        }
+        public void RemoveExelFile(ExelFile removedFile, string FolderName)
+        {
+            windowFileBase.exelWindowFileBase.RemoveFile(removedFile, FolderName);
+            if (SelectedExelFile == removedFile)
+            {
+                ClearWindow();
+            }
+            UpdateFiles();
+        }
+        public void RemoveFolderView(string folderName)
+        {
+            windowFileBase.exelWindowFileBase.RemoveFolderWithFiles(folderName);
+            FolderView removedFolder = FoldersView.FirstOrDefault(item => item.Name == folderName);
+            if (removedFolder.Files.Contains(SelectedExelFile) == true)
+            {
+                ClearWindow();
+            }
+            FoldersView.Remove(removedFolder);
+        }
+        public void ReadExelFile(List<ExelFile> AddedFiles)
+        {
+            foreach (ExelFile exelFile in AddedFiles)
+            {
+                ReadExelFile(exelFile);
+            }
+        }
+        public void ReadExelFile(ExelFile AddedFile)
+        {            
+            bool result = false;
+            Thread readExelFile = new Thread(() =>
+            {
+                result = windowFileBase.exelWindowFileBase.TryReadExelFile(AddedFile);
+            });
+            readExelFile.Start();            
+            if (result == false)
+            {
+
+            }
+        }
+        public void AddDirectory(Directory AddedDirectory, ExelFile BindingFile)
+        {
+            ExelWindowFileBase exelWindowFileBase = windowFileBase.exelWindowFileBase;
+            if (exelWindowFileBase.TryAddDirectory(AddedDirectory, BindingFile) == false)
+            {
+                return;
+            }            
+            SearchFilesResult searchFilesResult = exelWindowFileBase.SearchFilesResults.FirstOrDefault(item => item.ExelFile == SelectedExelFile && item.NameColumn == SelectedColumnName.StringValue);
+            if (searchFilesResult == null)
+            {
+                searchFilesResult = new SearchFilesResult();
+                searchFilesResult.SetExelFile(SelectedExelFile);
+                searchFilesResult.SetNameColumn(selectedColumnName.StringValue);
+            }
+            searchFilesResult.AddFilesInDirectory(AddedDirectory, SearchFilesInDirectoryies(AddedDirectory, selectedColumnName.StringValue));
+            exelWindowFileBase.AddSearchFilesResult(searchFilesResult);
+            UpdateDirectories(); 
+        }        
+        //viewmodelbase 
+
+        private void ClearWindow()
+        {
+            dataView = null;
+            OnPropertyChanged(nameof(DataView));
+            FoldersView.Clear();
+            selectedColumnName = null;
+            OnPropertyChanged(nameof(SelectedColumnName));
+            selectedPage = null;
+            OnPropertyChanged(nameof(SelectedPage));
+            ColumnsNamesInPage.Clear();
+            ExelFilePages.Clear();
+            ExelFilesСontentInDirectoriesEquals.Clear();
+            ExelFilesСontentInDirectoriesNoEquals.Clear();
+            Directories.Clear();
+            selectedExelFile = null;
+            OnPropertyChanged(nameof(SelectedExelFile));
+            foreach (string key in SelectedPageInfo.Keys)
+            {
+                SelectedPageInfo[key].Clear();
+            }
+            OnPropertyChanged(nameof(SelectedPageInfo));
+            
+        }
+
         private List<ExelFilePageTable> GetTabelsForTableInfo()
         {
             List<ExelFilePageTable> tables = new List<ExelFilePageTable>();
@@ -198,10 +336,11 @@ namespace READER_0._1.ViewModel
             List<ExelFilePageTableRow> rows = new List<ExelFilePageTableRow>();
             for (int i = 0; i < selectedPage.Tabeles.Count; i++)
             {
+                rows.Clear();
                 exelFilePageTable = new ExelFilePageTable(selectedPage.Tabeles[i].TableColumns.Keys.ToList());
                 rows.AddRange(selectedPage.Tabeles[i].SearchRowsByColumn(SelectedColumnName.StringValue, list));
-                exelFilePageTable.AddRow(rows);
-                exelFilePageTables.Add(exelFilePageTable);
+                exelFilePageTable.AddRow(new List<ExelFilePageTableRow>(rows));
+                exelFilePageTables.Add(exelFilePageTable);                
             }                      
             return exelFilePageTables;
         }
@@ -287,19 +426,19 @@ namespace READER_0._1.ViewModel
             {
                 List<object> ColumnsData = new List<object>(SelectedPage.GetColumnsData(ColumnName));
                 ColumnsData.RemoveAll(item => item == null);
-                SelectedPageInfo["ColumnsData"] = ColumnsData.Count;
+                SelectedPageInfo["ColumnsData"] = ColumnsData;
                 List<object> ColumnsDataDplicates = new List<object>(SelectedPage.GetColumnsDataDplicates(ColumnName));
                 ColumnsDataDplicates.RemoveAll(item => item == null);
-                SelectedPageInfo["ColumnsDataDplicates"] = ColumnsDataDplicates.Count;
+                SelectedPageInfo["ColumnsDataDplicates"] = ColumnsDataDplicates;
                 List<object> ColumnsDataNoDplicates = new List<object>(SelectedPage.GetColumnsDataNoDplicates(ColumnName));
                 ColumnsDataNoDplicates.RemoveAll(item => item == null);
-                SelectedPageInfo["ColumnsDataNoDplicates"] = ColumnsDataNoDplicates.Count;                
+                SelectedPageInfo["ColumnsDataNoDplicates"] = ColumnsDataNoDplicates;                
             }
             else
             {
-                SelectedPageInfo["ColumnsData"] = 0;
-                SelectedPageInfo["ColumnsDataDplicates"] = 0;
-                SelectedPageInfo["ColumnsDataNoDplicates"] = 0;
+                SelectedPageInfo["ColumnsData"] = new List<object>();
+                SelectedPageInfo["ColumnsDataDplicates"] = new List<object>();
+                SelectedPageInfo["ColumnsDataNoDplicates"] = new List<object>();
             }
             OnPropertyChanged(nameof(SelectedPageInfo));
         }       
@@ -315,9 +454,8 @@ namespace READER_0._1.ViewModel
                     var tt = item.ToDataTabel();
                     dataTables.Add(tt);
                 }
-                App.Current.Dispatcher.Invoke(() => {
+                App.Current.Dispatcher.Invoke(() => {                                
                     DataView = MergeDataTables(dataTables).DefaultView;
-                    OnPropertyChanged(nameof(DataView));
                 });
                 LoadingTable = 0;                            
             }
@@ -344,128 +482,109 @@ namespace READER_0._1.ViewModel
                 ExelFilePages.Add(exelFilePage);
 
             }
-        }       
-        private Dictionary<string, int> selectedPageInfo = new Dictionary<string, int>
+        }              
+        public void UpdateFiles() //разбить на 2 метода добавления удаления 
         {
-            { "ColumnsData", 0 },
-            { "ColumnsDataDplicates", 0 },
-            { "ColumnsDataNoDplicates", 0 }
-        };
-        public Dictionary<string, int> SelectedPageInfo
-        {
-            get
-            {
-                return selectedPageInfo;
+            if (windowFileBase.exelWindowFileBase.FoldersWithFiles.Count == 0 && FoldersView.Count > 0) // добавить проход по всем файлам если решишь их excelFiles лист без папок
+            {                
+                FoldersView.Clear();
+                if (SelectedExelFile != null)
+                {
+                    ClearWindow();
+                }
             }
-            set
+            FolderView folderView;
+            foreach (Directory folder in windowFileBase.exelWindowFileBase.FoldersWithFiles)
             {               
-                selectedPageInfo = value;
-                OnPropertyChanged(nameof(SelectedPageInfo));
+                folderView = GetOrCreateFolderView(folder.Name);
+                if (FolderViewExist(folderView.Name) == false)
+                {
+                    FoldersView.Remove(folderView);
+                    continue;
+                }
+                if (folderView.Files.Equals(folder.Files) == false)
+                {
+                    if (folderView.Files == null)
+                    {
+                        continue;
+                    }
+                    folderView.RemoveFile(folderView.Files.Except(folder.Files).ToList());
+                    folderView.AddFiles(folder.Files.Except(folderView.Files).ToList());                                       
+                }
             }
-        }        
-
-        public void UpdateFiles()
-          {
-             FolderView folderView;
-             foreach (KeyValuePair<string,List<ExelFile>> folder in windowFileBase.exelWindowFileBase.FoldersWithFiles)
-              {
-                folderView = GetOrCreateFolderView(folder.Key);
-                
-                  if (folderView.Files.Equals(folder.Value) == false)
-                  {
-                      int index = FoldersView.IndexOf(folderView);
-                      if (FoldersView[index].Files != null)
-                      {
-                          FoldersView[index].AddFiles(folder.Value.Except(FoldersView[index].Files).ToList());
-                      }                    
-                  }
-              }
-          }
-
+        }
+        private bool FolderViewExist(string folderName)
+        {
+            if (windowFileBase.exelWindowFileBase.FoldersWithFiles.Find(item => item.Name == folderName) == null)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
         private FolderView GetOrCreateFolderView(string folderName)
         {
             FolderView folderView = FoldersView.FirstOrDefault(fv => fv.Name == folderName);
 
-            if (folderView == null)
+            if (folderView == null )
             {
                 folderView = new FolderView(folderName, typeof(ExelFile));
-                FoldersView.Add(folderView);
+                FoldersView.Add(folderView);               
             }
-
             return folderView;
+
         }
 
-        public void UpdateDirectory() // добавить удаление файлов
-        {            
-            if (windowFileBase.exelWindowFileBase.DirectoriesBelongExelFile.TryGetValue(SelectedExelFile, out List<Directory> bindingFiles) == false || bindingFiles.Count == 0)
+        public void UpdateDirectories() // добавить удаление файлов
+        {
+            ExelWindowFileBase exelWindowFileBase = windowFileBase.exelWindowFileBase;
+            if (exelWindowFileBase.DirectoriesBelongExelFile.TryGetValue(SelectedExelFile, out List<Directory> bindingFiles) == false || bindingFiles.Count == 0)
             {
                 Directories.Clear();
                 OnPropertyChanged(nameof(Directories));
                 ExelFilesСontentInDirectoriesEquals.Clear();
                 ExelFilesСontentInDirectoriesNoEquals.Clear();
                 return;
-            }
-            CheckingAddedDirectory();
+            }     
+            
             Directories.Clear();          
-            if (windowFileBase.exelWindowFileBase.DirectoriesBelongExelFile.TryGetValue(SelectedExelFile, out List<Directory> directoryies) == true)
+            if (exelWindowFileBase.DirectoriesBelongExelFile.TryGetValue(SelectedExelFile, out List<Directory> directoryies) == true)
             {
                 Directories = new ObservableCollection<Directory>(directoryies);
                 OnPropertyChanged(nameof(Directories));
-            }          
+            }    
+            
             ExelFilesСontentInDirectoriesEquals.Clear();
-            SearchFilesResult searchFilesResult = windowFileBase.exelWindowFileBase.SearchFilesResults.FirstOrDefault(item => item.ExelFile == SelectedExelFile && item.NameColumn == SelectedColumnName.StringValue);
+            SearchFilesResult searchFilesResult = exelWindowFileBase.SearchFilesResults.FirstOrDefault(item => item.ExelFile == SelectedExelFile && item.NameColumn == SelectedColumnName.StringValue);
             ExelFilesСontentInDirectoriesEquals = new ObservableCollection<string>(searchFilesResult.GetAllFiles().Select(file => file.FileName).ToList());
             OnPropertyChanged(nameof(ExelFilesСontentInDirectoriesEquals));
-            ExelFilesСontentInDirectoriesNoEquals.Clear();
-            var exelFilesСontentInDirectoriesNoEquals = SelectedPage.GetColumnsData(SelectedColumnName.StringValue).ConvertAll(x => Convert.ToString(x)).OfType<string>().ToList().Except(ExelFilesСontentInDirectoriesEquals).ToList();
-            exelFilesСontentInDirectoriesNoEquals.RemoveAll(string.IsNullOrEmpty);
+
+            ExelFilesСontentInDirectoriesNoEquals.Clear();                  
+            List<string> сolumnsDataNoDplicates = selectedPageInfo["ColumnsDataNoDplicates"].ConvertAll(x => Convert.ToString(x));            
+            var exelFilesСontentInDirectoriesNoEquals = сolumnsDataNoDplicates.Where(i => !ExelFilesСontentInDirectoriesEquals.Contains(i)).ToList();                       
             ExelFilesСontentInDirectoriesNoEquals = new ObservableCollection<string>(exelFilesСontentInDirectoriesNoEquals);
             OnPropertyChanged(nameof(ExelFilesСontentInDirectoriesNoEquals));
         }
-
-        private void CheckingAddedDirectory()
-        {
-            if (windowFileBase.exelWindowFileBase.SearchFilesResults.FirstOrDefault(item => item.ExelFile == SelectedExelFile && item.NameColumn == SelectedColumnName.StringValue) == null)
-            {
-                SearchFilesResult searchFilesResult = new SearchFilesResult();
-                searchFilesResult.SetExelFile(SelectedExelFile);
-                searchFilesResult.SetNameColumn(selectedColumnName.StringValue);
-                windowFileBase.exelWindowFileBase.DirectoriesBelongExelFile.TryGetValue(SelectedExelFile, out List<Directory> directories);
-                if (directories != null && searchFilesResult.FilesInDirectory.Keys.ToList().Equals(directories) == false)
-                {
-                    List<Directory> addedFilesInDirectories = directories.Except(searchFilesResult.FilesInDirectory.Keys.ToList()).ToList();
-                    foreach (Directory directory in addedFilesInDirectories)
-                    {
-                        searchFilesResult.AddFilesInDirectory(directory, SearchFilesInDirectoryies(directory, selectedColumnName.StringValue));
-                    }
-                    windowFileBase.exelWindowFileBase.AddSearchFilesResult(searchFilesResult);
-                }
-            }
-        }
-
+       
         private List<Model.File> SearchFilesInDirectoryies(Directory directory, string nameColumn)
         {
-            List<Model.File> EqualsFile = directory.SearchFileToName(SelectedPage.GetColumnsData(nameColumn).ConvertAll(x => Convert.ToString(x)).OfType<string>().ToList(), Formats.pdf);
+            List<Model.File> EqualsFile = directory.SearchFileToName(selectedPageInfo["ColumnsDataNoDplicates"].ConvertAll(x => Convert.ToString(x)).OfType<string>().ToList(), Formats.pdf);
             return EqualsFile;
         }
-
-        private void PropertyChangedFolderSubscription(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            foreach (FolderView folder in FoldersView)
-            {
-                folder.PropertyChanged += PropertyChangedNameFolder;
+        public void SetFolderViewName(string oldName, string newName)
+        {            
+            FolderView folderView = FoldersView.FirstOrDefault(element => element.Name == oldName);
+            if (FoldersView.FirstOrDefault(element => element.Name == newName) == null)
+            {                
+                windowFileBase.exelWindowFileBase.SetFolerName(oldName, newName);
+                folderView.CorrectName = true;
+                folderView.Name = newName;
             }
-        }
-        private void PropertyChangedNameFolder(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == "Name")
+            else
             {
-                FolderView folderView = (FolderView)sender;
-                string newName = folderView.Name;
-                List<FolderView> convertList = FoldersView.ToList();
-                int index = convertList.FindIndex(item => item.Name == newName);
-                windowFileBase.exelWindowFileBase.ChangeFolerName(newName, index);
-                UpdateFiles();
+                folderView.CorrectName = false;
             }
         }
     }

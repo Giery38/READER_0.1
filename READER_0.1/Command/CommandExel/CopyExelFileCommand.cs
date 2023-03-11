@@ -12,11 +12,9 @@ namespace READER_0._1.Command.CommandExel
 {
     class CopyExelFileCommand : CommandBase
     {
-        private readonly WindowFileBase windowFileBase;
         private readonly ExelViewModel exelViewModel;
-        public CopyExelFileCommand(ExelViewModel exelViewModel, WindowFileBase windowFileBase)
+        public CopyExelFileCommand(ExelViewModel exelViewModel)
         {
-            this.windowFileBase = windowFileBase;
             this.exelViewModel = exelViewModel;
         }
         public override void Execute(object parameter)
@@ -29,9 +27,11 @@ namespace READER_0._1.Command.CommandExel
                 string directoryName = Path.GetFileName(directoryPath);
                 string[] allFoundFiles = System.IO.Directory.GetFiles(directoryPath, "*." + nameof(Formats.pdf), SearchOption.TopDirectoryOnly);
                 List<Model.File> filesToDirectory = new List<Model.File>();
+                string extension;
                 for (int i = 0; i < allFoundFiles.Length; i++)
                 {
-                    filesToDirectory.Add(new Model.File(allFoundFiles[i], Path.GetFileNameWithoutExtension(allFoundFiles[i]), windowFileBase.FormatStrngToEnum(".pdf")));
+                    extension = Path.GetExtension(allFoundFiles[i]).Replace(".", "");
+                    filesToDirectory.Add(new Model.File(allFoundFiles[i], extension, (Formats)Enum.Parse(typeof(Formats),".pdf",true)));
                 }
                 Model.Directory directory = new Model.Directory(directoryPath, directoryName, filesToDirectory);
                 CopyFiles(directory);
@@ -41,12 +41,14 @@ namespace READER_0._1.Command.CommandExel
 
         private void CopyFiles(Model.Directory DestinationDirectory)
         {
+            /*
             List<Model.File> copiedFiles = new List<Model.File>();
-            windowFileBase.exelWindowFileBase.ExelFilesСontentInDirectoriesEquals.TryGetValue(exelViewModel.SelectedPage, out copiedFiles);
+            exelViewModel.ExelFilesСontentInDirectoriesEquals.TryGetValue(exelViewModel.SelectedPage, out copiedFiles);
             for (int i = 0; i < copiedFiles.Count; i++)
             {
                 copiedFiles[i].CopyeTo(DestinationDirectory.Path);
-            }
+            }     
+            */
         }
     }
 }

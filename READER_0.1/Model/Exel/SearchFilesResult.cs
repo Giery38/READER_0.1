@@ -26,7 +26,7 @@ namespace READER_0._1.Model.Exel
         }  
         public List<Model.File> GetAllFiles()
         {
-            return FilesInDirectory.Values.SelectMany(x => x).ToList();
+            return FilesInDirectory.Values.SelectMany(x => x).Distinct().ToList();
         }
         public void AddFilesInDirectory(Directory directory, List<Model.File> Files)
         {

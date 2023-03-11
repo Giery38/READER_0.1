@@ -14,7 +14,19 @@ namespace READER_0._1.Model
         public string FileName { get; protected set; }
         public Formats Format { get; protected set; }
         public string TempCopyPath { get; protected set; }
-
+        private bool corrupted = false;
+        public bool Corrupted
+        {
+            get
+            {
+                return corrupted;
+            }
+            set
+            {
+                corrupted = value;
+                OnPropertyChanged(nameof(Corrupted));
+            }
+        }
         public File(string path, string fileName, Formats format)
         {
             Path = path;

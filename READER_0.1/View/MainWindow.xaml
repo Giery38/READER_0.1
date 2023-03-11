@@ -13,12 +13,13 @@
     MinHeight="730"
     d:DataContext="{d:DesignInstance Type=viewmodel:MainViewModel}"
     mc:Ignorable="d">
+    <Window.Resources />
     <Grid x:Name="MainGrid">
         <Grid.Resources>
             <DataTemplate DataType="{x:Type viewmodel:ExelViewModel}">
                 <views:ExelView
                     DropFileCommand="{Binding AddExelFileDropCommand}"
-                    ScrollTableCommand="{Binding AddFileDropCommand}"
+                    FolderViewNameChangeCommand="{Binding FolderViewNameChangeCommand}"
                     SizeChangeCommand="{Binding SizeChangeCommand}" />
             </DataTemplate>
             <DataTemplate DataType="{x:Type viewmodel:WordViewModel}">

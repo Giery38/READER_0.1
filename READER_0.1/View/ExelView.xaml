@@ -17,13 +17,24 @@
     Background="AliceBlue"
     mc:Ignorable="d">
     <UserControl.Resources>
-        <converters:IndexConverter x:Key="IndexConverter" />
+        <converters:AlternationIndexConverter x:Key="AlternationIndexConverter" />
+        <converters:SizeChangeConverter x:Key="SizeChangeConverte" />
+        <converters:ListViewItemToContentAndTagConverter x:Key="ListViewItemToContentAndTagConverter" />
     </UserControl.Resources>
     <Grid x:Name="MainGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200" />
             <ColumnDefinition x:Name="MainWidht" Width="*" />
         </Grid.ColumnDefinitions>
+        <Grid.Resources>
+            <Style x:Key="GetButton" TargetType="Button">
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Cursor" Value="Hand" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Resources>
         <Grid
             Grid.Column="0"
             Width="Auto"
@@ -40,75 +51,223 @@
                 Margin="0,60,0,0"
                 HorizontalContentAlignment="Center"
                 d:ItemsSource="{d:SampleData}"
+                Background="#FF606060"
                 ItemsSource="{Binding FoldersView}"
                 ScrollViewer.CanContentScroll="False"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
                 ScrollViewer.IsDeferredScrollingEnabled="True">
-                <ListView.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Command="{Binding DeleteFile}" Header="Delete folder" />
-                    </ContextMenu>
-                </ListView.ContextMenu>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0,20,0,00" />
+                        <Setter Property="Focusable" Value="False" />
+                        <Setter Property="IsSelected" Value="False" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type ListViewItem}">
+                                    <Border
+                                        x:Name="border"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="Transparent"
+                                        BorderThickness="1"
+                                        SnapsToDevicePixels="true">
+                                        <ContentPresenter
+                                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="border" Property="Background" Value="Transparent" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListView.ItemContainerStyle>
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel>
-                            <TextBox Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
-                            <ListView
-                                Name="ListFiles"
-                                Width="180"
-                                Height="Auto"
-                                MinHeight="100"
-                                d:ItemsSource="{d:SampleData}"
-                                AllowDrop="True"
-                                ItemsSource="{Binding Files}"
-                                ScrollViewer.CanContentScroll="True"
-                                ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                                ScrollViewer.IsDeferredScrollingEnabled="True"
-                                SelectedItem="{Binding ElementName=ListFolders, Path=DataContext.SelectedExelFile, Mode=TwoWay}"
-                                SelectionMode="Single"
-                                Tag="{Binding Name}">
-                                <ListView.Resources>
-                                    <Style TargetType="ListView">
-                                        <EventSetter Event="Drop" Handler="FolderFiles_Drop" />
-                                        <Setter Property="AllowDrop" Value="True" />
-                                    </Style>
-                                </ListView.Resources>
-                                <ListView.ItemContainerStyle>
-                                    <Style x:Name="Focus" TargetType="{x:Type ListViewItem}">
-                                        <Setter Property="IsEnabled" Value="{Binding Readed}" />
-                                        <Setter Property="Focusable" Value="{Binding Readed}" />
-                                    </Style>
-                                </ListView.ItemContainerStyle>
-                                <ListView.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <VirtualizingStackPanel Orientation="Vertical" />
-                                    </ItemsPanelTemplate>
-                                </ListView.ItemsPanel>
-                                <ListView.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Margin="0,0,5,0" Text="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}, Converter={StaticResource IndexConverter}}" />
-                                            <TextBlock
-                                                Width="150"
-                                                Text="{Binding FileName}"
-                                                TextAlignment="Left"
-                                                TextWrapping="Wrap" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                                <ListView.ContextMenu>
-                                    <ContextMenu>
-                                        <MenuItem Command="{Binding DeleteFile}" Header="Delete me" />
-                                    </ContextMenu>
-                                </ListView.ContextMenu>
-                            </ListView>
-                            <Button
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Bottom"
-                                Command="{Binding ElementName=ListFolders, Path=DataContext.AddFileCommand}"
-                                CommandParameter="{Binding Name}"
-                                Content="Добавить" />
-                        </StackPanel>
+                        <Border
+                            Padding="1"
+                            Background="#8A8888"
+                            BorderBrush="#8A8888"
+                            BorderThickness="2"
+                            CornerRadius="5">
+                            <StackPanel Background="#8A8888">
+                                <Border
+                                    Height="28"
+                                    Padding="2"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Top"
+                                    Background="#7A6C6C"
+                                    CornerRadius="5,5,0,0">
+                                    <DockPanel LastChildFill="False">
+                                        <TextBox
+                                            Width="100"
+                                            Background="#7A6C6C"
+                                            BorderThickness="0"
+                                            DockPanel.Dock="Left"
+                                            Tag="{Binding ElementName=ListFiles, Path=Tag}"
+                                            Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                            TextChanged="FolderFiles_NameChange">
+                                            <TextBox.Resources>
+                                                <Style TargetType="TextBox">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding CorrectName}" Value="False">
+                                                            <Setter Property="Foreground" Value="Red" />
+                                                        </DataTrigger>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="CaretBrush" Value="White" />
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBox.Resources>
+                                        </TextBox>
+                                        <Button
+                                            x:Name="DeleteFolderButton"
+                                            Padding="1,2,0,0"
+                                            Background="Transparent"
+                                            Click="DeleteFolderButton_Click"
+                                            Command="{Binding ElementName=ListFolders, Path=DataContext.RemoveFolderViewCommand}"
+                                            CommandParameter="{Binding Name}"
+                                            ContentTemplate="{StaticResource TrashIcon}"
+                                            DockPanel.Dock="Right"
+                                            Style="{StaticResource GetButton}" />
+                                    </DockPanel>
+                                </Border>
+                                <ListView
+                                    Name="ListFiles"
+                                    Width="170"
+                                    Height="Auto"
+                                    MinHeight="100"
+                                    Margin="0,10,0,10"
+                                    Padding="6"
+                                    HorizontalAlignment="Center"
+                                    d:ItemsSource="{d:SampleData}"
+                                    AllowDrop="True"
+                                    AlternationCount="{Binding Files.Count}"
+                                    Background="{Binding Background, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Border}}}"
+                                    BorderThickness="0"
+                                    ItemsSource="{Binding Files}"
+                                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                    ScrollViewer.IsDeferredScrollingEnabled="True"
+                                    ScrollViewer.PanningMode="None"
+                                    ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                    SelectedItem="{Binding ElementName=ListFolders, Path=DataContext.SelectedExelFile, Mode=TwoWay}"
+                                    SelectionMode="Single"
+                                    Tag="{Binding Name}">
+                                    <ListView.Resources>
+                                        <ContextMenu x:Key="ItemContextMenu">
+                                            <MenuItem
+                                                Background="WhiteSmoke"
+                                                Command="{Binding Source={x:Reference Name=ListFolders}, Path=DataContext.RemoveExelFileCommand}"
+                                                CommandParameter="{Binding Path=PlacementTarget, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ContextMenu}}, Converter={StaticResource ListViewItemToContentAndTagConverter}}"
+                                                Header="Удалить файл" />
+                                        </ContextMenu>
+                                        <Style TargetType="ListView">
+                                            <EventSetter Event="Drop" Handler="FolderFiles_Drop" />
+                                            <Setter Property="AllowDrop" Value="True" />
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type ListView}">
+                                                        <Border
+                                                            Padding="{TemplateBinding Padding}"
+                                                            Background="{TemplateBinding Background}"
+                                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                                            BorderThickness="{TemplateBinding BorderThickness}">
+                                                            <ItemsPresenter />
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListView.Resources>
+                                    <ListView.ItemContainerStyle>
+                                        <Style TargetType="{x:Type ListViewItem}">
+                                            <Setter Property="Padding" Value="0" />
+                                            <Setter Property="Tag" Value="{Binding ElementName=ListFiles, Path=Tag}" />
+                                            <Setter Property="Focusable" Value="{Binding Readed}" />
+                                            <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}" />
+                                            <EventSetter Event="PreviewMouseRightButtonDown" Handler="ListFiles_ListViewItem_PreviewMouseRightButtonDown" />
+                                            <EventSetter Event="ContextMenuClosing" Handler="ListFiles_ListViewItem_ContextMenuClosing" />
+                                        </Style>
+                                    </ListView.ItemContainerStyle>
+                                    <ListView.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <VirtualizingStackPanel Orientation="Vertical" />
+                                        </ItemsPanelTemplate>
+                                    </ListView.ItemsPanel>
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Height="Auto" HorizontalAlignment="Center">
+                                                <Border
+                                                    Width="155"
+                                                    Padding="4"
+                                                    HorizontalAlignment="Center"
+                                                    BorderBrush="Black"
+                                                    BorderThickness="1"
+                                                    CornerRadius="5">
+                                                    <StackPanel
+                                                        Width="100"
+                                                        HorizontalAlignment="Left"
+                                                        Orientation="Horizontal">
+                                                        <TextBlock Margin="0,0,2,0" Text="{Binding RelativeSource={RelativeSource AncestorType={x:Type ListViewItem}}, Path=(ItemsControl.AlternationIndex), Converter={StaticResource AlternationIndexConverter}, StringFormat='{}{0}.'}" />
+                                                        <TextBlock
+                                                            Width="100"
+                                                            Text="{Binding FileName}"
+                                                            TextAlignment="Left"
+                                                            TextWrapping="Wrap">
+                                                            <TextBlock.Resources>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Corrupted}" Value="True">
+                                                                            <Setter Property="Foreground" Value="Red" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Resources>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+                                <Button
+                                    Height="25"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Bottom"
+                                    Command="{Binding ElementName=ListFolders, Path=DataContext.AddFileCommand}"
+                                    CommandParameter="{Binding Name}"
+                                    Content="Добавить">
+                                    <Button.Resources>
+                                        <Style TargetType="Button">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CorrectName}" Value="False">
+                                                    <Setter Property="IsEnabled" Value="False" />
+                                                </DataTrigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Cursor" Value="Hand" />
+                                                </Trigger>
+                                            </Style.Triggers>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border
+                                                            Padding="0"
+                                                            Background="#7A6C6C"
+                                                            CornerRadius="0,0,5,5">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
+                        </Border>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -117,7 +276,8 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Bottom"
                 Command="{Binding CreateViewFolderCommand}"
-                Content="Создать папку" />
+                Content="Создать папку"
+                Style="{StaticResource GetButton}" />
         </Grid>
         <Grid
             Grid.Column="1"
@@ -165,60 +325,59 @@
                         <RowDefinition Height="50*" />
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Background="AliceBlue">
-                        <Border Padding="20,10,20,0">
+                        <Border Padding="40,10,40,0">
                             <StackPanel>
-                                <ComboBox
-                                    Width="100"
-                                    HorizontalAlignment="Left"
-                                    Panel.ZIndex="20"
-                                    IsReadOnly="True"
-                                    ItemsSource="{Binding Path=TableInfo}"
-                                    SelectedItem="{Binding SelectedTableInfo}" />
-                                <Viewbox
-                                    Name="TableViewBox"
-                                    MinWidth="600"
-                                    MinHeight="500">
-                                    <Viewbox.Resources>
-                                        <Style TargetType="Viewbox">
-                                            <EventSetter Event="SizeChanged" Handler="SizeTable_Change" />
-                                            <Setter Property="Height" Value="{Binding ElementName=TableViewBox, Path=Height}" />
-                                        </Style>
-                                    </Viewbox.Resources>
-
-
-                                    <!--  https://stackovergo.com/ru/q/1007103/get-displayed-text-from-textblock  -->
-                                    <Grid>
-
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="0*" />
-                                            <ColumnDefinition Width="10*" />
-                                            <ColumnDefinition Width="337*" />
-                                        </Grid.ColumnDefinitions>
-                                        <DataGrid
-                                            x:Name="ghghghgh"
-                                            ItemsSource="{Binding DataView}"
-                                            Grid.ColumnSpan="3"                                            
-                                            Width="{Binding ElementName=TableViewBox, Path=ActualWidth}"
-                                            Height="{Binding ElementName=TableViewBox, Path=ActualHeight}"
-                                            MinWidth="600"
-                                            MinHeight="500"
-                                            MaxHeight="700"
-                                            Panel.ZIndex="0"
-                                            IsReadOnly="True"
-                                            SelectionUnit="Cell"
-                                            VirtualizingStackPanel.IsVirtualizing="True"
-                                            VirtualizingStackPanel.VirtualizationMode="Recycling" />
-                                       
-                                        <Rectangle
-                                            Grid.Column="2"
-                                            Width="200"
-                                            Height="200"
-                                            Margin="217,189,256,189"
-                                            Fill="Black"
-                                            Opacity="{Binding LoadingTable}" />
-
-                                    </Grid>
-                                </Viewbox>
+                                <Grid>
+                                    <Grid.Resources>
+                                        <System:Double x:Key="FixedValueHeight">130</System:Double>
+                                    </Grid.Resources>
+                                    <Grid.Height>
+                                        <MultiBinding Converter="{StaticResource SizeChangeConverte}">
+                                            <Binding Path="ActualHeight" RelativeSource="{RelativeSource AncestorType={x:Type Window}}" />
+                                            <Binding Source="{StaticResource FixedValueHeight}" />
+                                        </MultiBinding>
+                                    </Grid.Height>
+                                    <Border BorderBrush="Black" BorderThickness="2">
+                                        <Grid>
+                                            <Border Padding="20">
+                                                <StackPanel>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <ComboBox
+                                                            Width="100"
+                                                            Height="20"
+                                                            HorizontalAlignment="Left"
+                                                            VerticalAlignment="Top"
+                                                            Panel.ZIndex="20"
+                                                            IsReadOnly="True"
+                                                            ItemsSource="{Binding Path=TableInfo}"
+                                                            SelectedItem="{Binding SelectedTableInfo}" />
+                                                        <ToggleButton Height="20" Width="50" Content="ddddd">
+                                                            
+                                                        </ToggleButton>
+                                                    </StackPanel>
+                                                    <DataGrid
+                                                        x:Name="Table"
+                                                        MinHeight="500"
+                                                        Margin="0,20,0,0"
+                                                        Panel.ZIndex="0"
+                                                        AutoGeneratedColumns="Table_AutoGeneratedColumns"
+                                                        IsReadOnly="True"
+                                                        ItemsSource="{Binding DataView}"
+                                                        ScrollViewer.CanContentScroll="True"
+                                                        SelectionUnit="Cell"
+                                                        VirtualizingStackPanel.IsVirtualizing="True"
+                                                        VirtualizingStackPanel.VirtualizationMode="Recycling" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Rectangle
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Stretch"
+                                                Fill="Black"
+                                                Visibility="Hidden"
+                                                Opacity="{Binding LoadingTable}" />
+                                        </Grid>
+                                    </Border>
+                                </Grid>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -271,11 +430,11 @@
                                                 Text="Общая информация" />
                                         </Grid>
                                         <TextBlock Height="Auto" Text="Номера накладных" />
-                                        <TextBlock Height="Auto" Text="{Binding SelectedPageInfo[ColumnsData]}" />
+                                        <TextBlock Height="Auto" Text="{Binding SelectedPageInfo[ColumnsData].Count}" />
                                         <TextBlock Height="Auto" Text="Дубликаты" />
-                                        <TextBlock Height="Auto" Text="{Binding SelectedPageInfo[ColumnsDataDplicates]}" />
+                                        <TextBlock Height="Auto" Text="{Binding SelectedPageInfo[ColumnsDataDplicates].Count}" />
                                         <TextBlock Height="Auto" Text="Номера накладных без дубликатов" />
-                                        <TextBlock Height="Auto" Text="{Binding SelectedPageInfo[ColumnsDataNoDplicates]}" />
+                                        <TextBlock Height="Auto" Text="{Binding SelectedPageInfo[ColumnsDataNoDplicates].Count}" />
                                         <TextBlock Height="Auto" Text="Найдено накладных" />
                                         <TextBlock Height="Auto" Text="{Binding ExelFilesСontentInDirectoriesEquals.Count}" />
                                         <TextBlock Height="Auto" Text="Отсутсвующие  накладные" />
@@ -310,12 +469,14 @@
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Bottom"
                                             Command="{Binding AddDirectoryCommand}"
-                                            Content="Button" />
+                                            Content="Button"
+                                            Style="{StaticResource GetButton}" />
                                         <Button
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Bottom"
                                             Command="{Binding CopyFileCommand}"
-                                            Content="Копировать" />
+                                            Content="Копировать"
+                                            Style="{StaticResource GetButton}" />
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>
