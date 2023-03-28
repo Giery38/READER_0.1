@@ -14,7 +14,6 @@ namespace READER_0._1.Model.Exel
 {
     public class ExelWindowFileBase
     {     
-        public List<Directory> Directories { get; private set; }
         public Dictionary<ExelFile, List<Directory>> DirectoriesBelongExelFile { get; private set; }
         public List<Directory> FoldersWithFiles { get; private set; }        
         public ExelReaderManager ExelReaderManager { get; private set; }
@@ -29,12 +28,8 @@ namespace READER_0._1.Model.Exel
 
         public ExelWindowFileBase(string tempFolderPath, Settings.Exel.ExelSettingsRead exelSettingsRead)
         {
-            Directories = new List<Directory>();
             DirectoriesBelongExelFile = new Dictionary<ExelFile, List<Directory>>();
-            FoldersWithFiles = new List<Directory>()
-            {
-                { new Directory("Файлы")}
-            };
+            FoldersWithFiles = new List<Directory>();           
             ExelReaderManager = new ExelReaderManager(tempFolderPath, exelSettingsRead);
             SearchFilesResults = new List<SearchFilesResult>();
             ExelFilesСontentInDirectoriesEquals = new Dictionary<ExelFilePage, List<Model.File>>();
@@ -50,11 +45,28 @@ namespace READER_0._1.Model.Exel
             ThreadsReadFiles.Add(thread);
         }
         
-        public void AddSearchFilesResult(SearchFilesResult searchFilesResult)
+        public bool TryAddSearchFilesResult(SearchFilesResult searchFilesResult)
         {
-            SearchFilesResults.Add(searchFilesResult);
+            if (SearchFilesResults.Contains(searchFilesResult) == false)
+            {
+                SearchFilesResults.Add(searchFilesResult);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
-              
+        public bool TryRemoveDirectoryInSearchFilesResult(Directory RemovedDirectory, ExelFile BindingFile)
+        {
+            SearchFilesResult searchFilesResult = SearchFilesResults.FirstOrDefault(item => item.ExelFile == BindingFile && item.FilesInDirectory.Keys.FirstOrDefault(item => item == RemovedDirectory) == RemovedDirectory);
+            if (searchFilesResult == null)
+            {
+                return false;
+            }
+            searchFilesResult.FilesInDirectory.Remove(RemovedDirectory);
+            return true;
+        }
         public void AddFile(List<ExelFile> AddedFiles, string FolderName)
         {
             if (AddedFiles.Count == 0)
@@ -74,6 +86,11 @@ namespace READER_0._1.Model.Exel
         }
         public void RemoveFile(ExelFile RemovedFile, string FolderName)
         {
+            Directory folderWithFiles = FoldersWithFiles.Find(item => item.Name == FolderName);
+            if (folderWithFiles == null)
+            {
+                return;
+            }
             Thread readFileThread = ExelReaderManager.FindThreadsReadFile(RemovedFile.Path);
             if (readFileThread != null)
             {
@@ -86,10 +103,14 @@ namespace READER_0._1.Model.Exel
                 {
                     ThreadsReadFiles.Remove(readFileThread);
                 }
-            }                   
-            Directory folderWithFiles = FoldersWithFiles.Find(item => item.Name == FolderName);
+            }                              
             folderWithFiles.Files.Remove(RemovedFile);
             SearchFilesResults.RemoveAll(item => item.ExelFile == RemovedFile);
+            ExelFile directoryBelongExelFileKey = DirectoriesBelongExelFile.Keys.FirstOrDefault(item => item == RemovedFile);
+            if (directoryBelongExelFileKey != null)
+            {
+                DirectoriesBelongExelFile.Remove(directoryBelongExelFileKey);
+            }
         }
         public void RemoveFolderWithFiles(string folderName)
         {
@@ -99,32 +120,13 @@ namespace READER_0._1.Model.Exel
                 RemoveFile(file, folderName);
             }
             FoldersWithFiles.Remove(folderWithFiles);
-        } 
-        public void AddDirectory(List<Directory> AddedDirectory) // если папка являетьсья самодостаточным элементом 
-        {
-            if (AddedDirectory.Count != 0)
-            {               
-                Directories.AddRange(AddedDirectory);
-            }
-        }
-        public void AddDirectory(Directory AddedDirectory)
-        {
-            if (AddedDirectory != null)
-            {
-                if (Directories.Find(item => item == AddedDirectory) == null)
-                {
-                    Directories.Add(AddedDirectory);
-                }
-            }
-        }
+        }               
         public bool TryAddDirectory(Directory AddedDirectory, ExelFile BindingFile)
         {
-            if (AddedDirectory == null)
+            if (AddedDirectory == null || BindingFile == null)
             {
                 return false;
             }
-            Directories.Add(AddedDirectory);
-            Directories.Distinct();
             if (DirectoriesBelongExelFile.Keys.FirstOrDefault(item => item.Path == BindingFile.Path) != null)
             {
                 if (DirectoriesBelongExelFile[BindingFile].Find(item => item.Path == AddedDirectory.Path) == null)
@@ -143,12 +145,28 @@ namespace READER_0._1.Model.Exel
                 return true;
             }        
         }
-        public void RemoveDirectory(List<Directory> RemovedDirectory)
+        public bool TryRemoveDirectory(Directory RemovedDirectory, ExelFile BindingFile)
         {
-            if (RemovedDirectory.Count != 0)
+            if (RemovedDirectory == null || BindingFile == null)
             {
-                Directories = Directories.Except(RemovedDirectory).ToList();
+                return false;
             }
+            if (DirectoriesBelongExelFile.Keys.FirstOrDefault(item => item.Path == BindingFile.Path) != null)
+            {
+                if (DirectoriesBelongExelFile[BindingFile].Find(item => item.Path == RemovedDirectory.Path) != null)
+                {
+                    DirectoriesBelongExelFile[BindingFile].Remove(RemovedDirectory);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }            
         }
 
         public void AddFolder(string nameFolder)

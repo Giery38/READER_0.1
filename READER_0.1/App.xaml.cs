@@ -22,34 +22,32 @@ namespace READER_0._1
     public partial class App : Application
     {
         private readonly WindowFileBase windowFileBase;
-        private readonly Navigation.Navigation navigation;
         private Settings settings;
         private static string tempFolderPath;
         private string configFilePath;
-        private event Action cleansingTempFolder;
         public App()
-        {
+        {                    
             tempFolderPath = CreateTempFolder();
             CleansingTempFolder();
             SetSettings();
-            windowFileBase = new WindowFileBase(tempFolderPath, settings);
-            navigation = new Navigation.Navigation();
-            cleansingTempFolder += CleansingTempFolder;
-            AppDomain.CurrentDomain.ProcessExit += new EventHandler((sender, e) => { cleansingTempFolder(); });                 
+            windowFileBase = new WindowFileBase(tempFolderPath, settings);                     
         }        
         protected override void OnStartup(StartupEventArgs e)
         {
-            //navigation.CurrentViewModel = new WordViewModel(windowFileBase);                      
-            navigation.CurrentViewModel = new ExelViewModel(windowFileBase);
+           
             MainWindow = new MainWindow()
             {
-                DataContext = new MainViewModel(windowFileBase, navigation)
+                DataContext = new MainViewModel(windowFileBase)
+                //DataContext = mainViewModel
             };
-            MainWindow.Content = Application.LoadComponent(new Uri("App.xaml", UriKind.Relative));
             MainWindow.Show();
             base.OnStartup(e);
         }
-
+        protected override void OnExit(ExitEventArgs e)
+        {
+            CleansingTempFolder();
+            base.OnExit(e);
+        }
         private void SetSettings()
         {
             configFilePath = CreateConfigFile();

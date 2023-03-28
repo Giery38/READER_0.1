@@ -37,7 +37,7 @@ namespace READER_0._1.ViewModel.ViewElement
                 name = value;
                 OnPropertyChanged(nameof(Name));
             }
-        }
+        }        
         private bool correctName = true;
         public bool CorrectName
         {

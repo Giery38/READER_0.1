@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using READER_0._1.Model;
 using READER_0._1.Model.Exel;
+using READER_0._1.View.Elements;
 using READER_0._1.ViewModel;
 using System;
 using System.Collections.Generic;
@@ -13,22 +14,24 @@ namespace READER_0._1.Command.CommandExel
     class AddExelFileCommand : CommandBase
     {        
         private readonly ExelViewModel exelViewModel;
-
         public AddExelFileCommand(ExelViewModel exelViewModel)
         {
             this.exelViewModel = exelViewModel;
-        }
+           
+        }       
+
         public override void Execute(object parameter)
         {
+            
             List<ExelFile> files = new List<ExelFile>();
             File file;
             OpenFileDialog openFileDialog = new OpenFileDialog
-            {
+            {                
                 RestoreDirectory = false,
                 Multiselect = true,
                 Title = "Выберите файлы",
-                Filter = "Excel Files|*.xls;*.xlsx"
-            };
+                Filter = "Excel Files|*.xls;*.xlsx"                
+            };           
             bool? respons = openFileDialog.ShowDialog();
             if (respons == true)
             {
@@ -45,6 +48,6 @@ namespace READER_0._1.Command.CommandExel
                 }                
             }
             exelViewModel.AddExelFile(files, (string)parameter);
-        }        
+        }       
     }
 }

@@ -33,8 +33,7 @@ namespace READER_0._1.Model.Word
         {
             foreach (WordFile wordFile in wordFileReaed)
             {
-                Thread readExelFile = new Thread(() => ReadWordFile(wordFile));
-                readExelFile.IsBackground = true;
+                Thread readExelFile = new Thread(() => ReadWordFile(wordFile));                
                 readExelFile.Name = "Чтение Word файла " + wordFile.FileName;
                 threadsReadFiles.Add(readExelFile);
                 readExelFile.Start();

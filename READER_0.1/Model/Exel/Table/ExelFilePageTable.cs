@@ -79,7 +79,23 @@ namespace READER_0._1.Model.Exel
                 }
             }
             return rows;
-        }       
+        }     
+        public ExelFilePageTable RemoveDuplicatesByColumn(string columnName)
+        {
+            ExelFilePageTable result = new ExelFilePageTable(this.TableColumns.Keys.ToList());
+            List<ExelFilePageTableRow> exelFilePageTableRows = new List<ExelFilePageTableRow>();
+            TableColumns.TryGetValue(columnName, out int columnNumber);
+            foreach (ExelFilePageTableRow row in Rows)
+            {
+                var matchingRows = exelFilePageTableRows.FindAll(item => item.RowData[columnNumber]?.ToString() == row.RowData[columnNumber]?.ToString());
+                if (matchingRows.Count == 0)
+                {
+                    exelFilePageTableRows.Add(row);
+                }               
+            }
+            result.AddRow(exelFilePageTableRows);
+            return result;
+        }
         public void AddRow(List<ExelFilePageTableRow> addedRows)
         {
             Rows.AddRange(addedRows);

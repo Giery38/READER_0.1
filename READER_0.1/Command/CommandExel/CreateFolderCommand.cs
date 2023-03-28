@@ -11,26 +11,20 @@ namespace READER_0._1.Command.CommandExel
 {
     class CreateFolderCommand : CommandBase
     {
-        private readonly WindowFileBase windowFileBase;
         private readonly ViewModel.ExelViewModel exelViewModel;
-        protected event Action ChangeFoldersList;
-        public CreateFolderCommand(ExelViewModel exelViewModel, WindowFileBase windowFileBase)
-        {
-            this.windowFileBase = windowFileBase;
+        public CreateFolderCommand(ExelViewModel exelViewModel)
+        {;
             this.exelViewModel = exelViewModel;
-            ChangeFoldersList += exelViewModel.UpdateFiles;
         }
         public override void Execute(object parameter)
         {
-            List<string> folderViewsConvert = windowFileBase.exelWindowFileBase.FoldersWithFiles.Where(x => x is Directory).Select(x => ((Directory)x).Name).ToList();   
+            List<string> folderViewsConvert = exelViewModel.FoldersView.Where(x => x is FolderView).Select(x => ((FolderView)x).Name).ToList();
             string name = "Новая папка";
             while (folderViewsConvert.Find(item => item == name) != null)
             {
                 name = name + "(1)";
             }
-            windowFileBase.exelWindowFileBase.AddFolder(name);
-            ChangeFoldersList.Invoke();
-            //exelViewModel.FoldersView.Add(new FolderView(name));
+            exelViewModel.AddFolderView(name);            
         }
     }
 }

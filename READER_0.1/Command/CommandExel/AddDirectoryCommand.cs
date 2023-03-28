@@ -9,6 +9,12 @@ using System.Text;
 using System.Linq;
 using WinForms = System.Windows.Forms;
 using System.Runtime.InteropServices;
+using System.Reflection;
+using READER_0._1.View.Elements;
+using Microsoft.WindowsAPICodePack.Dialogs;
+using READER_0._1.Tools;
+using System.Windows;
+using System.Windows.Interop;
 
 namespace READER_0._1.Command.CommandExel
 {
@@ -20,29 +26,35 @@ namespace READER_0._1.Command.CommandExel
             this.exelViewModel = exelViewModel;        
         }
         public override void Execute(object parameter)
-        {
-            WinForms.FolderBrowserDialog folderBrowserDialog = new WinForms.FolderBrowserDialog();            
-            WinForms.DialogResult dialogResult = folderBrowserDialog.ShowDialog();
-            
-            if (dialogResult == WinForms.DialogResult.OK)
+        {           
+            СustomizedCommonOpenFileDialog сustomizedCommonOpenFileDialog = new СustomizedCommonOpenFileDialog();
+            сustomizedCommonOpenFileDialog.Multiselect = true;
+            сustomizedCommonOpenFileDialog.FolderPicker = FolderPickerOption.Custom;
+            сustomizedCommonOpenFileDialog.OkButtonLabel = "Выбор папки";
+            сustomizedCommonOpenFileDialog.FileNameLabel = "Папка:";
+            WindowInteropHelper helper = new WindowInteropHelper(Application.Current.MainWindow);
+            IntPtr hWnd = helper.Handle;
+            if (сustomizedCommonOpenFileDialog.ShowDialog(hWnd) == CommonFileDialogResult.Ok)
             {
-                string directoryPath = folderBrowserDialog.SelectedPath;
-                string directoryName = Path.GetFileName(directoryPath);
-                string[] allFoundFiles = System.IO.Directory.GetFiles(directoryPath, "*." + nameof(Formats.pdf), SearchOption.TopDirectoryOnly);
-                List<Model.File> filesToDirectory = new List<Model.File>();
-                string extension;
-                for (int i = 0; i < allFoundFiles.Length; i++)
+                List<string> selectedFolders = сustomizedCommonOpenFileDialog.FilePaths;
+                foreach (string directoryPath in selectedFolders)
                 {
-                    extension = Path.GetExtension(allFoundFiles[i]).Replace(".", "");
-                    filesToDirectory.Add(new Model.File(allFoundFiles[i], Path.GetFileNameWithoutExtension(allFoundFiles[i]), (Formats)Enum.Parse(typeof(Formats), extension, true)));
+                    string directoryName = Path.GetFileName(directoryPath);
+                    string[] allFoundFiles = System.IO.Directory.GetFiles(directoryPath, "*." + nameof(Formats.pdf), SearchOption.TopDirectoryOnly);
+                    List<Model.File> filesToDirectory = new List<Model.File>();
+                    string extension;
+                    for (int i = 0; i < allFoundFiles.Length; i++)
+                    {
+                        extension = Path.GetExtension(allFoundFiles[i]).Replace(".", "");
+                        filesToDirectory.Add(new Model.File(allFoundFiles[i], Path.GetFileNameWithoutExtension(allFoundFiles[i]), (Formats)Enum.Parse(typeof(Formats), extension, true)));
+                    }
+                    Model.Directory directory = new Model.Directory(directoryPath, directoryName, filesToDirectory);
+                    if (exelViewModel.SelectedExelFile != null && exelViewModel.SelectedPage != null) // убрать это если нужно создать самодостаточную папку
+                    {
+                        exelViewModel.AddDirectory(directory, exelViewModel.SelectedExelFile);
+                    }
                 }
-                Model.Directory directory = new Model.Directory(directoryPath, directoryName, filesToDirectory);
-                if (exelViewModel.SelectedExelFile != null && exelViewModel.SelectedPage != null) // убрать это если нужно создать самодостаточную папку
-                {
-                    exelViewModel.AddDirectory(directory, exelViewModel.SelectedExelFile);                  
-                }
-               
-            }
+            }                         
         }              
     }
 }

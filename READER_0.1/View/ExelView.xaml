@@ -5,9 +5,10 @@
     xmlns:System="clr-namespace:System;assembly=mscorlib"
     xmlns:converters="clr-namespace:READER_0._1.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:diagnostics="clr-namespace:System.Diagnostics;assembly=netstandard"
     xmlns:local="clr-namespace:READER_0._1.View"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewelement="clr-namespace:READER_0._1.ViewModel.ViewElement.TableView"
+    xmlns:viewelement="clr-namespace:READER_0._1.View.Elements"
     xmlns:viewmodel="clr-namespace:READER_0._1.ViewModel"
     xmlns:viewmodel2="clr-namespace:READER_0._1.Model"
     Name="UserControl"
@@ -20,6 +21,17 @@
         <converters:AlternationIndexConverter x:Key="AlternationIndexConverter" />
         <converters:SizeChangeConverter x:Key="SizeChangeConverte" />
         <converters:ListViewItemToContentAndTagConverter x:Key="ListViewItemToContentAndTagConverter" />
+        <DataTemplate x:Key="TrashIcon">
+            <Path
+                Data="M5,6.77273h4.2m9.8,0h-4.2m-5.6,0L9.2,5.5c0-.55228.44772-1,1-1h3.6c.5523,0,1,.44772,1,1v1.27273m-5.6,0h5.6M6.4,8.59091v7.27269c0,1.7142,0,2.5713.54673,3.1039.54674.5325,1.42669.5325,3.18657.5325h3.7334c1.7599,0,2.6398,0,3.1866-.5325.5467-.5326.5467-1.3897.5467-3.1039v-7.27269M9.2,10.4091v5.4545M12,10.4091v5.4545m2.8-5.4545v5.4545"
+                Stroke="Black"
+                StrokeLineJoin="Round">
+                <Path.RenderTransform>
+                    <MatrixTransform Matrix="0.959149 0 0 0.937012 -2.509788 -2.244144" />
+                </Path.RenderTransform>
+            </Path>
+        </DataTemplate>
+
     </UserControl.Resources>
     <Grid x:Name="MainGrid">
         <Grid.ColumnDefinitions>
@@ -27,7 +39,7 @@
             <ColumnDefinition x:Name="MainWidht" Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.Resources>
-            <Style x:Key="GetButton" TargetType="Button">
+            <Style TargetType="{x:Type Button}">
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
                         <Setter Property="Cursor" Value="Hand" />
@@ -108,13 +120,14 @@
                                             Background="#7A6C6C"
                                             BorderThickness="0"
                                             DockPanel.Dock="Left"
+                                            LostFocus="TextBox_LostFocus"
                                             Tag="{Binding ElementName=ListFiles, Path=Tag}"
                                             Text="{Binding Name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                             TextChanged="FolderFiles_NameChange">
                                             <TextBox.Resources>
                                                 <Style TargetType="TextBox">
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding CorrectName}" Value="False">
+                                                        <DataTrigger Binding="{Binding CorrectName, Mode=OneWay}" Value="False">
                                                             <Setter Property="Foreground" Value="Red" />
                                                         </DataTrigger>
                                                         <Trigger Property="IsMouseOver" Value="True">
@@ -132,8 +145,7 @@
                                             Command="{Binding ElementName=ListFolders, Path=DataContext.RemoveFolderViewCommand}"
                                             CommandParameter="{Binding Name}"
                                             ContentTemplate="{StaticResource TrashIcon}"
-                                            DockPanel.Dock="Right"
-                                            Style="{StaticResource GetButton}" />
+                                            DockPanel.Dock="Right" />
                                     </DockPanel>
                                 </Border>
                                 <ListView
@@ -276,8 +288,7 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Bottom"
                 Command="{Binding CreateViewFolderCommand}"
-                Content="Создать папку"
-                Style="{StaticResource GetButton}" />
+                Content="Создать папку" />
         </Grid>
         <Grid
             Grid.Column="1"
@@ -340,41 +351,50 @@
                                     <Border BorderBrush="Black" BorderThickness="2">
                                         <Grid>
                                             <Border Padding="20">
-                                                <StackPanel>
-                                                    <StackPanel Orientation="Horizontal">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="*" />
+                                                    </Grid.RowDefinitions>
+                                                    <StackPanel Grid.Row="0" Orientation="Horizontal">
                                                         <ComboBox
-                                                            Width="100"
-                                                            Height="20"
+                                                            Width="120"
+                                                            Height="24"
                                                             HorizontalAlignment="Left"
                                                             VerticalAlignment="Top"
                                                             Panel.ZIndex="20"
                                                             IsReadOnly="True"
                                                             ItemsSource="{Binding Path=TableInfo}"
                                                             SelectedItem="{Binding SelectedTableInfo}" />
-                                                        <ToggleButton Height="20" Width="50" Content="ddddd">
-                                                            
-                                                        </ToggleButton>
+                                                        <viewelement:ToggleButton
+                                                            Width="50"
+                                                            Height="24"
+                                                            Toggled="{Binding ShowDuplicatesInDataView, Mode=OneWayToSource}" />
+                                                        <TextBlock Text="Показывать дубликаты" />
                                                     </StackPanel>
                                                     <DataGrid
                                                         x:Name="Table"
+                                                        Grid.Row="1"
+                                                        Grid.ColumnSpan="3"
+                                                        MinWidth="500"
                                                         MinHeight="500"
                                                         Margin="0,20,0,0"
                                                         Panel.ZIndex="0"
                                                         AutoGeneratedColumns="Table_AutoGeneratedColumns"
                                                         IsReadOnly="True"
                                                         ItemsSource="{Binding DataView}"
-                                                        ScrollViewer.CanContentScroll="True"
                                                         SelectionUnit="Cell"
                                                         VirtualizingStackPanel.IsVirtualizing="True"
                                                         VirtualizingStackPanel.VirtualizationMode="Recycling" />
-                                                </StackPanel>
+                                                    <Rectangle
+                                                        Grid.Row="1"
+                                                        HorizontalAlignment="Stretch"
+                                                        VerticalAlignment="Stretch"
+                                                        Fill="Black"
+                                                        Panel.ZIndex="1"
+                                                        Opacity="{Binding LoadingTable}" />
+                                                </Grid>
                                             </Border>
-                                            <Rectangle
-                                                HorizontalAlignment="Stretch"
-                                                VerticalAlignment="Stretch"
-                                                Fill="Black"
-                                                Visibility="Hidden"
-                                                Opacity="{Binding LoadingTable}" />
                                         </Grid>
                                     </Border>
                                 </Grid>
@@ -469,14 +489,12 @@
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Bottom"
                                             Command="{Binding AddDirectoryCommand}"
-                                            Content="Button"
-                                            Style="{StaticResource GetButton}" />
+                                            Content="Button" />
                                         <Button
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Bottom"
                                             Command="{Binding CopyFileCommand}"
-                                            Content="Копировать"
-                                            Style="{StaticResource GetButton}" />
+                                            Content="Копировать" />
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>

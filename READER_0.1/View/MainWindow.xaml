@@ -46,13 +46,13 @@
             </Storyboard>
         </Grid.Resources>
         <Button
-            x:Name="ShowMainMenu_button"
+            x:Name="ShowMainMenu_Button"
             Width="200"
             Height="30"
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
-            Panel.ZIndex="3"
-            Click="Button_Click"
+            Panel.ZIndex="2"
+            Click="ShowMainMenu_Button_Click"
             Content="Show Element" />
         <Grid
             x:Name="GridMainMenu"
@@ -72,6 +72,7 @@
                     Panel.ZIndex="3"
                     Background="Beige"
                     MouseLeave="Grid_MouseLeave">
+                    <Button Click="CloseMainMenu_Button_Click" x:Name="CloseMainMenu_Button" VerticalAlignment="Top" Height="30"></Button>
                     <Border Padding="0,60,0,0">
                         <Grid>
                             <TreeView x:Name="TreeViewMainMenu" Background="{Binding ElementName=MainMenuSwap, Path=Background}">

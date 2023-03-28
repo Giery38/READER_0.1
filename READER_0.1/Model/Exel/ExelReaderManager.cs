@@ -107,6 +107,10 @@ namespace READER_0._1.Model.Exel
                 return false;
             }
         }
-
+        public void Close()
+        {
+            ExelFileReaders.ForEach(reader => reader.Close());
+            ExelFileReaders.Clear();
+        }
     }
 }

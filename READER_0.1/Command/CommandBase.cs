@@ -16,7 +16,7 @@ namespace READER_0._1.Command
         }
         public abstract void Execute(object parameter);
 
-        protected void OnCanExecutedChanged()
+        public virtual void OnCanExecutedChanged()
         {
             CanExecuteChanged?.Invoke(this, new EventArgs());
         }

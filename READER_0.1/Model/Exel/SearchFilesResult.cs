@@ -32,5 +32,25 @@ namespace READER_0._1.Model.Exel
         {
             FilesInDirectory.TryAdd(directory, Files);
         }
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+
+            SearchFilesResult other = (SearchFilesResult)obj;
+            return ExelFile.Equals(other.ExelFile) &&
+                   FilesInDirectory.Equals(other.FilesInDirectory) &&
+                   NameColumn.Equals(other.NameColumn);
+        }
+        public override int GetHashCode()
+        {
+            int hash = 17;
+            hash = hash * 31 + ExelFile.GetHashCode();
+            hash = hash * 31 + FilesInDirectory.GetHashCode();
+            hash = hash * 31 + NameColumn.GetHashCode();
+            return hash;
+        }
     }
 }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace READER_0._1.Navigation
 {
     public class Navigation
-    {
+    {       
         private ViewModelBase currentViewModel;
         public ViewModelBase CurrentViewModel
         {

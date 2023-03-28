@@ -11,6 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="WindowsAPICodePack\**" />
+    <EmbeddedResource Remove="WindowsAPICodePack\**" />
+    <None Remove="WindowsAPICodePack\**" />
+    <Page Remove="WindowsAPICodePack\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <COMReference Include="Microsoft.Office.Core">
 		<Guid>{2DF8D04C-5BFA-101B-BDE5-00AA0044DE52}</Guid>
 		<VersionMajor>2</VersionMajor>
@@ -41,12 +48,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DevExpress.Data" Version="22.1.6" />
+    <PackageReference Include="DevExpress.Data" Version="22.2.4" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.19.0" />
     <PackageReference Include="ExcelDataReader" Version="3.6.0" />
     <PackageReference Include="ExcelDataReader.DataSet" Version="3.6.0" />
     <PackageReference Include="System.ObjectModel" Version="4.3.0" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+    <PackageReference Include="WindowsAPICodePack" Version="7.0.4" />
   </ItemGroup>
 
 </Project>

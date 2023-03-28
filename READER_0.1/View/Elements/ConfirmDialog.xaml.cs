@@ -34,7 +34,7 @@ namespace READER_0._1.View.Elements
         {            
             bool.TryParse(parameter as string,out bool result);
             IsConfirmed = result;
-            this.Close();
+            this.Close();            
         }
     }
 }

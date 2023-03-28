@@ -15,46 +15,38 @@ using System.Windows.Shapes;
 namespace READER_0._1.View
 {
     public partial class MainWindow : Window
-    {
+    {       
         public MainWindow()
         {
-            InitializeComponent();
+            InitializeComponent();            
         }
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void ShowMainMenu_Button_Click(object sender, RoutedEventArgs e)
         {
-            Button ShowMainMenuButton = this.FindName("ShowMainMenu_button") as Button;
-            ShowMainMenuButton.IsHitTestVisible = false;
-            Storyboard storyboardShow = (Storyboard)MainGrid.Resources["ShowMainMenu"];
-            storyboardShow.Begin();
+            ShowMainMenu();
             GridMainMenu.IsHitTestVisible = true;
         }
-        private void ShowMainMenu_Completed(object sender, EventArgs e)
+        private void CloseMainMenu_Button_Click(object sender, RoutedEventArgs e)
         {
-            Button ShowMainMenuButton = this.FindName("ShowMainMenu_button") as Button;
-            ShowMainMenuButton.IsHitTestVisible = false;
-            Grid GridMainMenu = this.FindName("GridMainMenu") as Grid;
+             CloseMainMenu();
+             GridMainMenu.IsHitTestVisible = false;
+        }
+        private void ShowMainMenu_Completed(object sender, EventArgs e)
+        { 
             if (GridMainMenu.IsMouseOver == false)
             {
-                Storyboard storyboard = (Storyboard)MainGrid.Resources["HideMainMenu"];
-                storyboard.Begin();
-                ShowMainMenuButton.IsHitTestVisible = true;
+                CloseMainMenu();
                 GridMainMenu.IsHitTestVisible = false;
             }            
         }
         private void Grid_MouseLeave(object sender, MouseEventArgs e)
-        {
-            TreeView TreeViewMainMenu = this.FindName("TreeViewMainMenu") as TreeView;
+        {           
             CollapseTreeNodes(TreeViewMainMenu, false);
-            Grid MainMenuSwap = this.FindName("MainMenuSwap") as Grid;
             double left = Canvas.GetLeft(MainMenuSwap);
             if (left == 0)
             {
-                Button ShowMainMenuButton = this.FindName("ShowMainMenu_button") as Button;
-                ShowMainMenuButton.IsHitTestVisible = true;
-                Storyboard storyboard = (Storyboard)MainGrid.Resources["HideMainMenu"];
-                storyboard.Begin();
-                GridMainMenu.IsHitTestVisible = false;
+                CloseMainMenu();
             }
+            GridMainMenu.IsHitTestVisible = false;
         }
         private void CollapseTreeNodes(TreeView treeView, bool isExpanded)
         {
@@ -67,6 +59,16 @@ namespace READER_0._1.View
                     item.IsExpanded = isExpanded;                    
                 }
             }
-        }       
+        } 
+        private void ShowMainMenu()
+        {
+            Storyboard storyboardShow = (Storyboard)MainGrid.Resources["ShowMainMenu"];
+            storyboardShow.Begin();
+        }
+        private void CloseMainMenu()
+        {
+            Storyboard storyboard = (Storyboard)MainGrid.Resources["HideMainMenu"];
+            storyboard.Begin();
+        }
     }
 }

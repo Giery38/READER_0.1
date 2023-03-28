@@ -19,10 +19,11 @@ namespace READER_0._1.Command
         }
         public override void Execute(object parameter)
         {
-            navigation.CurrentViewModel = nextViewModel;
+            
+            navigation.CurrentViewModel = nextViewModel;        
         }
         public override bool CanExecute(object parameter)
-         {
+        {
             if (navigation.CurrentViewModel == nextViewModel)
             {
                 return false;
@@ -30,7 +31,11 @@ namespace READER_0._1.Command
             else
             {
                 return true;
-            }            
+            }
+        }
+        public override void OnCanExecutedChanged()
+        {
+            base.OnCanExecutedChanged();
         }
     }
 }
