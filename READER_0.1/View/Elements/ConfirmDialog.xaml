@@ -5,33 +5,52 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:READER_0._1.View.Elements"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="Удалить " 
-    SizeToContent="WidthAndHeight"
+    Title="Удалить "
     ResizeMode="CanMinimize"
+    SizeToContent="WidthAndHeight"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <Window.Icon>
         <DrawingImage />
     </Window.Icon>
-    <Border Width="300" Height="Auto" Padding="20,10,20,10">
+    <Border
+        Width="300"
+        Height="Auto"
+        Padding="20,10,20,10">
         <StackPanel>
-            <TextBlock HorizontalAlignment="Left" Width="250" TextWrapping="Wrap" Margin="0,0,0,10" Text="{Binding Message}" />
+            <TextBlock
+                Width="250"
+                Margin="0,0,0,10"
+                HorizontalAlignment="Left"
+                Text="{Binding Message}"
+                TextWrapping="Wrap" />
             <DockPanel Width="200" LastChildFill="False">
-                <Button
-                    Command="{Binding SetConfirmed}"
-                    CommandParameter="true"
-                    BorderThickness="0"
-                    DockPanel.Dock="Left"
-                    HorizontalAlignment="Left"
-                    Background="Transparent"
-                    Content="Да" />
-                <Button
-                    BorderThickness="0"
-                     Command="{Binding SetConfirmed}"
-                    CommandParameter="false"
-                    DockPanel.Dock="Right"
-                    Background="Transparent"
-                    Content="Нет" />
+                <Border
+                    BorderBrush="Black"
+                    BorderThickness="1"
+                    DockPanel.Dock="Left">
+                    <Button
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{Binding SetConfirmed}"
+                        CommandParameter="true"
+                        Content="Да" />
+                </Border>
+                <Border
+                    BorderBrush="Black"
+                    BorderThickness="1"
+                    DockPanel.Dock="Right">
+                    <Button
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{Binding SetConfirmed}"
+                        CommandParameter="false"
+                        Content="Нет" />
+                </Border>
             </DockPanel>
         </StackPanel>
     </Border>

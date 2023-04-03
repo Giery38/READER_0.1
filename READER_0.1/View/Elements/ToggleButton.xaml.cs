@@ -47,7 +47,7 @@ namespace READER_0._1.View.Elements
         public ToggleButton()
         {
             InitializeComponent();
-            Back.Fill = Off;
+            Back.Background = Off;
             Toggled = false;
             Dot.Margin = LeftSide;            
         }             
@@ -56,13 +56,13 @@ namespace READER_0._1.View.Elements
         {
             if (!Toggled)
             {
-                Back.Fill = On;
+                Back.Background = On;
                 Toggled = true;
                 Dot.Margin = RightSide;
             }
             else
             {
-                Back.Fill = Off;
+                Back.Background = Off;
                 Toggled = false;
                 Dot.Margin = LeftSide;
             }
@@ -78,13 +78,13 @@ namespace READER_0._1.View.Elements
         {
             if (!Toggled)
             {
-                Back.Fill = On;
+                Back.Background = On;
                 Toggled = true;
                 Dot.Margin = RightSide;
             }
             else
             {
-                Back.Fill = Off;
+                Back.Background = Off;
                 Toggled = false;
                 Dot.Margin = LeftSide;
             }

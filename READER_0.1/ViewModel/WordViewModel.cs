@@ -47,5 +47,10 @@ namespace READER_0._1.ViewModel
             OnPropertyChanged(nameof(WordFiles));
             SelectedWordFile = selectedWordFile;
         }
+
+        public override void Deactivation()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

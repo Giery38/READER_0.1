@@ -3,6 +3,7 @@ using READER_0._1.Model;
 using READER_0._1.Model.Exel;
 using READER_0._1.Model.Settings.Exel;
 using READER_0._1.Tools;
+using READER_0._1.ViewModel.tools;
 using READER_0._1.ViewModel.ViewElement;
 using System;
 using System.Collections.Generic;
@@ -44,6 +45,8 @@ namespace READER_0._1.ViewModel
         private ExelSettingsRead exelSettingsRead;
         //
         private List<Thread> loadedTabels;
+        private LoadedTablesManager loadedTablesManager;
+        private Dictionary<ExelFilePage, TablesStates> TablesVariations;
         public ExelViewModel(WindowFileBase windowFileBase)
         {
             this.windowFileBase = windowFileBase;
@@ -76,16 +79,15 @@ namespace READER_0._1.ViewModel
             //
             exelSettingsRead = windowFileBase.settings.ExelSettingsRead;
             loadedTabels = new List<Thread>();
+            TablesVariations = new Dictionary<ExelFilePage, TablesStates>();
             //start
             AddFolderView("Файлы");
-            Thread readExelFile22 = new Thread(() =>
-            {
-                ChangePageTablesManager();
-            });
-            readExelFile22.Start();
-        }
+            loadedTablesManager = new LoadedTablesManager();
+            loadedTablesManager.LoadingTableChange += OnLoadingTableChange;
+            loadedTablesManager.Start();
+            
 
-        private List<ExelFilePageTable> currentExelFilePageTables;
+        }               
         private string selectedTableInfo;
         public string SelectedTableInfo
         {
@@ -96,18 +98,8 @@ namespace READER_0._1.ViewModel
             set
             {
                 selectedTableInfo = value;
-                OnPropertyChanged(nameof(SelectedTableInfo));
-                currentExelFilePageTables = GetTabelsForTableInfo();
-                ChangePageTables(currentExelFilePageTables);
-                /*
-                Thread changePageTables = new Thread(() => ChangePageTables(currentExelFilePageTables));
-                loadedTabels.Add(changePageTables);
-                foreach (Thread item in ThreadHelper.SerchThreadLive(loadedTabels))
-                {
-                    item.Join();
-                }
-                changePageTables.Start();
-                */
+                OnPropertyChanged(nameof(SelectedTableInfo));                
+                ChangePageTables();
             }
         }
 
@@ -119,18 +111,10 @@ namespace READER_0._1.ViewModel
                 return showDuplicatesInDataView;
             }
             set
-            {
+            {              
                 showDuplicatesInDataView = value;
                 OnPropertyChanged(nameof(ShowDuplicatesInDataView));
-                if (value == true)
-                {
-                    ChangePageTables(currentExelFilePageTables);
-                }
-                else
-                {
-
-                    ChangePageTables(currentExelFilePageTables?.Select(item => item.RemoveDuplicatesByColumn(SelectedColumnName?.StringValue)).ToList());
-                }
+                ChangePageTables();
             }
         }
 
@@ -161,6 +145,12 @@ namespace READER_0._1.ViewModel
                 OnPropertyChanged(nameof(LoadingTable));
             }
         }
+        private void OnLoadingTableChange(object sender, EventArgs e)
+        {
+            LoadedTablesManager loadedTablesManager = sender as LoadedTablesManager;
+            LoadingTable = loadedTablesManager.LoadingTable;
+        }
+
         private ExelFile selectedExelFile;
         public ExelFile SelectedExelFile
         {
@@ -174,9 +164,9 @@ namespace READER_0._1.ViewModel
                 {
                     selectedExelFile = value;
                     OnPropertyChanged(nameof(SelectedExelFile));
-                    SetExelFilePages(SelectedExelFile.ExelPage);
+                    SetExelFilePages(SelectedExelFile.ExelPages);
                     SelectFerstPageInSelectedFile();
-                    CreateUnitedPage();
+                    CreateUnitedPage();                    
                 }
             }
         }
@@ -276,15 +266,16 @@ namespace READER_0._1.ViewModel
             {
                 ClearFileInfo();
             }
+            ClearTablesVariationsInfo(removedFile);
         }
         public void RemoveFolderView(string folderName)
         {
             windowFileBase.exelWindowFileBase.RemoveFolderWithFiles(folderName);
             FolderView removedFolder = FoldersView.FirstOrDefault(item => item.Name == folderName);
-            if (removedFolder.Files.Contains(SelectedExelFile) == true)
+            foreach (ExelFile exelFile in removedFolder.Files)
             {
-                ClearFileInfo();
-            }
+                RemoveExelFile(exelFile, folderName);
+            }            
             FoldersView.Remove(removedFolder);
         }
         public void ReadExelFile(List<ExelFile> AddedFiles)
@@ -359,25 +350,113 @@ namespace READER_0._1.ViewModel
             {
                 SelectedPageInfo[key].Clear();
             }
-            OnPropertyChanged(nameof(SelectedPageInfo));
-
-        }        
-        private List<ExelFilePageTable> GetTabelsForTableInfo()
+            OnPropertyChanged(nameof(SelectedPageInfo));            
+        }      
+        private void ClearTablesVariationsInfo(ExelFile removedFile)
         {
+            foreach (ExelFilePage page in removedFile.ExelPages)
+            {
+                TablesVariations.Remove(page);
+            }
+            
+        }
+
+
+        private bool TryGetTableVariations(ExelFilePage exelFilePage, TablesStates.TableVariation tableVariation, TablesStates.DuplicatesOption duplicatesOption, out DataView dataView)
+        {
+            dataView = new DataView();
+            if (TablesVariations.TryGetValue(exelFilePage, out TablesStates tablesStates) == true)
+            {
+                if (tablesStates.TryGetTables(tableVariation, duplicatesOption, out dataView))
+                {
+                    return true;
+                }               
+            }
+            return false;
+        }
+        private bool TryAddTableVariations(ExelFilePage exelFilePage, TablesStates.TableVariation tableVariation, TablesStates.DuplicatesOption duplicatesOption, DataView dataView)
+        {
+            if (TablesVariations.ContainsKey(exelFilePage) == false)
+            {
+                if (TablesVariations.TryAdd(exelFilePage, new TablesStates()) == false)
+                {
+                    return false;
+                }                             
+            }
+            if (TablesVariations[exelFilePage].TryAddTable(tableVariation, duplicatesOption, dataView) == true)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        private DataView GetOrCreateTableVariations(ExelFilePage exelFilePage, TablesStates.TableVariation tableVariation, TablesStates.DuplicatesOption duplicatesOption, List<ExelFilePageTable> exelFilePageTables)
+        {            
+            if (TryGetTableVariations(SelectedPage, tableVariation, duplicatesOption, out DataView dataView) == true)
+            {
+                return dataView;
+            }
+            else
+            {
+                List<DataTable> dataTables = new List<DataTable>();
+                dataTables.AddRange(exelFilePageTables.Select(item => item.ToDataTabel()));
+                dataView = MergeDataTables(dataTables).DefaultView;
+                TryAddTableVariations(exelFilePage, tableVariation, duplicatesOption, dataView);
+            }
+            return dataView;
+        }
+        private DataView GetTabelsForTableInfo()
+        {            
             List<ExelFilePageTable> tables = new List<ExelFilePageTable>();
+            DataView dataView = new DataView();
+            TablesStates.DuplicatesOption duplicatesOption;
+            if (ShowDuplicatesInDataView == true)
+            {
+                duplicatesOption = TablesStates.DuplicatesOption.WithDuplicates;
+            }
+            else
+            {
+                duplicatesOption = TablesStates.DuplicatesOption.WithoutDuplicates;
+            }
             switch (selectedTableInfo)
             {
                 case "Все":
-                    tables = selectedPage.Tabeles;
+                    if (TryGetTableVariations(SelectedPage, TablesStates.TableVariation.All, duplicatesOption, out dataView) == false)
+                    {
+                        tables = SelectedPage.Tabeles;
+                        if (duplicatesOption == TablesStates.DuplicatesOption.WithDuplicates)
+                        {                            
+                            tables = tables.Select(item => item.RemoveDuplicatesByColumn(SelectedColumnName?.StringValue)).ToList();
+                        }
+                        dataView = GetOrCreateTableVariations(SelectedPage, TablesStates.TableVariation.All, duplicatesOption, tables);
+                    }                                                         
                     break;
                 case "Найденные":
-                    tables = CreateTableEquals(new List<object>(ExelFilesСontentInDirectoriesEquals.ToList()));
+                    if (TryGetTableVariations(SelectedPage, TablesStates.TableVariation.Found, duplicatesOption, out dataView) == false)
+                    {
+                        tables = CreateTableEquals(new List<object>(ExelFilesСontentInDirectoriesEquals.ToList()));
+                        if (duplicatesOption == TablesStates.DuplicatesOption.WithDuplicates)
+                        {
+                            tables = tables.Select(item => item.RemoveDuplicatesByColumn(SelectedColumnName?.StringValue)).ToList();
+                        }
+                        dataView = GetOrCreateTableVariations(SelectedPage, TablesStates.TableVariation.Found, duplicatesOption, tables);
+                    }                                       
                     break;
                 case "Отсутствующие":
-                    tables = CreateTableEquals(new List<object>(ExelFilesСontentInDirectoriesNoEquals.ToList()));
+                    if (TryGetTableVariations(SelectedPage, TablesStates.TableVariation.Missing, duplicatesOption, out dataView) == false)
+                    {
+                        tables = CreateTableEquals(new List<object>(ExelFilesСontentInDirectoriesNoEquals.ToList()));
+                        if (duplicatesOption == TablesStates.DuplicatesOption.WithDuplicates)
+                        {
+                            tables = tables.Select(item => item.RemoveDuplicatesByColumn(SelectedColumnName?.StringValue)).ToList();
+                        }
+                        dataView = GetOrCreateTableVariations(SelectedPage, TablesStates.TableVariation.Missing, duplicatesOption, tables);
+                    }                                        
                     break;       
             }
-            return tables;
+            return dataView;
         }
 
         public List<ExelFilePageTable> CreateTableEquals(List<object> list)
@@ -396,7 +475,7 @@ namespace READER_0._1.ViewModel
                 }                
             }
             return exelFilePageTables;
-        }
+        }        
 
         private void SetExelFilePages(List<ExelFilePage> exelFilePages)
         {
@@ -495,35 +574,24 @@ namespace READER_0._1.ViewModel
                 SelectedPageInfo["ColumnsDataNoDplicates"] = new List<object>();
             }
             OnPropertyChanged(nameof(SelectedPageInfo));
-        }    
-        private void ChangePageTables(List<ExelFilePageTable> tables)
-        {
-            if (SelectedPage != null)
-            {
-                List<DataTable> dataTables = new List<DataTable>();
-                LoadingTable = 1;
-                dataTables.AddRange(tables.Select(item => item.ToDataTabel()));               
-                App.Current.Dispatcher.Invoke(() =>
-                {
-                    DataView = MergeDataTables(dataTables).DefaultView;
-                });
-                LoadingTable = 0;
-            }
-        }       
-        private void ChangePageTablesManager()
-        {
-            while (true)
-            {
-                if (true)
-                {
-
-                }
-                else
-                {
-
-                }
-            }
         }
+        
+        private void ChangePageTables()
+        {
+            Thread thread = new Thread(() =>
+            {
+                if (SelectedPage != null)
+                {
+                    DataView dataView = GetTabelsForTableInfo();                    
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
+                        DataView = dataView;
+                    });
+                }
+            });
+            loadedTablesManager.LoadTable(thread);
+        }
+              
         private DataTable MergeDataTables(List<DataTable> dataTables)
         {
             DataTable result = new DataTable();
@@ -573,6 +641,12 @@ namespace READER_0._1.ViewModel
 
         public void UpdateDirectories() 
         {
+            if (TablesVariations.ContainsKey(SelectedPage) == true)
+            {
+                TablesVariations[SelectedPage].RemoveAllTableVariation(TablesStates.TableVariation.Found);
+                TablesVariations[SelectedPage].RemoveAllTableVariation(TablesStates.TableVariation.Missing);
+                ChangePageTables();
+            }
             ExelWindowFileBase exelWindowFileBase = windowFileBase.exelWindowFileBase;            
             if (exelWindowFileBase.SearchFilesResults.Count == 0)
             {
@@ -626,7 +700,48 @@ namespace READER_0._1.ViewModel
                 oldNameFolderView.CorrectName = false;
             }
         }
+        private class TablesStates
+        {
+            private Dictionary<(TableVariation, DuplicatesOption), DataView> tables = new Dictionary<(TableVariation, DuplicatesOption), DataView>();          
+            public bool TryAddTable(TableVariation variation, DuplicatesOption duplicatesOption, DataView table)
+            {
+                if (tables.TryAdd((variation, duplicatesOption), table) == true)
+                {
+                    return true;
+                }
+                return false;
+            }
 
+            public bool TryGetTables(TableVariation variation, DuplicatesOption duplicatesOption, out DataView table)
+            {
+                table = new DataView();
+                if (tables.TryGetValue((variation, duplicatesOption), out DataView tablesResult))
+                {
+                    table = tablesResult;
+                    return true;
+                }
+                return false;
+            }  
+            public void RemoveAllTableVariation(TableVariation variation)
+            {
+                List<(TableVariation, DuplicatesOption)> keys = tables.Where(item => item.Key.Item1 == variation).Select(item => item.Key).ToList();
+                foreach ((TableVariation, DuplicatesOption) key in keys)
+                {
+                    tables.Remove(key);
+                }
+            }
+            public enum TableVariation
+            {
+                All,
+                Found,
+                Missing
+            }
+            public enum DuplicatesOption
+            {
+                WithDuplicates,
+                WithoutDuplicates
+            }
+        }
         public override void Deactivation()
         {
             throw new NotImplementedException();

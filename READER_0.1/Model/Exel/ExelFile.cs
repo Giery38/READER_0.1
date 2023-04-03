@@ -8,7 +8,7 @@ namespace READER_0._1.Model.Exel
 {
     public class ExelFile : File
     {
-        public  List<ExelFilePage> ExelPage { get; private set; }
+        public  List<ExelFilePage> ExelPages { get; private set; }
 
         private bool readed; 
         public bool Readed
@@ -26,12 +26,12 @@ namespace READER_0._1.Model.Exel
 
         public ExelFile(string path, string fileName, Formats format) : base(path, fileName, format)
         {
-            ExelPage = new List<ExelFilePage>();
+            ExelPages = new List<ExelFilePage>();
             Readed = false;
         }
         public ExelFile()
         {
-            ExelPage = new List<ExelFilePage>();
+            ExelPages = new List<ExelFilePage>();
         }
         public ExelFile(ExelFile exelFile)
         {
@@ -39,7 +39,7 @@ namespace READER_0._1.Model.Exel
             Path = exelFile.Path;
             Readed = exelFile.Readed;
             Format = exelFile.Format;
-            ExelPage = exelFile.ExelPage;            
+            ExelPages = exelFile.ExelPages;            
         }
         public void SetReaded(bool value)
         {
@@ -50,14 +50,14 @@ namespace READER_0._1.Model.Exel
         {
             if (exelFilePage != null)
             {
-                ExelPage.Add(exelFilePage);
+                ExelPages.Add(exelFilePage);
             }           
         }
         public void AddPage(List<ExelFilePage> exelFilePage)
         {
             if (exelFilePage != null)
             {
-                ExelPage.AddRange(exelFilePage);
+                ExelPages.AddRange(exelFilePage);
             }           
         }
     }

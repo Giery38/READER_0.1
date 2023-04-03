@@ -147,12 +147,11 @@ namespace READER_0._1.View
         private void DeleteFolderButton_Click(object sender, RoutedEventArgs e)
         {
             Button button = sender as Button;
-            var confirmDialog = new ConfirmDialog($"Вы уверены, что хотите удалить папку {button.CommandParameter}?");
+            ConfirmDialog confirmDialog = new ConfirmDialog($"Вы уверены, что хотите удалить папку {button.CommandParameter}?");
             confirmDialog.ShowDialog();
             bool choiceResult = confirmDialog.IsConfirmed;
             if (button.Command.CanExecute(choiceResult))
-            {
-                // Выполнение команды
+            {            
                 button.Command.Execute(button.CommandParameter);
             }
         }     

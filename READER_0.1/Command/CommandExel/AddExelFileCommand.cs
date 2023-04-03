@@ -6,6 +6,7 @@ using READER_0._1.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using File = READER_0._1.Model.File;
 
@@ -19,10 +20,17 @@ namespace READER_0._1.Command.CommandExel
             this.exelViewModel = exelViewModel;
            
         }       
-
-        public override void Execute(object parameter)
+        private int GetRowSum(int[,] arr, int row)
         {
-            
+            int rowSum = 0;
+            for (int j = 0; j < arr.GetLength(1); j++)
+            {
+                rowSum += arr[row, j];               
+            }
+            return rowSum;
+        }       
+        public override void Execute(object parameter)
+        {           
             List<ExelFile> files = new List<ExelFile>();
             File file;
             OpenFileDialog openFileDialog = new OpenFileDialog

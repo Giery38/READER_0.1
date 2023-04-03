@@ -14,5 +14,10 @@ namespace READER_0._1.ViewModel
         {
             this.settings = settings;
         }
+
+        public override void Deactivation()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

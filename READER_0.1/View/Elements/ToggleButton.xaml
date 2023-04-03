@@ -15,28 +15,31 @@
             Margin="0"
             HorizontalAlignment="Left"
             VerticalAlignment="Top">
-            <Rectangle
+            <Border
+                SnapsToDevicePixels="True"
                 x:Name="Back"
                 MinWidth="96"
                 MinHeight="56"
                 Margin="2,2,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Fill="#FFA0A0A0"
-                MouseLeftButtonDown="Back_MouseLeftButtonDown"
-                RadiusX="15"
-                RadiusY="29" />
-            <Rectangle  
+                Background="#FFA0A0A0"
+                BorderBrush="Black"
+                BorderThickness="2"
+                CornerRadius="10"
+                MouseLeftButtonDown="Back_MouseLeftButtonDown" />
+            <Border
+                 SnapsToDevicePixels="True"
                 x:Name="Dot"
-                MinWidth="50"
+                MinWidth="55"
                 MinHeight="55"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                Fill="White"
-                RadiusX="15"
-                RadiusY="29"
-                MouseLeftButtonDown="Dot_MouseLeftButtonDown">
-            </Rectangle>
+                Background="White"
+                BorderBrush="Black"
+                BorderThickness="2"
+                CornerRadius="10"
+                MouseLeftButtonDown="Dot_MouseLeftButtonDown" />
         </Grid>
     </Viewbox>
 
