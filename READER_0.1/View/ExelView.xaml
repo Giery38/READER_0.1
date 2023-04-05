@@ -372,49 +372,12 @@
                                                         <RowDefinition Height="*" />
                                                     </Grid.RowDefinitions>
                                                     <StackPanel Grid.Row="0" Orientation="Horizontal">
-                                                        <ComboBox                                                            
-                                                            Width="120"
-                                                            Height="24"
-                                                            HorizontalAlignment="Left"
-                                                            VerticalAlignment="Top"
-                                                            Panel.ZIndex="20"
-                                                            Background="#5C3939"
-                                                            IsReadOnly="True"
-                                                            ItemsSource="{Binding Path=TableInfo}"
-                                                            SelectedItem="{Binding SelectedTableInfo}">
-                                                            <ComboBox.ItemTemplate>
-                                                                <DataTemplate>
-                                                                    <Grid>
-                                                                        <Grid.ColumnDefinitions>
-                                                                            <ColumnDefinition Width="*" />
-                                                                            <ColumnDefinition Width="10" />
-                                                                        </Grid.ColumnDefinitions>
-                                                                        <TextBlock Grid.Column="0" Text="{Binding}" />
-                                                                        <Ellipse
-                                                                            Grid.Column="1"
-                                                                            Width="10"
-                                                                            Height="10"
-                                                                            Fill="Transparent"
-                                                                            Stroke="Black"
-                                                                            StrokeThickness="1" />
-                                                                    </Grid>
-                                                                </DataTemplate>
-                                                            </ComboBox.ItemTemplate>
-                                                            <ComboBox.ItemContainerStyle>
-                                                                <Style TargetType="ComboBoxItem">
-                                                                    <Setter Property="Background" Value="#5C3939" />
-                                                                    <Setter Property="BorderThickness" Value="0" />
-                                                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                                                </Style>
-                                                            </ComboBox.ItemContainerStyle>
-                                                        </ComboBox>
-
+                                                        <viewelement:CustomComboBox SelectedItem="{Binding SelectedTableInfo}" Width="150" Height="30" BorderBrush="#888888"  Background="#FF3F3F3F" CornerRadius="10" ItemsSource="{Binding Path=TableInfo}"></viewelement:CustomComboBox>
                                                         <viewelement:ToggleButton                                                            
                                                             Width="50"
                                                             Height="24"
                                                             Toggled="{Binding ShowDuplicatesInDataView, Mode=OneWayToSource}" />
                                                         <TextBlock Text="Показывать дубликаты" />
-                                                        <viewelement:CustomComboBox CornerRadius="10" ItemsSource="{Binding Path=TableInfo}"></viewelement:CustomComboBox>
                                                     </StackPanel>
                                                     <DataGrid
                                                         x:Name="Table"
