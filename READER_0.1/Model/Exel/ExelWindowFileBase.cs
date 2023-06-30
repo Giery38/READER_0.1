@@ -1,4 +1,5 @@
-﻿using READER_0._1.Tools;
+﻿using READER_0._1.Model.Exel.Settings;
+using READER_0._1.Tools;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,7 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows;
-using static READER_0._1.Model.Settings.Exel.ExelSettingsRead;
+using static READER_0._1.Model.Exel.Settings.ExelSettingsRead;
 
 namespace READER_0._1.Model.Exel
 {
@@ -21,22 +22,22 @@ namespace READER_0._1.Model.Exel
         public Dictionary<ExelFilePage, List<Model.File>> ExelFilesСontentInDirectoriesNoEquals { get; private set; }
         public List<SearchFilesResult> SearchFilesResults { get; private set; }
         //
-        public List<Thread> ThreadsReadFiles { get; private set; } //
+        public List<Thread> ThreadsReadFiles { get; private set; } 
         //
-        private readonly Settings.Exel.ExelSettingsRead exelSettingsRead;
+        public ExelSettings ExelSettings { get; private set; }
         static public string TempFolderPath { get; private set; }
 
-        public ExelWindowFileBase(string tempFolderPath, Settings.Exel.ExelSettingsRead exelSettingsRead)
+        public ExelWindowFileBase(string tempFolderPath, ExelSettings exelSettings)
         {
             DirectoriesBelongExelFile = new Dictionary<ExelFile, List<Directory>>();
             FoldersWithFiles = new List<Directory>();           
-            ExelReaderManager = new ExelReaderManager(tempFolderPath, exelSettingsRead);
+            ExelReaderManager = new ExelReaderManager(tempFolderPath);
             SearchFilesResults = new List<SearchFilesResult>();
             ExelFilesСontentInDirectoriesEquals = new Dictionary<ExelFilePage, List<Model.File>>();
             ExelFilesСontentInDirectoriesNoEquals = new Dictionary<ExelFilePage, List<Model.File>>();
             ThreadsReadFiles = new List<Thread>();
             //
-            this.exelSettingsRead = exelSettingsRead;
+            this.ExelSettings = exelSettings;
             TempFolderPath = tempFolderPath;
             //                       
         }       
@@ -85,25 +86,13 @@ namespace READER_0._1.Model.Exel
             folderWithFiles.AddFile(AddedFile);
         }
         public void RemoveFile(ExelFile RemovedFile, string FolderName)
-        {
+        {           
             Directory folderWithFiles = FoldersWithFiles.Find(item => item.Name == FolderName);
             if (folderWithFiles == null)
             {
                 return;
             }
-            Thread readFileThread = ExelReaderManager.FindThreadsReadFile(RemovedFile.Path);
-            if (readFileThread != null)
-            {
-                if (readFileThread.IsAlive == true)
-                {
-                    readFileThread.Interrupt();
-                    readFileThread.Join();
-                }
-                else
-                {
-                    ThreadsReadFiles.Remove(readFileThread);
-                }
-            }                              
+            ExelReaderManager.RemoveExelFileReader(RemovedFile);
             folderWithFiles.Files.Remove(RemovedFile);
             SearchFilesResults.RemoveAll(item => item.ExelFile == RemovedFile);
             ExelFile directoryBelongExelFileKey = DirectoriesBelongExelFile.Keys.FirstOrDefault(item => item == RemovedFile);
@@ -111,6 +100,14 @@ namespace READER_0._1.Model.Exel
             {
                 DirectoriesBelongExelFile.Remove(directoryBelongExelFileKey);
             }
+            try
+            {
+                System.IO.File.Delete(RemovedFile.TempCopyPath);
+            }
+            catch (Exception)
+            {
+                
+            }            
         }
         public void RemoveFolderWithFiles(string folderName)
         {
@@ -192,14 +189,14 @@ namespace READER_0._1.Model.Exel
                 AddedList = RemoveDublicateInLists(ExelFilesСontentInDirectoriesNoEquals[keyPage], AddedList);
                 AddedList = RemoveDublicateInLists(ExelFilesСontentInDirectoriesEquals[keyPage], AddedList);
                 ExelFilesСontentInDirectoriesNoEquals[keyPage].AddRange(AddedList);
-            }            
+            }
         }        
         private List<Model.File> RemoveDublicateInLists(List<Model.File> MainList, List<Model.File> ChekingList)
         {
             List<Model.File> result = new List<Model.File>();
             for (int i = 0; i < ChekingList.Count; i++)
             {
-                if (MainList.Find(item => item.FileName == ChekingList[i].FileName) == null)
+                if (MainList.Find(item => item.Name == ChekingList[i].Name) == null)
                 {
                     result.Add(ChekingList[i]);
                 }
@@ -214,12 +211,12 @@ namespace READER_0._1.Model.Exel
                 folderWithFiles.SetName(newName);
             }            
         }
-        public bool TryReadExelFile(ExelFile exelFile)
+        public bool TryReadExelFile(ExelFile exelFile, ExelSettingsRead exelSettingsRead)
         {
             bool result = false;
             Thread readExelFile = new Thread(() =>
             {
-                result = ExelReaderManager.TryReadExelFile(exelFile);
+                result = ExelReaderManager.TryReadExelFile(exelFile, exelSettingsRead);
             });            
             readExelFile.Start();
             readExelFile.Join();

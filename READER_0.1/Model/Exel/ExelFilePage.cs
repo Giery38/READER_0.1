@@ -1,10 +1,6 @@
-﻿using Microsoft.Office.Interop.Excel;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using static READER_0._1.Model.Settings.Exel.ExelSettingsRead;
-using Excel = Microsoft.Office.Interop.Excel;
 
 namespace READER_0._1.Model.Exel
 {

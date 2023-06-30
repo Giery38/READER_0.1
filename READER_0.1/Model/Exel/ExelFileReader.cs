@@ -4,14 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
-using System.Threading;
-using READER_0._1.Tools;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Packaging;
-using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using System.IO;
-using READER_0._1.Model.Settings.Exel;
+using READER_0._1.Model.Exel.Settings;
+using static READER_0._1.Model.Exel.Settings.ExelSettingsRead;
 
 namespace READER_0._1.Model.Exel
 {
@@ -31,6 +29,7 @@ namespace READER_0._1.Model.Exel
         private Excel.Workbook usedWorkbook;
         private Process usedProcess;
         private SpreadsheetDocument usedDocument;
+        public bool isUsedApplicationNull;
 
         public ExelFileReader(ExelFile exelFile, string tempFolderPath, ExelSettingsRead settings)
         {
@@ -79,8 +78,7 @@ namespace READER_0._1.Model.Exel
             return exelFilePages;
         }       
         public void Close()
-        {
-            Closed = true;
+        {            
             try
             {
                 if (usedAppliacation != null)
@@ -130,27 +128,17 @@ namespace READER_0._1.Model.Exel
             {
                
             }
-            try
-            {
-                if (ExelFile.TempCopyPath != null)
-                {
-                    System.IO.File.Delete(ExelFile.TempCopyPath);
-                }
-            }
-            catch (Exception)
-            {
-
-            }            
+            Closed = true;
         }
         private string CreateTempFile(Excel.Application exelApplication, Excel.Workbook exelWorkbook)
         {
             GetWindowThreadProcessId(exelApplication.Hwnd, out int idProcess);
-            string tempFileName = "id022-" + idProcess + "id022-" + ExelFile.FileName + "-temp" + "." + ExelFile.Format.ToString();
-            string tempFilePath = Path.Combine(TempFolderPath, tempFileName);            
+            string tempName = "id022-" + idProcess + "id022-" + ExelFile.Name + "-temp" + "." + ExelFile.Format.ToString();
+            string tempFilePath = Path.Combine(TempFolderPath, tempName);            
             while (System.IO.File.Exists(tempFilePath))
             {
-                tempFileName += "1";
-                tempFilePath = Path.Combine(TempFolderPath, tempFileName + ExelFile.Format.ToString());
+                tempName += "1";
+                tempFilePath = Path.Combine(TempFolderPath, tempName + ExelFile.Format.ToString());
             }
             try
             {
@@ -197,10 +185,8 @@ namespace READER_0._1.Model.Exel
                 return null;
             }
             List<ExelFilePage> exelFilePages = new List<ExelFilePage>();
-            SpreadsheetDocument document = SpreadsheetDocument.Open(ExelFile.TempCopyPath, true);            
-            usedDocument = document;
-            this.workbookPart = document.WorkbookPart;
-            List<WorksheetPart> worksheetsParts = workbookPart.WorksheetParts.ToList();
+            usedDocument = SpreadsheetDocument.Open(ExelFile.TempCopyPath, false);            
+            this.workbookPart = usedDocument.WorkbookPart;
             foreach (int index in DataInPage.Keys)
             {                
                 if (DataInPage[index] != null)
@@ -209,10 +195,10 @@ namespace READER_0._1.Model.Exel
                 }
 
             }
-            if (document != null)
+            if (usedDocument != null)
             {
-                document.Close();
-                document.Dispose();
+                usedDocument.Close();
+                usedDocument.Dispose();
             }
             usedDocument = null;
             return exelFilePages;
@@ -254,19 +240,19 @@ namespace READER_0._1.Model.Exel
 
         private ExelFilePage ReadWorksheetExel(WorksheetPart worksheetPart, object[,] arrData)
         {            
-            List<Tuple<int, int>> positions = SearchPositionColumnName(arrData, settings.SearchableColumn);            
+            List<(int row, int column)> positions = SearchPositionColumnName(arrData, settings.SearchableColumn);            
             string relationshipId = workbookPart.GetIdOfPart(worksheetPart);
             Sheet sheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => s.Id == relationshipId);
             ExelFilePage exelFilePage = new ExelFilePage(sheet.Name);          
-            foreach (Tuple<int, int> position in positions)
+            foreach ((int row, int column) position in positions)
             {
                 exelFilePage.AddTabel(CreateTable(position, arrData, worksheetPart));                                
             }
             return exelFilePage;
         }        
-        private ExelFilePageTable CreateTable(Tuple<int, int> positionNameColumn, object[,] arrData, WorksheetPart worksheetPart)
+        private ExelFilePageTable CreateTable((int row, int column) positionNameColumn, object[,] arrData, WorksheetPart worksheetPart)
         {
-            Dictionary<string, Tuple<int, int>> titlePositions = ReadTableHeader(positionNameColumn,arrData, worksheetPart);
+            Dictionary<string, (int row, int column)> titlePositions = ReadTableHeader(positionNameColumn,arrData, worksheetPart);
             int startRow = GetFirstRowInTable(titlePositions, worksheetPart);
             int lastRow  = GetLastRowInTable(new Tuple<int, int>(startRow, titlePositions.Values.First().Item2), arrData, worksheetPart);            
             ExelFilePageTable exelFilePageTable = new ExelFilePageTable(titlePositions.Keys.ToList());
@@ -278,18 +264,18 @@ namespace READER_0._1.Model.Exel
             
             return exelFilePageTable;
         }
-        private Exel.Range GetRangeBodyTable(Tuple<int, int> positionNameColumn, object[,] arrData, int startRow, int lastRow, WorksheetPart worksheetPart)
+        private Exel.Range GetRangeBodyTable((int row, int column) positionNameColumn, object[,] arrData, int startRow, int lastRow, WorksheetPart worksheetPart)
         {
             Exel.Range headerRange =  GetTableHeaderRange(positionNameColumn, arrData, worksheetPart);
-            Tuple<int, int> firstCell = headerRange.Start;
-            Tuple<int, int> lastCell = headerRange.End;
-            Exel.Range rangeBody = new Exel.Range(new Tuple<int, int>(startRow, firstCell.Item2), new Tuple<int, int>(lastRow, lastCell.Item2));
+            (int row, int column) firstCell = headerRange.Start;
+            (int row, int column) lastCell = headerRange.End;
+            Exel.Range rangeBody = new Exel.Range(new (startRow, firstCell.Item2), new (lastRow, lastCell.Item2));
             return rangeBody;
         }
 
-        private List<object> ReadColumn(Tuple<int, int> titlePosition,int startRow,int lastRow, object[,] arrData, WorksheetPart worksheetPart)
+        private List<object> ReadColumn((int row, int column) titlePosition,int startRow,int lastRow, object[,] arrData, WorksheetPart worksheetPart)
         {
-            Tuple<int, int> ReadCell = titlePosition;
+            (int row, int column) ReadCell = titlePosition;
             List<object> DataColumn = new List<object>();
             MergeCells mergeCells = null;
             DocumentFormat.OpenXml.Spreadsheet.MergeCell mergeCell = null;
@@ -301,7 +287,7 @@ namespace READER_0._1.Model.Exel
             }            
             for (int row = startRow; row <= lastRow; row++)
             {
-                ReadCell = new Tuple<int, int>(row, titlePosition.Item2);
+                ReadCell = new (row, titlePosition.Item2);
                 value = arrData[ReadCell.Item1, ReadCell.Item2];
                 if (value == null && mergeCells != null)
                 {
@@ -321,26 +307,26 @@ namespace READER_0._1.Model.Exel
             }
             return DataColumn;
         }
-        private Dictionary<string, Tuple<int, int>> ReadTableHeader(Tuple<int, int> positionNameColumn, object[,] arrData, WorksheetPart worksheetPart)
+        private Dictionary<string, (int row, int column)> ReadTableHeader((int row, int column) positionNameColumn, object[,] arrData, WorksheetPart worksheetPart)
         {            
             Exel.Range headerRange =  GetTableHeaderRange(positionNameColumn, arrData, worksheetPart);
-            Tuple<int, int> firstCell = headerRange.Start;
-            Tuple<int, int> lastCell = headerRange.End;
-            Dictionary<string, Tuple<int, int>> titlePosition = new Dictionary<string, Tuple<int, int>>();
+            (int row, int column) firstCell = headerRange.Start;
+            (int row, int column) lastCell = headerRange.End;
+            Dictionary<string, (int row, int column)> titlePosition = new Dictionary<string, (int row, int column)>();
             for (int i = firstCell.Item2; i < lastCell.Item2 - firstCell.Item2 + 1 + firstCell.Item2; i++)
             {
-                positionNameColumn = CheckRealPositionNameColumn(new Tuple<int, int>(firstCell.Item1, i), arrData);
-                if (positionNameColumn != null)
+                positionNameColumn = CheckRealPositionNameColumn(new (firstCell.row, i), arrData);
+                if (positionNameColumn.row > 0 && positionNameColumn.column > 0)
                 {
-                    titlePosition.TryAdd(arrData[positionNameColumn.Item1, positionNameColumn.Item2].ToString(),positionNameColumn);
-                }
+                    titlePosition.TryAdd(arrData[positionNameColumn.Item1, positionNameColumn.Item2].ToString(), positionNameColumn);//
+                }               
             }
             return titlePosition;
         }
-        private Exel.Range GetTableHeaderRange(Tuple<int, int> positionNameColumn, object[,] arrData, WorksheetPart worksheetPart)
+        private Exel.Range GetTableHeaderRange((int row, int column) positionNameColumn, object[,] arrData, WorksheetPart worksheetPart)///////////////////////////////////////////////
         {
-            Tuple<int, int>  firstCell = positionNameColumn;
-            Tuple<int, int>  lastCell = positionNameColumn;
+            (int row, int column) firstCell = positionNameColumn;
+            (int row, int column) lastCell = positionNameColumn;
             Worksheet worksheet = worksheetPart.Worksheet;
             MergeCells mergeCells = worksheet.Elements<MergeCells>().FirstOrDefault();
             SheetData sheetData = worksheet.GetFirstChild<SheetData>();
@@ -363,7 +349,7 @@ namespace READER_0._1.Model.Exel
                 {
                     isLastCell = true;
                     rightBorderEnd = startColumn - 1;
-                    lastCell = new Tuple<int, int>(rowIndex, rightBorderEnd);
+                    lastCell = new(rowIndex, rightBorderEnd);
                 }
                 startColumn++;
             }
@@ -378,7 +364,7 @@ namespace READER_0._1.Model.Exel
                 {
                     isLastCell = true;
                     leftBorderEnd = startColumn + 1;
-                    firstCell = new Tuple<int, int>(rowIndex, leftBorderEnd);
+                    firstCell = new (rowIndex, leftBorderEnd);
                 }
                 startColumn--;
             }
@@ -426,11 +412,10 @@ namespace READER_0._1.Model.Exel
 
             return false;
         }               
-        private List<Tuple<int, int>> SearchPositionColumnName(object[,] dataInWorksheet, string nameColumnSearch)
-        {
-            List<string> namesColumnSearch = new List<string>();
-            List<Tuple<int, int>> positions = new List<Tuple<int, int>>();
-            settings.SearchingColumnName.TryGetValue(nameColumnSearch, out namesColumnSearch);                        
+        private List<(int row, int column)> SearchPositionColumnName(object[,] dataInWorksheet, string nameColumnSearch)
+        {           
+            List<(int row, int column)> positions = new List<(int row, int column)>();
+            List<string>  namesColumnSearch = settings.SearchingColumnNames.Find(item => item.Name == nameColumnSearch).Values;
             var columnCount = dataInWorksheet.GetLength(1);
             var rowCount = dataInWorksheet.Length / columnCount;
             for (int column = 1; column < columnCount + 1; column++)
@@ -440,10 +425,8 @@ namespace READER_0._1.Model.Exel
                     if (dataInWorksheet[row, column] != null)
                     {
                         if (namesColumnSearch.Find(item => item == dataInWorksheet[row, column].ToString()) != null)
-                        {
-                            var tt = namesColumnSearch.Find(item => item == dataInWorksheet[row, column].ToString());
-                            var gg = dataInWorksheet[row, column].ToString();
-                            positions.Add(new Tuple<int, int>(row, column));
+                        {                           
+                            positions.Add(new (row, column));
                         }
                     }
                 }
@@ -458,7 +441,7 @@ namespace READER_0._1.Model.Exel
             string columnName;
             string cellReference;
             Border border = new Border();
-            for (int i = startCell.Item1; i < rows; i++)
+            for (int i = startCell.Item1; i <= rows; i++)
             {                
                 if (arrData[startCell.Item1, startCell.Item2] == null)
                 {
@@ -480,9 +463,9 @@ namespace READER_0._1.Model.Exel
                 }                                         
                 startCell = new Tuple<int, int>(startCell.Item1 + 1, startCell.Item2);
             }
-            if (startCell.Item1 - 1 >= 1)
+            if (startCell.Item1 -  1 >=  1)
             {
-                return startCell.Item1 - 1;
+                return startCell.Item1 - 1 - settings.FooterLength;
             }
             return 1;
         }
@@ -545,7 +528,7 @@ namespace READER_0._1.Model.Exel
             return result;
         }
 
-        private int GetFirstRowInTable(Dictionary<string, Tuple<int, int>> titlePosition, WorksheetPart worksheetPart)
+        private int GetFirstRowInTable(Dictionary<string, (int row, int column)> titlePosition, WorksheetPart worksheetPart)
         {            
             Worksheet worksheet = worksheetPart.Worksheet;
             MergeCells mergeCells = null;
@@ -563,8 +546,8 @@ namespace READER_0._1.Model.Exel
             {
                 if (mergeCells != null)
                 {
-                    columnName = ConvertToLetter(titlePosition[title].Item2);
-                    cellReference = columnName + titlePosition[title].Item1.ToString();
+                    columnName = ConvertToLetter(titlePosition[title].column);
+                    cellReference = columnName + titlePosition[title].row.ToString();
                     cell = worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == cellReference);                    
                     mergeCell = GetCellInMergeCells(cell, mergeCells);
                     if (mergeCell != null)
@@ -576,9 +559,9 @@ namespace READER_0._1.Model.Exel
                         }
                     }
                 }                
-                if (titlePosition[title].Item1 > maxRow)
+                if (titlePosition[title].row > maxRow)
                 {
-                    maxRow = titlePosition[title].Item1;
+                    maxRow = titlePosition[title].row;
                 }                
             }
             return maxRow + 1;
@@ -595,40 +578,37 @@ namespace READER_0._1.Model.Exel
             int maxNumber = Math.Max(firstNumber, secondNumber);
             return maxNumber;
         }               
-        private Tuple<int, int> CheckRealPositionNameColumn(Tuple<int, int> nameColumnPosition, object[,] arrData)
+        private (int row, int column) CheckRealPositionNameColumn((int row, int column) nameColumnPosition, object[,] arrData)
         {
             var rows = arrData.GetLength(0);
             //var columns = arrData.GetLength(1);            
-            Tuple<int, int> realPosition = nameColumnPosition;
+            (int row, int column) realPosition = nameColumnPosition;
             if (arrData[nameColumnPosition.Item1, nameColumnPosition.Item2] != null && CheckValueCellOfNameColumn(arrData[nameColumnPosition.Item1, nameColumnPosition.Item2].ToString()))
             {
                 return realPosition;
             }
-            if (nameColumnPosition.Item1 - 1 > 0 && arrData[nameColumnPosition.Item1 - 1, nameColumnPosition.Item2] != null && CheckValueCellOfNameColumn(arrData[nameColumnPosition.Item1 - 1, nameColumnPosition.Item2].ToString()) == true)
+            if (nameColumnPosition.row - 1 > 0 && arrData[nameColumnPosition.Item1 - 1, nameColumnPosition.column] != null && CheckValueCellOfNameColumn(arrData[nameColumnPosition.row - 1, nameColumnPosition.Item2].ToString()) == true)
             {
-                return new Tuple<int, int>(nameColumnPosition.Item1 - 1, nameColumnPosition.Item2);
+                return new (nameColumnPosition.row - 1, nameColumnPosition.column);
             }
-            if (nameColumnPosition.Item1 + 1 <= rows && arrData[nameColumnPosition.Item1 + 1, nameColumnPosition.Item2] != null && CheckValueCellOfNameColumn(arrData[nameColumnPosition.Item1 + 1, nameColumnPosition.Item2].ToString()) == true)
+            if (nameColumnPosition.Item1 + 1 <= rows && arrData[nameColumnPosition.row + 1, nameColumnPosition.column] != null && CheckValueCellOfNameColumn(arrData[nameColumnPosition.row + 1, nameColumnPosition.Item2].ToString()) == true)
             {
-                return new Tuple<int, int>(nameColumnPosition.Item1 + 1, nameColumnPosition.Item2);
+                return new (nameColumnPosition.row + 1, nameColumnPosition.column);
             }
-            return null;
+            return (-1, -1);
         }
         private bool CheckValueCellOfNameColumn(string valueInCell)
         {
-            foreach (string key in settings.SearchingColumnName.Keys)
+            foreach (SearchingColumnName searchingColumnName in settings.SearchingColumnNames)
             {
                 if (valueInCell == null)
                 {
                     break;
                 }
-                for (int i = 0; i < settings.SearchingColumnName[key].Count; i++)
+                if (searchingColumnName.Active == true && searchingColumnName.Values.Contains(valueInCell) == true)
                 {
-                    if (settings.SearchingColumnName[key].Find(item => item == valueInCell) != null)
-                    {
-                        return true;
-                    }
-                }                
+                    return true;
+                }                                              
             }
             return false;
         }              

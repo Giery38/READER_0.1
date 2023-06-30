@@ -1,9 +1,12 @@
-﻿using System;
+﻿using READER_0._1.Model.Exel.Settings;
+using READER_0._1.Model.Exel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using READER_0._1.Model.Settings.Word;
 
 namespace READER_0._1.Model.Word
 {
@@ -15,37 +18,33 @@ namespace READER_0._1.Model.Word
         private readonly Settings.Word.WordSettingsRead wordSettingsRead;
         private List<Thread> threadsReadFiles;
 
+        public WordReaderManager WordReaderManager { get; private set; }
+
         public WordWindowFileBase(string tempFolderPath, Settings.Word.WordSettingsRead wordSettingsRead)
         {
             WordFiles = new List<WordFile>();
             threadsReadFiles = new List<Thread>();
             this.wordSettingsRead = wordSettingsRead;
             TempFolderPath = tempFolderPath;
+            WordReaderManager = new WordReaderManager(tempFolderPath);
         }
         public void AddFiles(List<WordFile> AddedFiles)
         {
             AddedFiles = AddedFiles.Except(WordFiles).ToList();
-            WordFiles.AddRange(AddedFiles);
-            Thread readExelFiles = new Thread(() => ReadWordFiles(AddedFiles));
-            readExelFiles.Start();
+            WordFiles.AddRange(AddedFiles);            
         }
-        private void ReadWordFiles(List<WordFile> wordFileReaed)
+        
+        public bool TryReadWordFile(WordFile wordFile, WordSettingsRead wordSettingsRead)
         {
-            foreach (WordFile wordFile in wordFileReaed)
+            bool result = false;
+            Thread readWordFile = new Thread(() =>
             {
-                Thread readExelFile = new Thread(() => ReadWordFile(wordFile));                
-                readExelFile.Name = "Чтение Word файла " + wordFile.FileName;
-                threadsReadFiles.Add(readExelFile);
-                readExelFile.Start();
-                readExelFile.Join();
-            }
+                result = WordReaderManager.TryReadExelFile(wordFile, wordSettingsRead);
+            });
+            readWordFile.Start();
+            readWordFile.Join();
+            return result;
         }
-        private void ReadWordFile(WordFile wordFile)
-        {
-            int id = WordFiles.FindIndex(file => file.FileName == wordFile.FileName);
-            WordFileReader exelFileReader = new WordFileReader(WordFiles[id], TempFolderPath, wordSettingsRead);
-            exelFileReader.Read();
-            WordFiles[id].SetReaded(true);
-        }
+     
     }
 }

@@ -24,7 +24,7 @@ namespace READER_0._1.Model.Exel
             }
         }
 
-        public ExelFile(string path, string fileName, Formats format) : base(path, fileName, format)
+        public ExelFile(string path, string name, string format) : base(path, name, format)
         {
             ExelPages = new List<ExelFilePage>();
             Readed = false;
@@ -35,7 +35,7 @@ namespace READER_0._1.Model.Exel
         }
         public ExelFile(ExelFile exelFile)
         {
-            FileName = exelFile.FileName;
+            Name = exelFile.Name;
             Path = exelFile.Path;
             Readed = exelFile.Readed;
             Format = exelFile.Format;

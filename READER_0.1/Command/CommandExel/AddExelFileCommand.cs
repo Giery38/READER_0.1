@@ -47,9 +47,9 @@ namespace READER_0._1.Command.CommandExel
                 string extension;
                 for (int i = 0; i < filePath.Length; i++)
                 {
-                    extension = Path.GetExtension(filePath[i]).Replace(".", "");
-                    file = new File(filePath[i], Path.GetFileNameWithoutExtension(filePath[i]), (Formats)Enum.Parse(typeof(Formats), extension, true));
-                    if (file.Format == Formats.xls || file.Format == Formats.xlsx)
+                    extension = Path.GetExtension(filePath[i]);
+                    file = new File(filePath[i], Path.GetFileNameWithoutExtension(filePath[i]), extension);
+                    if (file.Format == ".xls" || file.Format == ".xlsx")
                     {
                         files.Add(file.ToExelFile());
                     }                    

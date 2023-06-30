@@ -18,6 +18,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="settings.xml" />
+    <None Remove="View\Elements\ColorPicker\Images\CircularHueGradient.png" />
+    <None Remove="View\Elements\ColorPicker\Images\transparentbg_mini.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <COMReference Include="Microsoft.Office.Core">
 		<Guid>{2DF8D04C-5BFA-101B-BDE5-00AA0044DE52}</Guid>
 		<VersionMajor>2</VersionMajor>
@@ -48,13 +54,26 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DevExpress.Data" Version="22.2.4" />
-    <PackageReference Include="DocumentFormat.OpenXml" Version="2.19.0" />
+    <Resource Include="View\Elements\ColorPicker\Images\transparentbg_mini.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="View\Elements\ColorPicker\ColorPicker.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DevExpress.Data" Version="22.2.5" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="2.20.0" />
     <PackageReference Include="ExcelDataReader" Version="3.6.0" />
     <PackageReference Include="ExcelDataReader.DataSet" Version="3.6.0" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
     <PackageReference Include="System.ObjectModel" Version="4.3.0" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
     <PackageReference Include="WindowsAPICodePack" Version="7.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="View\Elements\ColorPicker\Images\CircularHueGradient.png" />
   </ItemGroup>
 
 </Project>

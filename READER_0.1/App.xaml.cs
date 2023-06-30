@@ -9,6 +9,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -30,7 +31,8 @@ namespace READER_0._1
             tempFolderPath = CreateTempFolder();
             CleansingTempFolder();
             SetSettings();
-            windowFileBase = new WindowFileBase(tempFolderPath, settings);                     
+            windowFileBase = new WindowFileBase(tempFolderPath, settings);
+           
         }        
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -46,6 +48,7 @@ namespace READER_0._1
         protected override void OnExit(ExitEventArgs e)
         {
             CleansingTempFolder();
+            windowFileBase.exelWindowFileBase.ExelReaderManager.Close();
             base.OnExit(e);
         }
         private void SetSettings()
@@ -70,9 +73,9 @@ namespace READER_0._1
         }
 
         private string CreateConfigFile()
-        {
+        {                   
             FileStream stream = new FileStream("settings.xml", FileMode.OpenOrCreate);
-            stream.Close();
+            stream.Close();                  
             return stream.Name;
         }
         private string CreateTempFolder()
@@ -101,8 +104,8 @@ namespace READER_0._1
             {
                 try
                 {
-                    string fileName = Path.GetFileNameWithoutExtension(filePath);
-                    string[] idString = fileName.Split("id022-");
+                    string name = Path.GetFileNameWithoutExtension(filePath);
+                    string[] idString = name.Split("id022-");
                     int.TryParse(idString[1], out int id);
                     Process processe = Process.GetProcessById(id);
                     processe.Kill();
@@ -119,6 +122,7 @@ namespace READER_0._1
                 }
                 catch
                 {
+
                 }
             }
         }

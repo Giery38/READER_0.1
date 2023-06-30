@@ -16,36 +16,29 @@ namespace READER_0._1.ViewModel
         public ICommand ShiftingInExelViewModelCommand { get; }
         public ICommand ShiftingInWordViewModelCommand { get; }
         public ICommand ShiftingInSettingsViewModelCommand { get; }
-        private List<ICommand> shiftingCommands = new List<ICommand>();
         public MainViewModel(WindowFileBase windowFileBase)
         {
-            ExelViewModel exelViewModel = new ExelViewModel(windowFileBase);            
+            //ExelViewModel exelViewModel = new ExelViewModel(windowFileBase);
+            WordViewModel wordViewModel = new WordViewModel(windowFileBase);
             navigation = new Navigation.Navigation();           
             this.windowFileBase = windowFileBase;          
             if (navigation.CurrentViewModel == null)
             {
-                navigation.CurrentViewModel = exelViewModel;
+                navigation.CurrentViewModel = wordViewModel;
                 //создать homePage
             }
-            //ShiftingInExelViewModelCommand = new NavigateCommand(new ExelViewModel(windowFileBase), navigation);
-            ShiftingInExelViewModelCommand = new NavigateCommand(exelViewModel, navigation);
-            shiftingCommands.Add(ShiftingInExelViewModelCommand);
-            ShiftingInWordViewModelCommand = new NavigateCommand(new WordViewModel(windowFileBase), navigation);
-            shiftingCommands.Add(ShiftingInWordViewModelCommand);
+            ShiftingInExelViewModelCommand = new NavigateCommand(new ExelViewModel(windowFileBase), navigation);
+            //ShiftingInExelViewModelCommand = new NavigateCommand(exelViewModel, navigation);
+            ShiftingInWordViewModelCommand = new NavigateCommand(wordViewModel, navigation); 
+            //ShiftingInWordViewModelCommand = new NavigateCommand(new WordViewModel(windowFileBase), navigation);         
             ShiftingInSettingsViewModelCommand = new NavigateCommand(new SettingsViewModel(windowFileBase.settings), navigation);
-            shiftingCommands.Add(ShiftingInSettingsViewModelCommand);
-            navigation.CurrentViewModelChanged += OnCurrentViewModelChanged;
+            //
+            navigation.CurrentViewModelChanged += Navigation_CurrentViewModelChanged;
         }
 
-        private void OnCurrentViewModelChanged()
+        private void Navigation_CurrentViewModelChanged()
         {
             OnPropertyChanged(nameof(CurrentViewModel));
-            shiftingCommands.OfType<NavigateCommand>().ToList().ForEach(item => item.OnCanExecutedChanged());
-        }
-
-        public override void Deactivation()
-        {
-            throw new NotImplementedException();
-        }
+        }              
     }
 }

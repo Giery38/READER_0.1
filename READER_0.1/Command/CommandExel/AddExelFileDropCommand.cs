@@ -25,8 +25,8 @@ namespace READER_0._1.Command.CommandExel
             for (int i = 0; i < addedFiles.filePaths.Length; i++)
             {
                 extension = Path.GetExtension(addedFiles.filePaths[i]).Replace(".", "");
-                file = new File(addedFiles.filePaths[i], Path.GetFileNameWithoutExtension(addedFiles.filePaths[i]), (Formats)Enum.Parse(typeof(Formats), extension, true));
-                if (file.Format == Formats.xls || file.Format == Formats.xlsx)
+                file = new File(addedFiles.filePaths[i], Path.GetFileNameWithoutExtension(addedFiles.filePaths[i]), extension);
+                if (file.Format == ".xls" || file.Format == ".xlsx")
                 {
                     files.Add(file.ToExelFile());
                 }

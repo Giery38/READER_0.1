@@ -1,12 +1,9 @@
 ﻿using READER_0._1.Model.Settings.Word;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Data;
 using System.Linq;
-using System.Text;
-using static READER_0._1.Model.Settings.Exel.ExelSettingsRead;
+
 
 namespace READER_0._1.Model.Exel
 {
@@ -36,25 +33,25 @@ namespace READER_0._1.Model.Exel
         public DataTable ToDataTabel()
         {
             DataTable dataTable = new DataTable();
-            foreach (int columnNumber in TableColumns.Values)
+            foreach (string columnName in TableColumns.Keys)
             {
-                dataTable.Columns.Add(columnNumber.ToString(), typeof(string));
+                dataTable.Columns.Add(columnName, typeof(string));
             }
-
+            
             for (int row = 0; row < Rows.Count; row++)
             {
-                DataRow dataRow = dataTable.NewRow();
-                for (int column = 0; column < TableColumns.Count; column++)
-                {
+                DataRow dataRow = dataTable.NewRow();                
+                for (int column = 0; column < dataTable.Columns.Count; column++)
+                {                    
                     if (TableCells[new Tuple<int, int>(row, column)] != null)
                     {
-                        dataRow[column.ToString()] = TableCells[new Tuple<int, int>(row, column)].ToString();
+                        dataRow[dataTable.Columns[column].ColumnName] = TableCells[new Tuple<int, int>(row, column)].ToString();
                     }
                     else
                     {
-                        dataRow[column.ToString()] = null;
+                        dataRow[dataTable.Columns[column].ColumnName] = null;
                     }
-                }
+                }                
                 dataTable.Rows.Add(dataRow);
             }
             return dataTable;
@@ -208,9 +205,8 @@ namespace READER_0._1.Model.Exel
                     return null;
                 }
                 for (int i = 0; i < lastRow; i++)
-                {
-                    object tempObject = new object();
-                    TableCells.TryGetValue(new Tuple<int, int>(i, columnNumber),out tempObject);
+                {                
+                    TableCells.TryGetValue(new Tuple<int, int>(i, columnNumber),out object tempObject);
                     columnData.Add(tempObject);
                 }                
             }

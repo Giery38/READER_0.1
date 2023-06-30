@@ -1,4 +1,5 @@
 ﻿using READER_0._1.Model;
+using READER_0._1.Model.Exel.Settings;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -49,6 +50,19 @@ namespace READER_0._1.ViewModel.ViewElement
             {
                 correctName = value;
                 OnPropertyChanged(nameof(CorrectName));
+            }
+        }
+        private ExelSettingsRead exelSettingsRead;
+        public ExelSettingsRead ExelSettingsRead
+        {
+            get
+            {
+                return exelSettingsRead;
+            }
+            set
+            {
+                exelSettingsRead = value;
+                OnPropertyChanged(nameof(ExelSettingsRead));
             }
         }
         public FolderView(string name, Type type) //форматная папка

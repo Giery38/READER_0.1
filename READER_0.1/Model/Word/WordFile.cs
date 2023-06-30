@@ -1,4 +1,5 @@
-﻿using System;
+﻿using READER_0._1.Model.Exel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,7 +22,20 @@ namespace READER_0._1.Model.Word
                 OnPropertyChanged(nameof(Readed));
             }
         }
-        public WordFile(string path, string fileName, Formats format) : base(path, fileName, format)
+        private List<ExelFilePageTable> tables;
+        public List<ExelFilePageTable> Tables
+        {
+            get
+            {
+                return tables;
+            }
+            set
+            {
+                tables = value;
+                OnPropertyChanged(nameof(Tables));
+            }
+        }
+        public WordFile(string path, string name, string format) : base(path, name, format)
         {           
             Readed = false;
         }

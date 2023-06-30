@@ -1,5 +1,6 @@
 ﻿using ExcelDataReader;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using READER_0._1.Model.Exel.Settings;
 using READER_0._1.Tools;
 using READER_0._1.View.Elements;
 using READER_0._1.ViewModel.ViewElement;
@@ -146,7 +147,7 @@ namespace READER_0._1.View
 
         private void DeleteFolderButton_Click(object sender, RoutedEventArgs e)
         {
-            Button button = sender as Button;
+            Button button = sender as Button;           
             ConfirmDialog confirmDialog = new ConfirmDialog($"Вы уверены, что хотите удалить папку {button.CommandParameter}?");
             confirmDialog.ShowDialog();
             bool choiceResult = confirmDialog.IsConfirmed;
@@ -154,7 +155,14 @@ namespace READER_0._1.View
             {            
                 button.Command.Execute(button.CommandParameter);
             }
-        }     
+        }
+        private void SettingsFolderButton_Click(object sender, RoutedEventArgs e)
+        {
+            ExelSettingsDialog exelSettingsDialog = new ExelSettingsDialog();
+            Button button = sender as Button;
+            exelSettingsDialog.ExelSettingsRead = button.CommandParameter as ExelSettingsRead;
+            exelSettingsDialog.ShowDialog();
+        }
         private void TextBox_LostFocus(object sender, RoutedEventArgs e)
         {
             var textBox = (TextBox)sender;
@@ -172,7 +180,7 @@ namespace READER_0._1.View
                     FolderViewNameChangeCommand?.Execute(info);
                 }
             }
-        }
+        }      
     }
     public static class ScrollViewerBinding
     {

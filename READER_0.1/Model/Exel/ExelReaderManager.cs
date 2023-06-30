@@ -1,5 +1,6 @@
-﻿using READER_0._1.Model.Settings.Exel;
+﻿using READER_0._1.Model.Exel.Settings;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -12,105 +13,56 @@ namespace READER_0._1.Model.Exel
     public class ExelReaderManager
     {
         public List<ExelFileReader> ExelFileReaders { get; private set; }
-        public List<Thread> ThreadsReadFiles { get; private set; }
-        public string TempFolderPath { get; private set; }
-        public ExelSettingsRead ExelSettingsRead { get; private set; }
+        public string TempFolderPath { get; private set; }        
+        private bool close = false;
 
-        public ExelReaderManager(string tempFolderPath, ExelSettingsRead exelSettingsRead)
+        public ExelReaderManager(string tempFolderPath)
         {
-            TempFolderPath = tempFolderPath;
-            ExelSettingsRead = exelSettingsRead;
+            TempFolderPath = tempFolderPath;            
             ExelFileReaders = new List<ExelFileReader>();
-            ThreadsReadFiles = new List<Thread>();
-        }
-        public Thread FindThreadsReadFile(string filePath)
+        }       
+        public bool TryReadExelFile(ExelFile exelFile, ExelSettingsRead exelSettingsRead)
         {
-            string[] name;
-
-            for (int i = 0; i < ThreadsReadFiles.Count; i++)
+            lock (this)
             {
-                name = ThreadsReadFiles[i].Name.Split(new string[] { "&&" }, StringSplitOptions.RemoveEmptyEntries);
-                if (filePath == name[1])
+                if (close == true)
                 {
-                    return ThreadsReadFiles[i];
+                    return false;
                 }
-            }
-            return null;
-        }
-        public bool TryReadExelFile(ExelFile exelFile)
-        {
-            Thread threadMain = Thread.CurrentThread;
-            threadMain.Name = "Чтение Excel файла" + "&&" + exelFile.Path;
-            ThreadsReadFiles.Add(threadMain);
-            Thread readExelFile = null;
-            try
-            {
-                bool TryReadExelFileResult = false;
-                readExelFile = new Thread(() =>
+                Thread threadMain = Thread.CurrentThread;
+                string name = "Чтение Excel файла" + "&&" + exelFile.Path;
+                threadMain.Name = name;
+                try
                 {
-                    TryReadExelFileResult = InternalReadExelFile(exelFile);
-                });               
-                readExelFile.Start();               
-                readExelFile.Join();                
-                if (ThreadsReadFiles.Contains(threadMain))
-                {
-                    ThreadsReadFiles.Remove(threadMain);
-                }
-                return TryReadExelFileResult;
-            }
-            catch (Exception)
-            {                
-                ExelFileReader exelFileReader = ExelFileReaders.Find(item => item.ExelFile == exelFile);
-                if (exelFileReader != null)
-                {
-                    exelFileReader.Close();
-                    ExelFileReaders.Remove(exelFileReader);
-                }
-                if (ThreadsReadFiles.Contains(threadMain))
-                {
-                    ThreadsReadFiles.Remove(threadMain);
-                }
-                GC.Collect();
-                return false;
-            }
-        }
-        public bool InternalReadExelFile(ExelFile exelFile)
-        {            
-            ExelFileReader exelFileReader = new ExelFileReader(exelFile, TempFolderPath, ExelSettingsRead);
-            ExelFileReaders.Add(exelFileReader);
-            try
-            {              
-                if (exelFile != null)
-                {
+                    ExelFileReader exelFileReader = new ExelFileReader(exelFile, TempFolderPath, exelSettingsRead);
+                    ExelFileReaders.Add(exelFileReader);
                     exelFile.AddPage(exelFileReader.Read());
+                    exelFileReader.Close();                    
+                    ExelFileReaders.Remove(exelFileReader);
                     exelFile.SetReaded(true);
                 }
-                if (ExelFileReaders.Find(item => item.ExelFile == exelFileReader.ExelFile) != null)
+                catch (Exception)
                 {
-                    exelFileReader.Close();
-                    ExelFileReaders.Remove(exelFileReader);
+                    exelFile.Corrupted = true; 
+                    return false;
                 }
                 return true;
-            }
-            catch (Exception ex)
+            }            
+        }     
+        public void RemoveExelFileReader(ExelFile RemovedFile)
+        {
+            ExelFileReader exelFileReader = ExelFileReaders.Find(item => item.ExelFile == RemovedFile);
+            if (exelFileReader != null)
             {
-                //Process.Start("cmd.exe", "/K echo ошибка" + ex.ToString());
-                if (exelFile != null)
-                {
-                    exelFile.Corrupted = true;
-                }
-                if (ExelFileReaders.Find(item => item.ExelFile == exelFileReader.ExelFile) != null)
-                {
-                    exelFileReader.Close();
-                    ExelFileReaders.Remove(exelFileReader);
-                }
-                return false;
+                exelFileReader.Close();                               
+                ExelFileReaders.Remove(exelFileReader);
             }
         }
         public void Close()
         {
             ExelFileReaders.ForEach(reader => reader.Close());
             ExelFileReaders.Clear();
+            close = true;       
         }
     }
 }

@@ -11,9 +11,10 @@ namespace READER_0._1.Model
     public class File : INotifyPropertyChanged
     {
         public string Path { get; protected set; }
-        public string FileName { get; protected set; }
-        public Formats Format { get; protected set; }
+        public string Name { get; protected set; }
+        public string Format { get; protected set; }
         public string TempCopyPath { get; protected set; }
+
         private bool corrupted = false;
         public bool Corrupted
         {
@@ -27,31 +28,25 @@ namespace READER_0._1.Model
                 OnPropertyChanged(nameof(Corrupted));
             }
         }
-        public File(string path, string fileName, Formats format)
+        public File(string path, string name, string format)
         {
             Path = path;
-            FileName = fileName;
+            Name = name;
             Format = format;
         }
 
         public File()
         {
             Path = "";
-            FileName = "";
-            Format = Formats.error;
+            Name = "";
+            Format = null;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        public void CopyeTo(string DestinationPath)
-        {
-            DestinationPath += "//" + System.IO.Path.GetFileName(Path);
-            System.IO.File.Copy(Path, DestinationPath, true);
-        }
+        }        
 
         public void SetTempCopyPath(string tempCopyPath) 
         {
@@ -60,10 +55,10 @@ namespace READER_0._1.Model
 
         public ExelFile ToExelFile()
         {
-            if (this.Format == Formats.xlsx ||
-                this.Format == Formats.xls)
+            if (this.Format == ".xlsx" ||
+                this.Format == ".xls")
             {
-                ExelFile exelFile = new ExelFile(Path, FileName, this.Format);
+                ExelFile exelFile = new ExelFile(Path, Name, this.Format);
                 return exelFile;
             }
             else
@@ -74,10 +69,10 @@ namespace READER_0._1.Model
         }
         public WordFile ToWordFile()
         {
-            if (this.Format == Formats.doc ||
-                this.Format == Formats.docx)
+            if (this.Format == ".doc" ||
+                this.Format == ".docx")
             {
-                WordFile wordFile = new WordFile(Path, FileName, this.Format);
+                WordFile wordFile = new WordFile(Path, Name, this.Format);
                 return wordFile;
             }
             else
@@ -102,14 +97,5 @@ namespace READER_0._1.Model
             return Path.GetHashCode();
         }
     }
-}
-public enum Formats
-{
-    xls,
-    xlsx,
-    doc,
-    docx,
-    pdf,
-    error
 }
 

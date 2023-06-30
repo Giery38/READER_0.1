@@ -7,6 +7,7 @@ using WinForms = System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.IO;
 using System.Windows;
+using READER_0._1.Model.Exel;
 
 namespace READER_0._1.Command.CommandExel
 {
@@ -16,39 +17,44 @@ namespace READER_0._1.Command.CommandExel
         public CopyExelFileCommand(ExelViewModel exelViewModel)
         {
             this.exelViewModel = exelViewModel;
+            exelViewModel.PropertyChanged += ExelViewModel_PropertyChanged;
+        }
+        private void ExelViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(exelViewModel.ExelFilesСontentInDirectoriesEquals))
+            {
+                OnCanExecutedChanged();
+            }
+        }
+        public override bool CanExecute(object parameter)
+        {
+            if (exelViewModel.ExelFilesСontentInDirectoriesEquals.Count > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
         public override void Execute(object parameter)
-        {
+        {           
             WinForms.FolderBrowserDialog folderBrowserDialog = new WinForms.FolderBrowserDialog();
             WinForms.DialogResult dialogResult = folderBrowserDialog.ShowDialog();
             if (dialogResult == WinForms.DialogResult.OK)
             {
+                SearchFilesResult searchFilesResult = exelViewModel.windowFileBase.exelWindowFileBase.SearchFilesResults
+   .Find(item => item.ExelFile == exelViewModel.SelectedExelFile && item.NameColumn == exelViewModel.SelectedColumnName);
                 string directoryPath = folderBrowserDialog.SelectedPath;
-                string directoryName = Path.GetFileName(directoryPath);
-                string[] allFoundFiles = System.IO.Directory.GetFiles(directoryPath, "*." + nameof(Formats.pdf), SearchOption.TopDirectoryOnly);
-                List<Model.File> filesToDirectory = new List<Model.File>();
-                string extension;
-                for (int i = 0; i < allFoundFiles.Length; i++)
+                foreach (List<Model.File> files in searchFilesResult.FilesInDirectory.Values)
                 {
-                    extension = Path.GetExtension(allFoundFiles[i]).Replace(".", "");
-                    filesToDirectory.Add(new Model.File(allFoundFiles[i], extension, (Formats)Enum.Parse(typeof(Formats),".pdf",true)));
-                }
-                Model.Directory directory = new Model.Directory(directoryPath, directoryName, filesToDirectory);
-                CopyFiles(directory);
+                    foreach (Model.File file in files)
+                    {
+                        System.IO.File.Copy(file.Path, Path.Combine(directoryPath, file.Name + file.Format), true);
+                    }
+                }                
                 MessageBox.Show("Все файлы копированы.");
             }
-        }
-
-        private void CopyFiles(Model.Directory DestinationDirectory)
-        {
-            /*
-            List<Model.File> copiedFiles = new List<Model.File>();
-            exelViewModel.ExelFilesСontentInDirectoriesEquals.TryGetValue(exelViewModel.SelectedPage, out copiedFiles);
-            for (int i = 0; i < copiedFiles.Count; i++)
-            {
-                copiedFiles[i].CopyeTo(DestinationDirectory.Path);
-            }     
-            */
-        }
+        }       
     }
 }

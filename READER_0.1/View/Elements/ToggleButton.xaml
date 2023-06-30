@@ -6,44 +6,28 @@
     xmlns:local="clr-namespace:READER_0._1.View.Elements"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
-
-
-    <Viewbox Margin="0,2,2,1">
-        <Grid
-            MinWidth="100"
-            MinHeight="60"
-            Margin="0"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top">
-            <Border
-                SnapsToDevicePixels="True"
-                x:Name="Back"
-                MinWidth="96"
-                MinHeight="56"
-                Margin="2,2,0,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Background="#FFA0A0A0"
-                BorderBrush="Black"
-                BorderThickness="2"
-                CornerRadius="10"
-                MouseLeftButtonDown="Back_MouseLeftButtonDown" />
-            <Border
-                 SnapsToDevicePixels="True"
-                x:Name="Dot"
-                MinWidth="55"
-                MinHeight="55"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Background="White"
-                BorderBrush="Black"
-                BorderThickness="2"
-                CornerRadius="10"
-                MouseLeftButtonDown="Dot_MouseLeftButtonDown" />
-        </Grid>
-    </Viewbox>
-
-
-
-
+    <Border
+        x:Name="Back"
+        MinWidth="20"
+        MinHeight="20"
+        Padding="0.4"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        Background="{Binding Background, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButton}}}"
+        BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButton}}}"
+        BorderThickness="{Binding BorderThickness, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButton}}}"
+        CornerRadius="{Binding CornerRadius, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButton}}}"
+        MouseLeftButtonDown="Back_MouseLeftButtonDown"
+        SnapsToDevicePixels="True">
+        <Border
+            x:Name="Dot"
+            MinWidth="10"
+            MinHeight="10"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Stretch"
+            Background="White"
+            CornerRadius="{Binding CornerRadius, RelativeSource={RelativeSource AncestorType={x:Type local:ToggleButton}}}"
+            IsHitTestVisible="False"
+            SnapsToDevicePixels="True" />
+    </Border>
 </UserControl>

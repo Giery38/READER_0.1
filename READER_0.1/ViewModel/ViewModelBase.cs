@@ -11,7 +11,6 @@ namespace READER_0._1.ViewModel
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-        public abstract void Deactivation();        
+        }        
     }
 }

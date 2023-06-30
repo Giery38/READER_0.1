@@ -25,27 +25,9 @@ namespace READER_0._1.Model
             Directories = new List<Directory>();           
             TempFolderPath = tempFolderPath;
             this.settings = settings;
-            exelWindowFileBase = new ExelWindowFileBase(TempFolderPath, settings.ExelSettingsRead);
+            exelWindowFileBase = new ExelWindowFileBase(TempFolderPath, settings.ExelSettings);
             wordWindowFileBase = new WordWindowFileBase(TempFolderPath, settings.WordSettingsRead);            
-        }                       
-        public Formats FormatStrngToEnum(string format)
-        {
-            switch (format)
-            {
-                case ".xls":
-                    return Formats.xls;                
-                case ".xlsx":
-                    return Formats.xlsx;
-                case ".doc":
-                    return Formats.doc;
-                case ".docx":
-                    return Formats.docx;
-                case ".pdf":
-                    return Formats.pdf;
-                default:
-                    return Formats.error;
-            }
-        }
+        }                              
     }
     public class FilesReachedEventArgs : EventArgs
     {

@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace READER_0._1.View
+namespace READER_0._1.View.Settings
 {
     /// <summary>
     /// Логика взаимодействия для SettingsView.xaml

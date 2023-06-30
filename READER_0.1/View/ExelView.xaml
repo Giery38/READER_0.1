@@ -3,10 +3,9 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:System="clr-namespace:System;assembly=mscorlib"
+    xmlns:colorpicker1="clr-namespace:ColorPicker"
     xmlns:converters="clr-namespace:READER_0._1.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:diagnostics="clr-namespace:System.Diagnostics;assembly=netstandard"
-    xmlns:local="clr-namespace:READER_0._1.View"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewelement="clr-namespace:READER_0._1.View.Elements"
     xmlns:viewmodel="clr-namespace:READER_0._1.ViewModel"
@@ -18,20 +17,14 @@
     Background="AliceBlue"
     mc:Ignorable="d">
     <UserControl.Resources>
-        <converters:AlternationIndexConverter x:Key="AlternationIndexConverter" />
-        <converters:SizeChangeConverter x:Key="SizeChangeConverte" />
-        <converters:ListViewItemToContentAndTagConverter x:Key="ListViewItemToContentAndTagConverter" />
-        <DataTemplate x:Key="TrashIcon">
-            <Path
-                Data="M5,6.77273h4.2m9.8,0h-4.2m-5.6,0L9.2,5.5c0-.55228.44772-1,1-1h3.6c.5523,0,1,.44772,1,1v1.27273m-5.6,0h5.6M6.4,8.59091v7.27269c0,1.7142,0,2.5713.54673,3.1039.54674.5325,1.42669.5325,3.18657.5325h3.7334c1.7599,0,2.6398,0,3.1866-.5325.5467-.5326.5467-1.3897.5467-3.1039v-7.27269M9.2,10.4091v5.4545M12,10.4091v5.4545m2.8-5.4545v5.4545"
-                Stroke="Black"
-                StrokeLineJoin="Round">
-                <Path.RenderTransform>
-                    <MatrixTransform Matrix="0.959149 0 0 0.937012 -2.509788 -2.244144" />
-                </Path.RenderTransform>
-            </Path>
-        </DataTemplate>
-
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Icons.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <converters:AlternationIndexConverter x:Key="AlternationIndexConverter" />
+            <converters:SizeChangeConverter x:Key="SizeChangeConverte" />
+            <converters:ListViewItemToContentAndTagConverter x:Key="ListViewItemToContentAndTagConverter" />
+        </ResourceDictionary>
     </UserControl.Resources>
     <Grid x:Name="MainGrid">
         <Grid.ColumnDefinitions>
@@ -39,12 +32,25 @@
             <ColumnDefinition x:Name="MainWidht" Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.Resources>
-            <Style TargetType="{x:Type Button}">
+            <Style TargetType="{x:Type viewelement:CustomComboBox}">
                 <Style.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True">
+                    <Trigger Property="IsMouseOver" Value="true">
+                        <Setter Property="BorderBrush" Value="{StaticResource SelectedItemColor}" />
                         <Setter Property="Cursor" Value="Hand" />
                     </Trigger>
                 </Style.Triggers>
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderBrush" Value="#888888" />
+            </Style>
+            <Style TargetType="{x:Type viewelement:CustomButton}">
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Cursor" Value="Hand" />
+                        <Setter Property="BorderBrush" Value="{StaticResource SelectedItemColor}" />
+                    </Trigger>
+                </Style.Triggers>
+                <Setter Property="Background" Value="#7A6C6C" />
+                <Setter Property="BorderBrush" Value="#7A6C6C" />
             </Style>
         </Grid.Resources>
         <Grid
@@ -148,6 +154,14 @@
                                             CommandParameter="{Binding Name}"
                                             ContentTemplate="{StaticResource TrashIcon}"
                                             DockPanel.Dock="Right" />
+                                        <Button
+                                            x:Name="SettingsFolderButton"
+                                            Padding="3"
+                                            Background="Transparent"
+                                            Click="SettingsFolderButton_Click"
+                                            CommandParameter="{Binding ExelSettingsRead}"
+                                            ContentTemplate="{StaticResource SettingsIcon}"
+                                            DockPanel.Dock="Right" />
                                     </DockPanel>
                                 </Border>
                                 <ListView
@@ -200,11 +214,40 @@
                                     <ListView.ItemContainerStyle>
                                         <Style TargetType="{x:Type ListViewItem}">
                                             <Setter Property="Padding" Value="0" />
+                                            <Setter Property="Margin" Value="0,0,0,5" />
                                             <Setter Property="Tag" Value="{Binding ElementName=ListFiles, Path=Tag}" />
                                             <Setter Property="Focusable" Value="{Binding Readed}" />
                                             <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}" />
                                             <EventSetter Event="PreviewMouseRightButtonDown" Handler="ListFiles_ListViewItem_PreviewMouseRightButtonDown" />
                                             <EventSetter Event="ContextMenuClosing" Handler="ListFiles_ListViewItem_ContextMenuClosing" />
+                                            <Setter Property="BorderBrush" Value="Black" />
+                                            <Setter Property="BorderThickness" Value="2" />
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type ListViewItem}">
+                                                        <Border
+                                                            x:Name="border"
+                                                            Padding="{TemplateBinding Padding}"
+                                                            Background="{TemplateBinding Background}"
+                                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                                            CornerRadius="6"
+                                                            SnapsToDevicePixels="true">
+                                                            <ContentPresenter
+                                                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="Transparent" />
+                                                                <Setter Property="Cursor" Value="Hand" />
+                                                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource SelectedItemColor}" />
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
                                         </Style>
                                     </ListView.ItemContainerStyle>
                                     <ListView.ItemsPanel>
@@ -217,11 +260,8 @@
                                             <StackPanel Height="Auto" HorizontalAlignment="Center">
                                                 <Border
                                                     Width="155"
-                                                    Padding="4"
-                                                    HorizontalAlignment="Center"
-                                                    BorderBrush="Black"
-                                                    BorderThickness="1"
-                                                    CornerRadius="5">
+                                                    Padding="6"
+                                                    HorizontalAlignment="Center">
                                                     <StackPanel
                                                         Width="100"
                                                         HorizontalAlignment="Left"
@@ -229,7 +269,7 @@
                                                         <TextBlock Margin="0,0,2,0" Text="{Binding RelativeSource={RelativeSource AncestorType={x:Type ListViewItem}}, Path=(ItemsControl.AlternationIndex), Converter={StaticResource AlternationIndexConverter}, StringFormat='{}{0}.'}" />
                                                         <TextBlock
                                                             Width="100"
-                                                            Text="{Binding FileName}"
+                                                            Text="{Binding Name}"
                                                             TextAlignment="Left"
                                                             TextWrapping="Wrap">
                                                             <TextBlock.Resources>
@@ -237,6 +277,9 @@
                                                                     <Style.Triggers>
                                                                         <DataTrigger Binding="{Binding Corrupted}" Value="True">
                                                                             <Setter Property="Foreground" Value="Red" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding Readed, Mode=OneWay}" Value="True">
+                                                                            <Setter Property="Background" Value="Green" />
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
@@ -248,38 +291,31 @@
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
                                 </ListView>
-                                <Button
+                                <viewelement:CustomButton
                                     Height="25"
                                     HorizontalAlignment="Stretch"
                                     VerticalAlignment="Bottom"
+                                    BorderThickness="2"
                                     Command="{Binding ElementName=ListFolders, Path=DataContext.AddFileCommand}"
                                     CommandParameter="{Binding Name}"
-                                    Content="Добавить">
-                                    <Button.Resources>
-                                        <Style TargetType="Button">
+                                    Content="Добавить"
+                                    CornerRadius="0,0,5,5">
+                                    <viewelement:CustomButton.Resources>
+                                        <Style TargetType="{x:Type viewelement:CustomButton}">
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding CorrectName}" Value="False">
                                                     <Setter Property="IsEnabled" Value="False" />
                                                 </DataTrigger>
                                                 <Trigger Property="IsMouseOver" Value="True">
                                                     <Setter Property="Cursor" Value="Hand" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource SelectedItemColor}" />
                                                 </Trigger>
                                             </Style.Triggers>
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="Button">
-                                                        <Border
-                                                            Padding="0"
-                                                            Background="#7A6C6C"
-                                                            CornerRadius="0,0,5,5">
-                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                                        </Border>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
+                                            <Setter Property="Background" Value="#7A6C6C" />
+                                            <Setter Property="BorderBrush" Value="#7A6C6C" />
                                         </Style>
-                                    </Button.Resources>
-                                </Button>
+                                    </viewelement:CustomButton.Resources>
+                                </viewelement:CustomButton>
                             </StackPanel>
                         </Border>
                     </DataTemplate>
@@ -287,6 +323,7 @@
             </ListView>
             <Grid Grid.Row="1" Background="Transparent">
                 <Button
+                    Height="30"
                     VerticalAlignment="Bottom"
                     Background="#7A6C6C"
                     BorderBrush="#8A8888"
@@ -312,16 +349,14 @@
             <Grid
                 Grid.Row="0"
                 Width="Auto"
-                VerticalAlignment="Stretch"
-                Panel.ZIndex="1">
+                VerticalAlignment="Stretch">
                 <ListView
                     Width="Auto"
                     Height="Auto"
                     d:ItemsSource="{d:SampleData}"
-                    Background="White"
-                    IsEnabled="True"
+                    Background="#463535"
+                    BorderThickness="0"
                     ItemsSource="{Binding ExelFilePages}"
-                    ScrollViewer.CanContentScroll="True"
                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
                     ScrollViewer.IsDeferredScrollingEnabled="True"
                     SelectedItem="{Binding SelectedPage}"
@@ -333,20 +368,29 @@
                     </ListView.ItemsPanel>
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel>
-                                <TextBlock HorizontalAlignment="Center" Text="{Binding WorksheetName}" />
+                            <StackPanel Width="500">
+                                <Border
+                                    Padding="12"
+                                    BorderBrush="Black"
+                                    BorderThickness="2"
+                                    CornerRadius="10">
+                                    <TextBlock HorizontalAlignment="Center" Text="{Binding WorksheetName}" />
+                                </Border>
                             </StackPanel>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
             </Grid>
-            <ScrollViewer Grid.Row="1" CanContentScroll="True">
+            <ScrollViewer
+                Grid.Row="1"
+                Background="#644D4D"
+                CanContentScroll="True">
                 <Grid Background="#644D4D">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="50*" />
                         <RowDefinition Height="50*" />
                     </Grid.RowDefinitions>
-                    <StackPanel Grid.Row="0" Background="Transparent">
+                    <StackPanel Grid.Row="1" Background="Transparent">
                         <Border Padding="40,10,40,0">
                             <StackPanel>
                                 <Grid Background="Transparent">
@@ -372,12 +416,33 @@
                                                         <RowDefinition Height="*" />
                                                     </Grid.RowDefinitions>
                                                     <StackPanel Grid.Row="0" Orientation="Horizontal">
-                                                        <viewelement:CustomComboBox SelectedItem="{Binding SelectedTableInfo}" Width="150" Height="30" BorderBrush="#888888"  Background="#FF3F3F3F" CornerRadius="10" ItemsSource="{Binding Path=TableInfo}"></viewelement:CustomComboBox>
-                                                        <viewelement:ToggleButton                                                            
-                                                            Width="50"
-                                                            Height="24"
-                                                            Toggled="{Binding ShowDuplicatesInDataView, Mode=OneWayToSource}" />
-                                                        <TextBlock Text="Показывать дубликаты" />
+                                                        <viewelement:CustomComboBox
+                                                            Width="150"
+                                                            Height="30"
+                                                            Background="#463535"
+                                                            BorderThickness="2"
+                                                            CornerRadius="10"
+                                                            ItemsSource="{Binding TableInfo}"
+                                                            SelectedItem="{Binding SelectedTableInfo}" />
+                                                        <viewelement:ToggleButton
+                                                            Width="40"
+                                                            Height="25"
+                                                            Margin="0,0,10,0"
+                                                            BorderThickness="2"
+                                                            CornerRadius="7"
+                                                            Toggled="{Binding ShowDuplicatesInDataView, Mode=OneWayToSource}">
+                                                            <viewelement:ToggleButton.Resources>
+                                                                <Style TargetType="{x:Type viewelement:ToggleButton}">
+                                                                    <Style.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="true">
+                                                                            <Setter Property="BorderBrush" Value="{StaticResource SelectedItemColor}" />
+                                                                        </Trigger>
+                                                                    </Style.Triggers>
+                                                                    <Setter Property="BorderBrush" Value="#888888" />
+                                                                </Style>
+                                                            </viewelement:ToggleButton.Resources>
+                                                        </viewelement:ToggleButton>
+                                                        <TextBlock VerticalAlignment="Center" Text="Показывать дубликаты" />
                                                     </StackPanel>
                                                     <DataGrid
                                                         x:Name="Table"
@@ -392,7 +457,13 @@
                                                         ItemsSource="{Binding DataView}"
                                                         SelectionUnit="Cell"
                                                         VirtualizingStackPanel.IsVirtualizing="True"
-                                                        VirtualizingStackPanel.VirtualizationMode="Recycling" />
+                                                        VirtualizingStackPanel.VirtualizationMode="Recycling">
+                                                        <DataGrid.Resources>
+                                                            <Style TargetType="{x:Type ScrollBar}">
+                                                                <Setter Property="IsTabStop" Value="False" />
+                                                            </Style>
+                                                        </DataGrid.Resources>
+                                                    </DataGrid>
                                                 </Grid>
                                             </Border>
                                             <Grid Opacity="{Binding LoadingTable, UpdateSourceTrigger=PropertyChanged}">
@@ -421,102 +492,259 @@
                             </StackPanel>
                         </Border>
                     </StackPanel>
-                    <Grid Grid.Row="1" Height="Auto">
-                        <Grid Width="Auto" Height="Auto">
-                            <StackPanel Margin="45,85,0,0" Orientation="Horizontal">
-                                <Grid
+                    <Grid Grid.Row="0" Margin="0,50,0,0">
+                        <Grid>
+                            <StackPanel
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal">
+                                <Border
                                     x:Name="FileInfo"
-                                    Width="250"
+                                    Width="300"
                                     Height="auto"
                                     MinHeight="300"
+                                    Margin="0,0,40,0"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
-                                    Background="Green">
-                                    <Grid.Resources>
-                                        <System:Boolean x:Key="OptionsEnable" />
-                                        <System:Double x:Key="OptionsVisible" />
-                                    </Grid.Resources>
+                                    Background="#463535"
+                                    CornerRadius="10">
                                     <StackPanel>
-                                        <Grid Panel.ZIndex="1" Background="AntiqueWhite">
-                                            <ComboBox
-                                                Width="108"
-                                                Margin="142,0,0,0"
-                                                HorizontalAlignment="Left"
-                                                Panel.ZIndex="2"
-                                                IsReadOnly="True"
-                                                ItemsSource="{Binding Path=ColumnsNamesInPage}"
-                                                SelectedItem="{Binding SelectedColumnName, Mode=TwoWay}">
-                                                <ComboBox.ItemContainerStyle>
-                                                    <Style TargetType="ComboBoxItem">
-                                                        <Style.Triggers>
-                                                            <Trigger Property="IsSelected" Value="true">
-                                                                <Setter Property="Foreground" Value="Green" />
-                                                            </Trigger>
-                                                            <Trigger Property="IsSelected" Value="False">
-                                                                <Setter Property="Foreground" Value="Yellow" />
-                                                            </Trigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </ComboBox.ItemContainerStyle>
-                                                <ComboBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <TextBlock IsEnabled="True" Text="{Binding StringValue, Mode=OneWay}" />
-                                                    </DataTemplate>
-                                                </ComboBox.ItemTemplate>
-                                            </ComboBox>
-                                            <TextBlock
-                                                Height="Auto"
-                                                FontSize="14"
-                                                Text="Общая информация" />
-                                        </Grid>
-                                        <TextBlock Height="Auto" Text="Номера накладных" />
+                                        <Border
+                                            Padding="5,0,5,0"
+                                            Background="#7A6C6C"
+                                            CornerRadius="10,10,0,0">
+                                            <DockPanel Background="Transparent">
+                                                <TextBlock
+                                                    Height="Auto"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="14"
+                                                    Text="Общая информация" />
+                                                <viewelement:CustomComboBox
+                                                    Width="150"
+                                                    HorizontalAlignment="Right"
+                                                    Background="#7A6C6C"
+                                                    BorderThickness="2"
+                                                    CornerRadius="10"
+                                                    ItemsSource="{Binding ColumnsNamesInPage}"
+                                                    SelectedItem="{Binding SelectedColumnName}" />
+                                            </DockPanel>
+                                        </Border>
+                                        <TextBlock Height="Auto" Text="Общие количество" />
                                         <TextBlock Height="Auto" Text="{Binding SelectedPageInfo[ColumnsData].Count}" />
                                         <TextBlock Height="Auto" Text="Дубликаты" />
                                         <TextBlock Height="Auto" Text="{Binding SelectedPageInfo[ColumnsDataDplicates].Count}" />
-                                        <TextBlock Height="Auto" Text="Номера накладных без дубликатов" />
+                                        <TextBlock Height="Auto" Text="Уникальные" />
                                         <TextBlock Height="Auto" Text="{Binding SelectedPageInfo[ColumnsDataNoDplicates].Count}" />
-                                        <TextBlock Height="Auto" Text="Найдено накладных" />
+                                        <TextBlock Height="Auto" Text="Найдено" />
                                         <TextBlock Height="Auto" Text="{Binding ExelFilesСontentInDirectoriesEquals.Count}" />
-                                        <TextBlock Height="Auto" Text="Отсутсвующие  накладные" />
+                                        <TextBlock Height="Auto" Text="Отсутсвующие" />
                                         <TextBlock
                                             Height="Auto"
                                             VerticalAlignment="Top"
                                             Text="{Binding ExelFilesСontentInDirectoriesNoEquals.Count}" />
                                     </StackPanel>
-                                </Grid>
-                                <Grid
-                                    Width="150"
+                                </Border>
+
+                                <Border
+                                    Width="250"
                                     Height="Auto"
-                                    Margin="20,0,0,0"
                                     HorizontalAlignment="Left"
-                                    VerticalAlignment="Top">
+                                    VerticalAlignment="Top"
+                                    Background="#463535"
+                                    CornerRadius="10">
                                     <StackPanel Orientation="Vertical">
-                                        <TextBlock HorizontalAlignment="Left" Text="Папки с накладными" />
-                                        <TreeView
-                                            Width="150"
-                                            Height="150"
-                                            ItemsSource="{Binding Directories}">
-                                            <TreeView.Resources>
-                                                <HierarchicalDataTemplate DataType="{x:Type viewmodel2:Directory}" ItemsSource="{Binding Files}">
-                                                    <TreeViewItem Header="{Binding Name}" />
-                                                </HierarchicalDataTemplate>
-                                                <HierarchicalDataTemplate DataType="{x:Type viewmodel2:File}">
-                                                    <TreeViewItem Header="{Binding FileName}" />
-                                                </HierarchicalDataTemplate>
-                                            </TreeView.Resources>
-                                        </TreeView>
-                                        <Button
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Bottom"
-                                            Command="{Binding AddDirectoryCommand}"
-                                            Content="Button" />
-                                        <Button
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Bottom"
-                                            Command="{Binding CopyFileCommand}"
-                                            Content="Копировать" />
+                                        <Border
+                                            Height="20"
+                                            Padding="10,0,10,0"
+                                            Background="#7A6C6C"
+                                            CornerRadius="8,8,0,0">
+                                            <TextBlock
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Center"
+                                                Text="Папки с накладными" />
+                                        </Border>
+                                        <Border Padding="10">
+                                            <StackPanel>
+                                                <TreeView
+                                                    Width="150"
+                                                    Height="150"
+                                                    Margin="0,0,0,10"
+                                                    HorizontalContentAlignment="Left"                                                    
+                                                    ItemsSource="{Binding Directories}">
+                                                    <TreeView.Resources>
+                                                        <HierarchicalDataTemplate DataType="{x:Type viewmodel2:Directory}" ItemsSource="{Binding Files}">
+                                                            <TreeViewItem Header="{Binding Name}" />
+                                                        </HierarchicalDataTemplate>
+                                                        <HierarchicalDataTemplate DataType="{x:Type viewmodel2:File}">
+                                                            <TreeViewItem Header="{Binding Name}" />
+                                                        </HierarchicalDataTemplate>
+                                                        <Style TargetType="TreeView">
+                                                            <Setter Property="BorderThickness" Value="0" />
+                                                        </Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="BorderThickness" Value="0" />
+                                                            <Setter Property="Background" Value="#7A7474"></Setter>
+                                                        </Style>
+                                                        <Style TargetType="{x:Type TreeViewItem}">
+                                                            <Setter Property="Background" Value="Transparent" />
+                                                            <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
+                                                            <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
+                                                            <Setter Property="Padding" Value="0" />
+                                                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="{x:Type TreeViewItem}">
+                                                                        <Grid>
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition Width="Auto" />
+                                                                                <ColumnDefinition Width="Auto" />
+                                                                                <ColumnDefinition Width="*" />
+                                                                            </Grid.ColumnDefinitions>
+                                                                            <Grid.RowDefinitions>
+                                                                                <RowDefinition Height="Auto" />
+                                                                                <RowDefinition />
+                                                                            </Grid.RowDefinitions>
+                                                                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                                                                <ToggleButton
+                                                                                    x:Name="Expander"
+                                                                                    Background="Transparent"
+                                                                                    ClickMode="Press"
+                                                                                    IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource Mode=TemplatedParent}}">
+                                                                                    <Grid>
+                                                                                        <Ellipse
+                                                                                            Width="10"
+                                                                                            Height="10"
+                                                                                            Fill="Black" />
+                                                                                    </Grid>
+                                                                                </ToggleButton>
+                                                                                <Border
+                                                                                    x:Name="Bd"
+                                                                                    Padding="{TemplateBinding Padding}"
+                                                                                    Background="{TemplateBinding Background}"
+                                                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                                                    SnapsToDevicePixels="true">
+                                                                                    <ContentPresenter
+                                                                                        x:Name="PART_Header"
+                                                                                        Margin="0"
+                                                                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                                        ContentSource="Header"
+                                                                                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
+                                                                                        <ContentPresenter.ContentTemplate>
+                                                                                            <DataTemplate>
+                                                                                                <TextBlock Text="{Binding Name}" />
+                                                                                            </DataTemplate>
+                                                                                        </ContentPresenter.ContentTemplate>
+                                                                                    </ContentPresenter>
+                                                                                </Border>
+                                                                            </StackPanel>
+                                                                            <ItemsPresenter
+                                                                                x:Name="ItemsHost"
+                                                                                Grid.Row="1"
+                                                                                Grid.Column="0"
+                                                                                Margin="10,0,0,0" />
+                                                                        </Grid>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsExpanded" Value="false">
+                                                                                <Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed" />
+                                                                            </Trigger>
+                                                                            <Trigger Property="HasItems" Value="false">
+                                                                                <Setter TargetName="Expander" Property="Visibility" Value="Hidden" />
+                                                                            </Trigger>
+                                                                            <Trigger Property="IsSelected" Value="true">
+                                                                                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}" />
+                                                                            </Trigger>
+                                                                            <MultiTrigger>
+                                                                                <MultiTrigger.Conditions>
+                                                                                    <Condition Property="IsSelected" Value="true" />
+                                                                                    <Condition Property="IsSelectionActive" Value="false" />
+                                                                                </MultiTrigger.Conditions>
+                                                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource {x:Static SystemColors.InactiveSelectionHighlightBrushKey}}" />
+                                                                                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}}" />
+                                                                            </MultiTrigger>
+                                                                            <Trigger Property="IsEnabled" Value="false">
+                                                                                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                            <Style.Triggers>
+                                                                <Trigger Property="VirtualizingPanel.IsVirtualizing" Value="true">
+                                                                    <Setter Property="ItemsPanel">
+                                                                        <Setter.Value>
+                                                                            <ItemsPanelTemplate>
+                                                                                <VirtualizingStackPanel />
+                                                                            </ItemsPanelTemplate>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TreeView.Resources>
+                                                </TreeView>
+                                                <viewelement:CustomButton
+                                                    Margin="0,0,0,5"
+                                                    Padding="3"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Bottom"
+                                                    BorderThickness="2"
+                                                    Command="{Binding AddDirectoryCommand}"
+                                                    Content="Добавить"
+                                                    CornerRadius="6" />
+                                                <viewelement:CustomButton
+                                                    Margin="0,0,0,5"
+                                                    Padding="3"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Bottom"
+                                                    BorderThickness="2"
+                                                    Command="{Binding CopyFileCommand}"
+                                                    Content="Копировать"
+                                                    CornerRadius="6" />
+                                                <StackPanel Margin="3,0,0,0" HorizontalAlignment="Left">
+                                                    <Border
+                                                        x:Name="BorderPaintButton"
+                                                        Padding="2,0,0,0"
+                                                        Background="#7A6C6C"
+                                                        BorderThickness="2"
+                                                        CornerRadius="6">
+                                                        <Border.Resources>
+                                                            <Style TargetType="{x:Type Border}">
+                                                                <Style.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter Property="Cursor" Value="Hand" />
+                                                                        <Setter Property="BorderBrush" Value="{StaticResource SelectedItemColor}" />
+                                                                    </Trigger>
+                                                                </Style.Triggers>
+                                                                <Setter Property="Background" Value="#7A6C6C" />
+                                                                <Setter Property="BorderBrush" Value="#7A6C6C" />
+                                                            </Style>
+                                                        </Border.Resources>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <viewelement:CustomButton
+                                                                Height="20"
+                                                                HorizontalAlignment="Left"
+                                                                VerticalAlignment="Bottom"
+                                                                Command="{Binding RepaintRowsCommand}"
+                                                                CommandParameter="{Binding ElementName=ColorPicker, Path=SelectedColor}"
+                                                                Content="Окрасить" />
+                                                            <colorpicker1:PortableMinimalisticColorPicker
+                                                                x:Name="ColorPicker"
+                                                                Width="10"
+                                                                Height="10"
+                                                                Margin="4,0,4,0"
+                                                                BackgroundWindow="#7A6C6C"
+                                                                MinHeightWindow="200"
+                                                                CornerRadiusWindow="15"
+                                                                RecentColors="{Binding RecentColors}"
+                                                                WidthWindow="140" />
+                                                        </StackPanel>
+                                                    </Border>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
                                     </StackPanel>
-                                </Grid>
+                                </Border>
                             </StackPanel>
                         </Grid>
                     </Grid>
@@ -526,36 +754,4 @@
         <Grid />
     </Grid>
 </UserControl>
-<!--<TreeView.ItemTemplate>
-    <HierarchicalDataTemplate DataType="{x:Type viewelement:TableView}" ItemsSource="{Binding Rows}">
-        <HierarchicalDataTemplate.ItemTemplate>
-            <DataTemplate>
-                <Grid>
-                    <ItemsControl ItemsSource="{Binding RowCells}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Vertical" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid
-                                                                                x:Name="name"
-                                                                                MinWidth="{Binding Width, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                                Margin="0,0,5,0"
-                                                                                local:ActualSizeBinding.Active="True"
-                                                                                local:ActualSizeBinding.BoundActualHeight="{Binding Height, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                                local:ActualSizeBinding.BoundActualWidth="{Binding Width, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                                Background="Crimson">
-                                    <TextBlock
-                                                                                    HorizontalAlignment="Center"
-                                                                                    Text="{Binding CellData}" />
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Grid>
-            </DataTemplate>
-        </HierarchicalDataTemplate.ItemTemplate>
-    </HierarchicalDataTemplate>
-    </TreeView.ItemTemplate>-->
+

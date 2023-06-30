@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:converters="clr-namespace:READER_0._1.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:elements="clr-namespace:READER_0._1.View.Elements"
     xmlns:local="clr-namespace:READER_0._1.View"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodel="clr-namespace:READER_0._1.ViewModel"
@@ -12,23 +13,23 @@
     d:DesignWidth="800"
     mc:Ignorable="d">
     <UserControl.Resources>
-        
+        <converters:SearchWordsConverter x:Key="SearchWordsConverter" />
+        <converters:AddSearchStringConverter x:Key="AddSearchStringConverter" />
     </UserControl.Resources>
     <Grid x:Name="MainGrid" Background="White">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200" />
-            <ColumnDefinition x:Name="MainWidht" Width="*" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid
-            Grid.Column="0"
-            Width="Auto"
+            Grid.Column="0"            
             Height="Auto"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
             <Grid.RowDefinitions>
                 <RowDefinition />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <ListView                
+            <ListView
                 Grid.Row="0"
                 Margin="0,60,0,0"
                 HorizontalContentAlignment="Center"
@@ -46,7 +47,20 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel>
-                            <TextBlock Text="{Binding FileName}" />
+                            <TextBlock Text="{Binding Name}">
+                                <TextBlock.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Corrupted}" Value="True">
+                                                <Setter Property="Foreground" Value="Red" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Readed, Mode=OneWay}" Value="True">
+                                                <Setter Property="Background" Value="Green" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Resources>
+                            </TextBlock>
                         </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
@@ -57,6 +71,63 @@
                 VerticalAlignment="Bottom"
                 Command="{Binding AddWordFileCommand}"
                 Content="Добавить файл" />
+        </Grid>
+        <Grid Grid.Column="1">
+            <Border Padding="20">
+                <StackPanel>
+                    <Border Width="200" HorizontalAlignment="Left">
+                        <StackPanel>
+                            <TextBlock Text="{Binding SearchParagraphRates.Name}" />
+                            <ListView x:Name="Test" MinHeight="20" ItemsSource="{Binding SearchParagraphRates.SearchStrings, Mode=TwoWay}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource SearchWordsConverter}, ConverterParameter=Тариф}" />
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                            <!--
+                             <TextBox x:Name="SearchStringData">
+                                
+                            </TextBox>
+                            <elements:CustomButton  
+                                Mouse.MouseLeave="CustomButton_MouseLeave"
+                                Command="{Binding AddSearchStringInSettingsCommand}"
+                                Width="100"
+                                Height="30"
+                                HorizontalAlignment="Left"
+                                Background="Blue"
+                                Content="Добавить" >
+                                <elements:CustomButton.CommandParameter>
+                                    <MultiBinding Converter="{StaticResource AddSearchStringConverter}">
+                                        <Binding Path="SearchParagraphRates"  />
+                                        <Binding Path="Text" ElementName="SearchStringData"  />
+                                    </MultiBinding>
+                                </elements:CustomButton.CommandParameter>
+                            </elements:CustomButton>
+                            -->                           
+                        </StackPanel>
+                    </Border>
+                    <Border Width="200" HorizontalAlignment="Left">
+                        <StackPanel>
+                            <TextBlock Text="{Binding SearchParagraphStanding.Name}" />
+                            <ListView MinHeight="20" ItemsSource="{Binding SearchParagraphStanding.SearchStrings}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource SearchWordsConverter}, ConverterParameter=Простой}" />
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </StackPanel>
+                    </Border>
+                    <elements:CustomButton
+                        Width="100"
+                        Height="30"
+                        HorizontalAlignment="Left"
+                        Background="Blue"
+                        Command="{Binding ReadWordFileCommand}"
+                        Content="Прочитать" />
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

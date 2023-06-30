@@ -18,32 +18,34 @@ using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Threading;
+using System.Xml;
 using static Microsoft.WindowsAPICodePack.Shell.ShellNativeMethods;
 
 namespace READER_0._1.Tools
 {
-    
+
     //https://github.com/mono/WindowsAPICodePack/blob/46dfc119e5f2208716b0b279ba5d205b794081c7/Shell/Interop/Dialogs/DialogsCOMInterfaces.cs //PopulateWithFileNames вернет файлы до выхода
     public class СustomizedCommonOpenFileDialog
     {
-       
+
         private CommonOpenFileDialog CommonOpenFileDialogBase;
         private Reflector reflector;
         private object nativeDialog;
         private object customize;
         private IntPtr parentWindow;
         private IntPtr window = IntPtr.Zero;
-       
-      
+
+
         public СustomizedCommonOpenFileDialog()
-        {            
-            CommonOpenFileDialogBase = new CommonOpenFileDialog();            
+        {
+            CommonOpenFileDialogBase = new CommonOpenFileDialog();
             Start();
         }
         [DllImport("user32.dll")]
-[return: MarshalAs(UnmanagedType.Bool)]
-public static extern bool IsWindow(IntPtr hWnd);
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsWindow(IntPtr hWnd);
         [DllImport("user32.dll", SetLastError = true)]
         static extern bool RedrawWindow(IntPtr hWnd, IntPtr lprcUpdate, IntPtr hrgnUpdate, uint flags);
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
@@ -54,7 +56,7 @@ public static extern bool IsWindow(IntPtr hWnd);
         public static extern IntPtr GetParent(IntPtr hWnd);
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, IntPtr lParam);
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]       
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, [MarshalAs(UnmanagedType.LPWStr)] string lParam);
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern IntPtr CreateWindowEx(int exstyle, string lpClassName, string lpWindowName, int dwStyle,
@@ -64,14 +66,14 @@ public static extern bool IsWindow(IntPtr hWnd);
         public static extern bool GetWindowRect(IntPtr hwnd, out RECT lpRect);
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]              
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpClassName, string lpWindowName);
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
         private delegate bool EnumChildProc(IntPtr hWnd, IntPtr lParam);
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);        
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
         [DllImport("user32.dll")]
         private static extern bool EnumChildWindows(IntPtr hWndParent, EnumChildProc lpEnumFunc, IntPtr lParam);
         [DllImport("user32.dll")]
@@ -103,13 +105,28 @@ public static extern bool IsWindow(IntPtr hWnd);
         [DllImport("DUIListView.dll")]
         private static extern int GetItemCount(IntPtr hWnd);
         [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-        public static extern IntPtr SetFocus(IntPtr hWnd);          
-        private static bool FindWindowByTitle(IntPtr hWnd, IntPtr lParam)
+        public static extern IntPtr SetFocus(IntPtr hWnd);
+        [DllImport("shell32.dll")]
+        static extern int SHGetFolderPath(
+            IntPtr hwndOwner,
+            int nFolder,
+            IntPtr hToken,
+            uint dwFlags,
+            [Out] StringBuilder pszPath
+            );
+
+        public static string GetLocalizedPath(Environment.SpecialFolder folder)
         {            
+            var builder = new StringBuilder();
+            SHGetFolderPath(IntPtr.Zero, (int)folder, IntPtr.Zero, 0x0000, builder);
+            return builder.ToString();
+        }
+        private static bool FindWindowByTitle(IntPtr hWnd, IntPtr lParam)
+        {
             const int bufferLength = 1024;
             StringBuilder sb = new StringBuilder(bufferLength);
             if (GetWindowText(hWnd, sb, bufferLength) > 0)
-            {                
+            {
                 ((List<IntPtr>)GCHandle.FromIntPtr(lParam).Target).Add(hWnd);
             }
             return true;
@@ -119,7 +136,7 @@ public static extern bool IsWindow(IntPtr hWnd);
             StringBuilder classNameBuilder = new StringBuilder(256);
             int length = GetClassName(hWnd, classNameBuilder, classNameBuilder.Capacity);
             if (length == 0)
-            {               
+            {
                 return null;
             }
             return classNameBuilder.ToString();
@@ -134,8 +151,8 @@ public static extern bool IsWindow(IntPtr hWnd);
                 return true;
             };
             EnumChildWindows(parentWindow, childProc, IntPtr.Zero);
-            return childWindows;            
-        }        
+            return childWindows;
+        }
         public List<IntPtr> FindWindowsByTitle(string title)
         {
             List<IntPtr> allWindow = new List<IntPtr>();
@@ -147,9 +164,9 @@ public static extern bool IsWindow(IntPtr hWnd);
                 foreach (IntPtr windowHWnd in allWindow)
                 {
                     const int bufferLength = 1024;
-                    StringBuilder sb = new StringBuilder(bufferLength);                    
+                    StringBuilder sb = new StringBuilder(bufferLength);
                     if (GetWindowText(windowHWnd, sb, bufferLength) > 0 && sb.ToString() == title)
-                    {                       
+                    {
                         result.Add(windowHWnd);
                     }
                 }
@@ -157,26 +174,26 @@ public static extern bool IsWindow(IntPtr hWnd);
             finally
             {
                 handle.Free();
-            }            
+            }
             return result;
-        }       
+        }
         private void Start()
         {
-            reflector = new Reflector("Microsoft.WindowsAPICodePack", "Microsoft.WindowsAPICodePack");            
+            reflector = new Reflector("Microsoft.WindowsAPICodePack", "Microsoft.WindowsAPICodePack");
             Type typeCommonFileDialog = typeof(CommonFileDialog);
             nativeDialog = reflector.GetField(typeCommonFileDialog, CommonOpenFileDialogBase, "_nativeDialog");
             if (nativeDialog == null)
             {
                 reflector.Call(typeCommonFileDialog, CommonOpenFileDialogBase, "InitializeNativeFileDialog", new object[] { });
                 nativeDialog = reflector.Call(typeCommonFileDialog, CommonOpenFileDialogBase, "GetNativeFileDialog", new object[] { });
-            }            
+            }
             reflector.Call(typeCommonFileDialog, CommonOpenFileDialogBase, "GetCustomizedFileDialog", new object[] { });
-            customize = reflector.GetField(typeCommonFileDialog, CommonOpenFileDialogBase, "_customize");            
+            customize = reflector.GetField(typeCommonFileDialog, CommonOpenFileDialogBase, "_customize");
             CommonOpenFileDialogBase.FileOk += CommonOpenFileDialog_FileOk;
             CommonOpenFileDialogBase.SelectionChanged += CommonOpenFileDialog_SelectionChanged;
             CommonOpenFileDialogBase.DialogOpening += CommonOpenFileDialog_DialogOpening;
             CommonOpenFileDialogBase.FolderChanging += CommonOpenFileDialog_FolderChanging;
-        }     
+        }
 
         private void SetWindow()
         {
@@ -184,8 +201,8 @@ public static extern bool IsWindow(IntPtr hWnd);
             {
                 Title = "Выбрать";
             }
-            List<IntPtr> allWindow = FindWindowsByTitle(Title);           
-            this.window = allWindow.FirstOrDefault(w => GetParent(w) == this.parentWindow);
+            List<IntPtr> allWindow = FindWindowsByTitle(Title);
+            this.window = allWindow.FirstOrDefault(w => GetParent(w) == this.parentWindow);           
             if (OkButtonLabel == null)
             {
                 InitializationOkButtonLabel();
@@ -194,10 +211,10 @@ public static extern bool IsWindow(IntPtr hWnd);
             {
                 FileNameLabel = "Открыть";
             }
-        }        
+        }
 
         private string GetFolder()
-        {            
+        {
             Type typeIFileDialog2 = reflector.GetType("Dialogs.IFileOpenDialog");
             object[] args = new object[1];
             reflector.Call(typeIFileDialog2, nativeDialog, "GetFolder", args);
@@ -216,31 +233,35 @@ public static extern bool IsWindow(IntPtr hWnd);
             if (args[0] == null)
             {
                 return null;
-            }           
+            }
             return args[0] as IShellItem;
-        }  
+        }             
         private string IShellItemToString(IShellItem shellItem)
         {
             shellItem.GetDisplayName(ShellItemDesignNameOptions.FileSystemPath, out IntPtr pszName);
             string path = Marshal.PtrToStringUni(pszName);
+
+            shellItem.GetDisplayName(ShellItemDesignNameOptions.DesktopAbsoluteEditing, out IntPtr pszName2);
+            string path2 = Marshal.PtrToStringUni(pszName2);           
+
             return path;
-        }           
+        }
         private void SizeRepeating(IntPtr windowParant, IntPtr windowChild)
         {
-            GetWindowRect(windowParant, out RECT startSize);                               
+            GetWindowRect(windowParant, out RECT startSize);
             while (IsWindow(window) == true)
             {
                 GetWindowRect(windowParant, out RECT newSize);
                 if (newSize.Width != startSize.Width)
-                {                    
-                    MoveWindow(windowChild, 0, 0, newSize.Width, newSize.Height, true);                    
+                {
+                    MoveWindow(windowChild, 0, 0, newSize.Width, newSize.Height, true);
                 }
                 startSize = newSize;
-            }            
+            }
         }
         private void CopySize(IntPtr windowParant, IntPtr windowChild)
         {
-            GetWindowRect(windowParant, out RECT parantSize);            
+            GetWindowRect(windowParant, out RECT parantSize);
             MoveWindow(windowChild, 0, 0, parantSize.Width, parantSize.Height, true);
         }
         private void OnCustomFolderPicker(object sender, EventArgs e)
@@ -251,8 +272,23 @@ public static extern bool IsWindow(IntPtr hWnd);
                 return;
             }
             CopySize(comboBox, customEdit);
-            List<string> selectedFoldersPath = GetSelectedFoldersPath();                       
-            List<string> fildersName = selectedFoldersPath.Select(name => Path.GetFileName(name)).ToList();
+            List<string> selectedFoldersPath = GetSelectedFoldersPath();            
+            List<string> fildersName = new List<string>();
+            foreach (string folderPath in selectedFoldersPath)
+            {
+                DirectoryInfo directoryInfo = new DirectoryInfo(folderPath);
+                ShellObject folder = ShellObject.FromParsingName(directoryInfo.FullName);
+                string displayedFilderName = folder.GetDisplayName(DisplayNameType.Default);
+                if (displayedFilderName != null)
+                {
+                    fildersName.Add(displayedFilderName);
+                }
+                else
+                {
+                    fildersName.Add(directoryInfo.Name);
+                }
+                  
+            }
             FilePaths = selectedFoldersPath;
             string result = string.Join(",", fildersName.Select(name => $"\"{name}\""));
             if (fildersName.Count > 1)
@@ -268,27 +304,43 @@ public static extern bool IsWindow(IntPtr hWnd);
                 result = $"\"{result}\"";
             }
             Type typeFileDialogCustomize = reflector.GetType("Dialogs.IFileDialogCustomize");
-            reflector.Call(typeFileDialogCustomize, customize, "SetEditBoxText", new object[] { customEditId, result});                  
+            reflector.Call(typeFileDialogCustomize, customize, "SetEditBoxText", new object[] { customEditId, result });
         }
 
         private void Close()
         {
             CommonFileDialogResultCustom = CommonFileDialogResult.Ok;
             SendMessage(window, 0x0010, 0, IntPtr.Zero);
-        }
-
+        }       
         private List<string> GetSelectedFoldersPath()
         {
             List<string> allSelctedItemNames = GetAllSelctedItemNames();
             List<string> selectedFoldersPath = new List<string>();
             string folderPath = GetFolder();
-            string filePath = null;
+            string filePath = null;           
+
+            GetLocalizedPath(Environment.SpecialFolder.Desktop);
+
             foreach (string selctedItemName in allSelctedItemNames)
             {
+                
                 filePath = Path.Combine(folderPath, selctedItemName);
+                
                 if (Directory.Exists(filePath) == true)
-                {
+                {                    
                     selectedFoldersPath.Add(filePath);
+                }
+                else
+                {
+                    DirectoryInfo directoryInfo = new DirectoryInfo(folderPath);
+                    foreach (DirectoryInfo childDirectoryInfo in directoryInfo.GetDirectories())
+                    {
+                        ShellObject folder = ShellObject.FromParsingName(childDirectoryInfo.FullName);
+                        if (folder.GetDisplayName(DisplayNameType.Default) == selctedItemName)
+                        {                           
+                            selectedFoldersPath.Add(childDirectoryInfo.FullName);
+                        }
+                    }
                 }
             }
             return selectedFoldersPath;
@@ -297,19 +349,19 @@ public static extern bool IsWindow(IntPtr hWnd);
         private IntPtr comboBox = IntPtr.Zero;
         private int customEditId = 1654;
         private void CreateCustomEdit()
-        {                  
-            List<IntPtr> allChildWindows = GetAllChildWindows(window);           
+        {
+            List<IntPtr> allChildWindows = GetAllChildWindows(window);
             customEdit = allChildWindows.FirstOrDefault(w => GetClassName(w) == "Edit" && AutomationElement.FromHandle(w).Current.Name == "CustomEdit");
             IntPtr oldEdit = allChildWindows.FirstOrDefault(w => GetClassName(w) == "Edit" && AutomationElement.FromHandle(w).Current.Name == FileNameLabel);
             DestroyWindow(oldEdit);
             comboBox = allChildWindows.FirstOrDefault(w => GetClassName(w) == "ComboBoxEx32" && AutomationElement.FromHandle(w).Current.Name == FileNameLabel);
-            EnableWindow(comboBox, false);            
+            EnableWindow(comboBox, false);
             SetParent(customEdit, comboBox);
-            GetWindowRect(comboBox, out RECT comboBoxRect);                                 
+            GetWindowRect(comboBox, out RECT comboBoxRect);
             MoveWindow(customEdit, 0, 0, comboBoxRect.Width, comboBoxRect.Height, true);
             Type typeFileDialogCustomize = reflector.GetType("Dialogs.IFileDialogCustomize");
             reflector.Call(typeFileDialogCustomize, customize, "SetEditBoxText", new object[] { customEditId, "" });
-        }      
+        }
         private void InitializationOkButtonLabel()
         {
             switch (FolderPicker)
@@ -326,7 +378,7 @@ public static extern bool IsWindow(IntPtr hWnd);
                 default:
                     break;
             }
-        }        
+        }
         private bool IsOKButtonClick()
         {
             IntPtr okButton = FindWindowEx(window, IntPtr.Zero, "Button", OkButtonLabel);
@@ -335,31 +387,51 @@ public static extern bool IsWindow(IntPtr hWnd);
             return PtInRect(okButtonRECT, mousePosition);
 
         }
-        private List<string> GetAllSelctedItemNames()
+        private List<string> GetAllSelctedItemNames() //первая проблема секторы элементов по дате изменения это отдельные объекты, вторая некоторые папки имеют не отображаемое имя
         {
             List<string> allSelctedItemNames = new List<string>();
             List<IntPtr> allChildWindows = GetAllChildWindows(window);
+                     
             IntPtr filesList = allChildWindows.FirstOrDefault(w => GetClassName(w) == "SHELLDLL_DefView");
-            AutomationElement element = AutomationElement.FromHandle(filesList);
+            AutomationElement element = AutomationElement.FromHandle(filesList);           
             AutomationElement listViewContainer = element.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.List));
             if (listViewContainer != null)
             {
-                AutomationElementCollection listViewItems = listViewContainer.FindAll(TreeScope.Children, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ListItem));
+                List<AutomationElement> listViewItems = listViewContainer.FindAll(
+                    TreeScope.Children,
+                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ListItem)
+                ).Cast<AutomationElement>().ToList();
+                if (listViewItems.Count == 0)
+                {
+                    AutomationElementCollection allChildElements = listViewContainer.FindAll(TreeScope.Children, Condition.TrueCondition);
+                    foreach (AutomationElement child in allChildElements)
+                    {
+                        if (child.Current.ClassName == "UIGroupItem")
+                        {
+                            AutomationElementCollection groupItems = child.FindAll(TreeScope.Children, Condition.TrueCondition);
+                            foreach (AutomationElement item in groupItems)
+                            {
+                                listViewItems.Add(item);
+                            }
+                        }                                               
+                    }
+                }
                 foreach (AutomationElement listViewItem in listViewItems)
                 {
-                    SelectionItemPattern selectPattern = listViewItem.GetCurrentPattern(SelectionItemPattern.Pattern) as SelectionItemPattern;
+                    listViewItem.TryGetCurrentPattern(SelectionItemPattern.Pattern, out object tempObject);
+                    SelectionItemPattern selectPattern = tempObject as SelectionItemPattern;
                     if (selectPattern == null)
                     {
                         continue;
                     }
                     if (selectPattern.Current.IsSelected == true)
-                    {
-                        allSelctedItemNames.Add(listViewItem.Current.Name);
+                    {                       
+                        allSelctedItemNames.Add(listViewItem.Current.Name);                       
                     }
                 }
             }
             return allSelctedItemNames;
-        }
+        }       
         private void CreateCustomElements()
         {
             CreateCustomEdit();
@@ -378,13 +450,13 @@ public static extern bool IsWindow(IntPtr hWnd);
         //Event
         public EventHandler<CancelEventArgs> FileOk;
         private void CommonOpenFileDialog_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
-        {                                                       
-            FileOk?.Invoke(sender, e);            
+        {
+            FileOk?.Invoke(sender, e);
         }
         public EventHandler SelectionChanged;
         private void CommonOpenFileDialog_SelectionChanged(object sender, EventArgs e)
         {
-            SelectionChanged?.Invoke(sender, e);            
+            SelectionChanged?.Invoke(sender, e);
         }
         public EventHandler DialogOpening;
         private void CommonOpenFileDialog_DialogOpening(object sender, EventArgs e)
@@ -393,7 +465,7 @@ public static extern bool IsWindow(IntPtr hWnd);
             if (FolderPicker == FolderPickerOption.Custom)
             {
                 CreateCustomElements();
-            }            
+            }
             DialogOpening?.Invoke(sender, e);
         }
         public EventHandler FolderChanging;
@@ -404,12 +476,12 @@ public static extern bool IsWindow(IntPtr hWnd);
         // Properties
 
         private FolderPickerOption folderPicker = FolderPickerOption.None;
-        public FolderPickerOption FolderPicker 
+        public FolderPickerOption FolderPicker
         {
             get
-            {                
+            {
                 return folderPicker;
-            }           
+            }
             set
             {
                 if (value == FolderPickerOption.Standard)
@@ -417,9 +489,9 @@ public static extern bool IsWindow(IntPtr hWnd);
                     SelectionChanged -= OnCustomFolderPicker;
                 }
                 if (value == FolderPickerOption.Custom)
-                {                    
+                {
                     Type typeFileDialogCustomize = reflector.GetType("Dialogs.IFileDialogCustomize");
-                    reflector.Call(typeFileDialogCustomize, customize, "AddEditBox", new object[] { customEditId, "CustomEdit" });                                       
+                    reflector.Call(typeFileDialogCustomize, customize, "AddEditBox", new object[] { customEditId, "CustomEdit" });
                     AddToMostRecentlyUsedList = false;
                     SelectionChanged += OnCustomFolderPicker;
                     FolderChanging += OnCustomFolderPicker;
@@ -429,8 +501,8 @@ public static extern bool IsWindow(IntPtr hWnd);
                     };
                 }
                 folderPicker = value;
-                
-            } 
+
+            }
         }
         private string okButtonLabel;
         public string OkButtonLabel
@@ -446,7 +518,7 @@ public static extern bool IsWindow(IntPtr hWnd);
                     Type typeIFileDialog = reflector.GetType("Dialogs.IFileDialog");
                     reflector.Call(typeIFileDialog, nativeDialog, "SetOkButtonLabel", new object[] { value });
                     okButtonLabel = value;
-                }                
+                }
             }
         }
         private string fileNameLabel;
@@ -487,7 +559,7 @@ public static extern bool IsWindow(IntPtr hWnd);
         {
             get { return CommonOpenFileDialogBase.AllowPropertyEditing; }
             set { CommonOpenFileDialogBase.AllowPropertyEditing = value; }
-        }                  
+        }
 
         public string DefaultDirectory
         {
@@ -515,14 +587,14 @@ public static extern bool IsWindow(IntPtr hWnd);
 
         public string FilePath
         {
-            get             
+            get
             {
                 if (FilePaths.Count > 0)
                 {
                     return FilePaths[0];
                 }
                 return null;
-            }                
+            }
         }
         private List<string> filePaths;
         public List<string> FilePaths
@@ -550,15 +622,15 @@ public static extern bool IsWindow(IntPtr hWnd);
 
         public CommonFileDialogFilterCollection Filters
         {
-            get { return CommonOpenFileDialogBase.Filters; }            
-        }       
+            get { return CommonOpenFileDialogBase.Filters; }
+        }
 
         public bool Multiselect
         {
             get { return CommonOpenFileDialogBase.Multiselect; }
             set { CommonOpenFileDialogBase.Multiselect = value; }
-        }       
-        
+        }
+
         // Methods
 
         public void SetTitle(string title)
@@ -567,11 +639,20 @@ public static extern bool IsWindow(IntPtr hWnd);
         }
         public void Dispose()
         {
-            CommonOpenFileDialogBase.Dispose();            
-        }          
+            CommonOpenFileDialogBase.Dispose();
+        }
         public CommonFileDialogResult ShowDialog()
+        {            
+            WindowInteropHelper helper = new WindowInteropHelper(System.Windows.Application.Current.MainWindow);
+            IntPtr  hWnd = helper.Handle;
+            return ShowDialog(hWnd);
+
+        }
+        public CommonFileDialogResult ShowDialog(IntPtr hwndOwner)
         {
-            commonFileDialogBaseResult = CommonOpenFileDialogBase.ShowDialog();
+            SetElementsLabel();
+            parentWindow = hwndOwner;
+            commonFileDialogBaseResult = CommonOpenFileDialogBase.ShowDialog(hwndOwner);
             if (CommonFileDialogResultCustom != CommonFileDialogResult.None)
             {
                 return CommonFileDialogResultCustom;
@@ -579,23 +660,27 @@ public static extern bool IsWindow(IntPtr hWnd);
             return commonFileDialogBaseResult;
         }
 
-        public CommonFileDialogResult ShowDialog(IntPtr hwndOwner)
+        private void SetElementsLabel()
         {
-            parentWindow = hwndOwner;
-            commonFileDialogBaseResult = CommonOpenFileDialogBase.ShowDialog(hwndOwner);
-            if (CommonFileDialogResultCustom != CommonFileDialogResult.None)
+            if (Title == null)
             {
-                return CommonFileDialogResultCustom;
-            }            
-            return commonFileDialogBaseResult;
-        }   
-        
-    }    
+                Title = "Выбрать";
+            }
+            if (OkButtonLabel == null)
+            {
+                InitializationOkButtonLabel();
+            }
+            if (FileNameLabel == null)
+            {
+                FileNameLabel = "Открыть";
+            }
+        }      
+    }
     public enum FolderPickerOption
     {
         Standard,
         Custom,
-        None        
-    }   
-        
+        None
+    }
+
 }

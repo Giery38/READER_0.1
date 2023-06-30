@@ -1,4 +1,4 @@
-﻿using READER_0._1.Model.Settings.Exel;
+﻿using READER_0._1.Model.Exel.Settings;
 using READER_0._1.Model.Settings.Word;
 using System;
 using System.Collections.Generic;
@@ -17,16 +17,16 @@ namespace READER_0._1.Model.Settings
     [Serializable]
     public class Settings 
     {        
-        private ExelSettingsRead exelSettingsRead;
-        public ExelSettingsRead ExelSettingsRead
+        private ExelSettings exelSettings;
+        public ExelSettings ExelSettings
         {
             get
             {
-                return exelSettingsRead;
+                return exelSettings;
             }
             set
             {
-                exelSettingsRead = value;                
+                exelSettings = value;                
             }
         }
         private WordSettingsRead wordSettingsRead;
@@ -46,7 +46,7 @@ namespace READER_0._1.Model.Settings
         public Settings()
         {
             WordSettingsRead = new WordSettingsRead();            
-            ExelSettingsRead = new ExelSettingsRead();
+            ExelSettings = new ExelSettings();
             
         }        
         public void SetConfigFilePath(string configFilePath)

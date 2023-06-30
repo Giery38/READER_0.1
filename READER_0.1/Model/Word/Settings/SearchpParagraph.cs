@@ -21,18 +21,19 @@ namespace READER_0._1.Model.Settings.Word
                 name = value;
             }
         }
-        private SearchString mainSearchString;
-        public SearchString MainSearchString
+        private List<SearchString> mainSearchStrings;
+        public List<SearchString> MainSearchStrings
         {
             get
             {
-                return mainSearchString;
+                return mainSearchStrings;
             }
             set
             {
-                mainSearchString = value;
+                mainSearchStrings = value;
             }
         }
+      
         private List<SearchString> searchStrings;
         public List<SearchString> SearchStrings
         {
@@ -48,18 +49,27 @@ namespace READER_0._1.Model.Settings.Word
         public SearchParagraph()
         {
             SearchStrings = new List<SearchString>();
+            MainSearchStrings = new List<SearchString>();
         }
         public List<SearchString> GetSearchStrings(string keyWord)
+        {           
+            return GetStrings(keyWord,SearchStrings);
+        }
+        public List<SearchString> GetMainStrings(string keyWord)
         {
-            List<SearchString> searchStrings = new List<SearchString>();
-            for (int i = 0; i < SearchStrings.Count; i++)
+            return GetStrings(keyWord, MainSearchStrings);
+        }
+        public List<SearchString> GetStrings(string keyWord, List<SearchString> MainList)
+        {
+            List<SearchString> strings = new List<SearchString>();
+            for (int i = 0; i < MainList.Count; i++)
             {
-                if (SearchStrings[i].KeyWords.Contains(keyWord) == true)
+                if (MainList[i].KeyWords.Contains(keyWord) == true)
                 {
-                    searchStrings.Add(SearchStrings[i]);
-                }             
+                    strings.Add(MainList[i]);
+                }
             }
-            return searchStrings;
+            return strings;
         }
     }
 }

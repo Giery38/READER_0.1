@@ -24,5 +24,11 @@ namespace READER_0._1.View
         {
             InitializeComponent();
         }
+
+        private void CustomButton_MouseLeave(object sender, MouseEventArgs e)
+        {
+            var bindingExpression = Test.GetBindingExpression(ListView.ItemsSourceProperty);
+            bindingExpression?.UpdateTarget();
+        }
     }
 }

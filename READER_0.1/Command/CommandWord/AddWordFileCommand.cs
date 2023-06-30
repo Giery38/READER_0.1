@@ -14,13 +14,11 @@ namespace READER_0._1.Command.CommandWord
     class AddWordFileCommand : CommandBase
     {
         private readonly WindowFileBase windowFileBase;
-        private readonly WordViewModel wordViewModel;
-        protected event Action ChangeFileList;
+        private readonly WordViewModel wordViewModel;   
         public AddWordFileCommand(WordViewModel wordViewModel, WindowFileBase windowFileBase) // добавляет все файлы, переопрелить для каждого окна
         {
             this.windowFileBase = windowFileBase;
-            this.wordViewModel = wordViewModel;
-            ChangeFileList += wordViewModel.UpdateFiles;
+            this.wordViewModel = wordViewModel;           
         }
         public override void Execute(object parameter)
         {
@@ -39,15 +37,15 @@ namespace READER_0._1.Command.CommandWord
                 string[] filePath = openFileDialog.FileNames;
                 for (int i = 0; i < filePath.Length; i++)
                 {                   
-                    file = new Model.File(filePath[i], Path.GetFileNameWithoutExtension(filePath[i]), windowFileBase.FormatStrngToEnum(Path.GetExtension(filePath[i])));
-                    if (file.Format == Formats.docx || file.Format == Formats.doc)
+                    file = new Model.File(filePath[i], Path.GetFileNameWithoutExtension(filePath[i]), Path.GetExtension(filePath[i]));
+                    if (file.Format == ".docx" || file.Format == ".doc")
                     {
                         files.Add(file.ToWordFile());
                     }
                 }
             }
-            windowFileBase.wordWindowFileBase.AddFiles(files);
-            ChangeFileList?.Invoke();
+            windowFileBase.wordWindowFileBase.AddFiles(files);            
+            wordViewModel.UpdateFiles();
         }
     }
 }

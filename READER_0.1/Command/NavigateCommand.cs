@@ -16,11 +16,18 @@ namespace READER_0._1.Command
         {
             this.navigation = navigation;         
             this.nextViewModel = nextViewModel;
+            navigation.CurrentViewModelChanged += Navigation_CurrentViewModelChanged;
         }
-        public override void Execute(object parameter)
+
+        private void Navigation_CurrentViewModelChanged()
         {
+            OnCanExecutedChanged();
+        }
+
+        public override void Execute(object parameter)
+        {            
+            navigation.CurrentViewModel = nextViewModel; 
             
-            navigation.CurrentViewModel = nextViewModel;        
         }
         public override bool CanExecute(object parameter)
         {
@@ -32,10 +39,6 @@ namespace READER_0._1.Command
             {
                 return true;
             }
-        }
-        public override void OnCanExecutedChanged()
-        {
-            base.OnCanExecutedChanged();
-        }
+        }       
     }
 }

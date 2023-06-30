@@ -6,6 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodel="clr-namespace:READER_0._1.ViewModel"
     xmlns:views="clr-namespace:READER_0._1.View"
+    xmlns:settings="clr-namespace:READER_0._1.View.Settings"
     Title="Window1"
     Width="950"
     Height="730"
@@ -26,7 +27,7 @@
                 <views:WordView />
             </DataTemplate>
             <DataTemplate DataType="{x:Type viewmodel:SettingsViewModel}">
-                <views:SettingsView />
+                <settings:SettingsView />
             </DataTemplate>
             <Storyboard x:Key="ShowMainMenu" Completed="ShowMainMenu_Completed">
                 <DoubleAnimation

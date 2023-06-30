@@ -1,9 +1,12 @@
 ﻿using READER_0._1.Model.Exel;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms.Design;
+using static READER_0._1.Model.Exel.Settings.ExelSettingsSearchFiles;
 
 namespace READER_0._1.Model
 {
@@ -12,11 +15,16 @@ namespace READER_0._1.Model
         public string Path { get; private set; }
         public string Name { get; private set; }
         public List<File> Files { get; private set; }
+
+        private List<File> filseModifiedName;
+        private List<File> filseWithoutModifiedName;
         public Directory(string path, string name, List<File> files)
         {
             Path = path;
             Name = name;
             Files = files;
+            filseModifiedName = new List<File>();
+            filseWithoutModifiedName = new List<File>();
         }
         public Directory(string name)
         {
@@ -42,34 +50,105 @@ namespace READER_0._1.Model
         {
             Name = name;
         }
-        public List<Model.File> SearchFileToName(List<string> SearchData, Formats FormatsFileSearch)
+        public void SetFilseModifiedName(ConfigurationName configurationName)
         {
-            List<string> filesPathInDirectory = System.IO.Directory.GetFiles(Path, "*." + FormatsFileSearch.ToString(), SearchOption.TopDirectoryOnly).ToList<string>();
-            List<string> filesInDirectoryName = new List<string>();
-            List<Model.File> filesInDirectory = new List<Model.File>();
-            List<Model.File> filesEquals = new List<Model.File>();           
-            for (int i = 0; i < filesPathInDirectory.Count; i++)
+            for (int file = 0; file < Files.Count; file++)
             {
-                filesInDirectoryName.Add(System.IO.Path.GetFileNameWithoutExtension(filesPathInDirectory[i]));                
-                Model.File file = new Model.File(filesPathInDirectory[i], filesInDirectoryName[i], FormatsFileSearch);
-                if (file.Path != "")
+                if (configurationName.CheckModifieds(Files[file].Name) == true)
                 {
-                    filesInDirectory.Add(file);
-                }                
-            }
-            // List<string> ColumnsData = ExelFile.ExelPage[IndexPage].GetColumnsDataNoDplicates(nameColumn).ConvertAll(x => Convert.ToString(x)).OfType<string>().ToList();// переделать
-            List<string> ColumnsData = SearchData;
-            for (int i = 0; i < ColumnsData.Count; i++)
-            {
-                Model.File addedFileEquals = filesInDirectory.Find(item => item.FileName == ColumnsData[i]);               
-                if (addedFileEquals != null)
+                    filseModifiedName.Add(Files[file]);
+                }
+                else
                 {
-                    filesEquals.Add(addedFileEquals);
-                }              
+                    filseWithoutModifiedName.Add(Files[file]);
+                }
             }
-            return filesEquals;
+            filseModifiedName.Sort((x, y) => x.Name.CompareTo(y.Name));
+            filseWithoutModifiedName.Sort((x, y) => x.Name.CompareTo(y.Name));
         }
 
+        public List<Model.File> SearchFileToName(List<string> searchData, string formatsFileSearch, List<ConfigurationName> configurationName)
+        {
+            List<string> tempSearchData = new List<string>(searchData);
+            List<Model.File> result = new List<Model.File>();
+            for (int i = 0; i < configurationName.Count; i++)
+            {
+                result.AddRange(SearchFileToName(tempSearchData, formatsFileSearch, configurationName[i]));
+            }
+            return result;
+        }
+
+        private List<Model.File> SearchFileToName(List<string> searchData, string formatsFileSearch, ConfigurationName configurationName)
+        {            
+            List<Model.File> result = new List<Model.File>();
+            if (filseModifiedName.Count > 0 || filseWithoutModifiedName.Count > 0)
+            {
+                result = QuickSearch(searchData, formatsFileSearch, configurationName);
+            }
+            else
+            {
+                for (int i = 0; i < searchData.Count; i++)
+                {
+                    Model.File file = Files.Find(file => file.Name == searchData[i]);
+                    if (file == null)
+                    {
+                        file = Files.Find(file => file.Name == configurationName.SetOrRemoveConfiguration(searchData[i]));
+                    }  
+                    
+                    if (file != null && file.Format == formatsFileSearch)
+                    {
+                        searchData.RemoveAt(i);
+                        result.Add(file);
+                    }
+                }
+            }
+            return result;
+        }
+        private List<Model.File> QuickSearch(List<string> searchData, string formatsFileSearch, ConfigurationName configurationName)
+        {
+            List<Model.File> result = new List<Model.File>();
+            Model.File file;
+            for (int i = 0; i < searchData.Count; i++)
+            {
+                if (configurationName.CheckModifieds(searchData[i]) == true)
+                {
+                    file = BinarySearch(filseModifiedName, searchData[i]);                                       
+                }
+                else
+                {
+                    file = BinarySearch(filseWithoutModifiedName, searchData[i]);
+                }
+                if (file != null && file.Format == formatsFileSearch)
+                {
+                    searchData.RemoveAt(i);
+                    result.Add(file);
+                }
+            }
+            return result;
+        }
+        private Model.File BinarySearch(List<Model.File> files, string name)
+        {
+            int left = 0;
+            int right = files.Count - 1;
+            while (left <= right)
+            {
+                int middle = (left + right) / 2;
+                int compareResult = files[middle].Name.CompareTo(name);
+                if (compareResult == 0)
+                {
+                    return files[middle];
+                }
+                else if (compareResult < 0)
+                {                  
+                    left = middle + 1;
+                }
+                else
+                {               
+                    right = middle - 1;
+                }
+            }
+            return null;
+        }     
         internal static bool Exists(string tempFolderPath)
         {
             throw new NotImplementedException();

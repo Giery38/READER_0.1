@@ -1,0 +1,34 @@
+﻿<UserControl
+    x:Class="READER_0._1.View.Settings.SettingsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"    
+     xmlns:viewmodel="clr-namespace:READER_0._1.ViewModel"
+    xmlns:views="clr-namespace:READER_0._1.View"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:elements="clr-namespace:READER_0._1.View.Elements"
+    d:DesignHeight="450"
+    d:DataContext="{d:DesignInstance Type=viewmodel:SettingsViewModel}"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <Grid x:Name="MainGrid" Background="White">
+        <Grid.Resources>
+            <DataTemplate DataType="{x:Type viewmodel:ExelViewModel}">
+                <views:ExelView
+                    />
+            </DataTemplate>
+        </Grid.Resources>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0" Height="Auto" >
+            <ListView  Margin="0,60,0,0">
+                
+            </ListView>
+        </Grid>
+        <Grid Grid.Column="1" Height="Auto" >
+            <ContentControl Content="{Binding CurrentSettingsViewModel}"></ContentControl>
+        </Grid>
+    </Grid>
+</UserControl>
