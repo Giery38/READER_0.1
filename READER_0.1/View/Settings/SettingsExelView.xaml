@@ -1,0 +1,194 @@
+﻿<UserControl
+    x:Class="READER_0._1.View.Settings.SettingsExelView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:READER_0._1.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:elements="clr-namespace:READER_0._1.View.Elements"
+    xmlns:local="clr-namespace:READER_0._1.View.Settings"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:settingsViewModel="clr-namespace:READER_0._1.ViewModel.Settings"
+    Name="UserControl"
+    d:DataContext="{d:DesignInstance Type=settingsViewModel:SettingsExelViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <converters:TupleToStringConverter x:Key="TupleToStringConverter" />
+    </UserControl.Resources>
+    <StackPanel>
+        <StackPanel Orientation="Horizontal">
+            <StackPanel>
+                <ListView
+                    Height="200"
+                    MinWidth="200"
+                    VerticalAlignment="Top"
+                    HorizontalContentAlignment="Stretch"
+                    ItemsSource="{Binding SearchingColumnNames}"
+                    SelectedItem="{Binding SelectedSearchingColumnName, Mode=TwoWay}">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Background" Value="Blue" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel LastChildFill="False">
+                                <TextBox
+                                    Width="100"
+                                    DockPanel.Dock="Left"
+                                    Text="{Binding Name}" />
+                                <elements:CustomButton
+                                    Width="10"
+                                    Height="10"
+                                    Background="Red"
+                                    Command="{Binding ElementName=UserControl, Path=DataContext.RemoveSearchingColumnNameCommand}"
+                                    CommandParameter="{Binding Name}"
+                                    DockPanel.Dock="Right" />
+                            </DockPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+                <elements:CustomButton
+                    Height="20"
+                    Background="AliceBlue"
+                    Command="{Binding AddSearchingColumnNameCommand}"
+                    Content="Добавить" />
+            </StackPanel>
+            <StackPanel>
+                <ListView
+                    Height="200"
+                    MinWidth="200"
+                    VerticalAlignment="Top"
+                    HorizontalContentAlignment="Stretch"
+                    ItemsSource="{Binding SelectedSearchingColumnNameValues}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel LastChildFill="False">
+                                <TextBox DockPanel.Dock="Left" Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <elements:CustomButton
+                                    Width="10"
+                                    Height="10"
+                                    Background="Red"
+                                    Command="{Binding ElementName=UserControl, Path=DataContext.RemoveSelectedSearchingColumnNameValueCommand}"
+                                    CommandParameter="{Binding Value}"
+                                    DockPanel.Dock="Right" />
+                            </DockPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+                <elements:CustomButton
+                    Height="20"
+                    Background="AliceBlue"
+                    Command="{Binding AddSearchingColumnNameValueCommand}"
+                    Content="Добавить" />
+            </StackPanel>
+        </StackPanel>
+        <StackPanel>
+            <ListView HorizontalContentAlignment="Stretch" MinHeight="20" ItemsSource="{Binding ConfigurationNames}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <DockPanel LastChildFill="False">
+                            <TextBlock Text="{Binding Name}" />
+                            <elements:CustomButton
+                                    Width="10"
+                                    Height="10"
+                                    Background="Red"
+                                    Command="{Binding ElementName=UserControl, Path=DataContext.RemoveConfigurationNameCommand}"
+                                    CommandParameter="{Binding Name}"
+                                    DockPanel.Dock="Right" />
+                        </DockPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <StackPanel Width="200">
+                <Border>
+                    <Grid>
+                        <TextBox
+                            x:Name="InputConfigurationsNameBox"
+                            Panel.ZIndex="2"
+                            Background="AliceBlue"
+                            Text="{Binding InputConfigurationNameText, UpdateSourceTrigger=PropertyChanged}" />
+                        <ListView
+                            x:Name="ConfigurationsNameFragmentedList"
+                            MinHeight="20"
+                            Panel.ZIndex="1"
+                            Background="Red"
+                            ItemsSource="{Binding InputConfigurationsNameFragmented}"
+                            SelectionMode="Multiple">
+                            <ListView.Resources>
+                                <Style TargetType="{x:Type ListViewItem}">
+                                    <Setter Property="IsSelected" Value="{Binding Item2, Mode=TwoWay}" />
+                                </Style>
+                            </ListView.Resources>
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock
+                                        x:Name="test"
+                                        MinWidth="10"
+                                        MinHeight="10"
+                                        Text="{Binding Item1}">
+                                        <TextBlock.Resources>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Item2, Mode=OneWay}" Value="False">
+                                                        <Setter Property="Background" Value="Coral" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Item2, Mode=OneWay}" Value="True">
+                                                        <Setter Property="Background" Value="Beige" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Resources>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                </Border>
+                <StackPanel Orientation="Horizontal">
+                    <elements:CustomButton
+                        x:Name="InputConfigurationsNameButton"
+                        Width="100"
+                        Height="20"
+                        HorizontalAlignment="Left"
+                        Click="InputConfigurationsNameButton_Click"
+                        Content="Ввести" />
+                    <elements:CustomButton
+                        Width="100"
+                        Height="20"
+                        Command="{Binding AddConfigurationsNameCommand}"
+                        Content="Сохранить" />
+                </StackPanel>
+            </StackPanel>
+            <StackPanel>
+                <ListView HorizontalContentAlignment="Stretch" MinHeight="20" ItemsSource="{Binding SearchingFormats}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel LastChildFill="False">
+                                <TextBox DockPanel.Dock="Left" Text="{Binding Value}" />
+                                <elements:CustomButton
+                                    Width="10"
+                                    Height="10"
+                                    Background="Red"
+                                    Command="{Binding ElementName=UserControl, Path=DataContext.RemoveSearchingFormatCommand}"
+                                    CommandParameter="{Binding Value}"
+                                    DockPanel.Dock="Right" />
+                            </DockPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+                <elements:CustomButton
+                    Height="20"
+                    Background="AliceBlue"
+                    Command="{Binding AddSearchingFormatCommand}"
+                    Content="Добавить" />
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

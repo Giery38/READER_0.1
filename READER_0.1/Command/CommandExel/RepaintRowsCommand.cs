@@ -10,7 +10,7 @@ using System.Windows.Media;
 
 namespace READER_0._1.Command.CommandExel
 {
-    class RepaintRowsCommand : CommandBase
+    public class RepaintRowsCommand : CommandBase
     {
         private readonly ExelViewModel exelViewModel;
         public RepaintRowsCommand(ExelViewModel exelViewModel)

@@ -23,6 +23,18 @@ namespace READER_0._1.Model.Settings.Word
                 name = value;
             }
         }
+        private bool active;
+        public bool Active
+        {
+            get
+            {
+                return active;
+            }
+            set
+            {
+                active = value;
+            }
+        }
         private List<string> searchStringWords;
         public List<string> SearchStringWords            
         {
@@ -100,13 +112,21 @@ namespace READER_0._1.Model.Settings.Word
         public SearchString()
         {
             SearchStringWords = new List<string>();
-            SearchWords = new List<SearchWord> ();
+            SearchWords = new List<SearchWord>();
             KeyWords = new List<string>();
             PositionKeyWords = new SerializableDictionary<string, int>();
             PositionSearchWords = new SerializableDictionary<string, int>();
             AssociationsWords = new SerializableDictionary<int, List<int>>();
         }
-        
+        public SearchString(SearchString searchString)
+        {
+            SearchStringWords = new List<string>(searchString.SearchStringWords);
+            SearchWords = new List<SearchWord>(searchString.SearchWords.Select(item => new SearchWord(item)));
+            KeyWords = new List<string>(searchString.KeyWords);
+            PositionKeyWords = new SerializableDictionary<string, int>(searchString.PositionKeyWords);
+            PositionSearchWords = new SerializableDictionary<string, int>(searchString.PositionSearchWords);
+            AssociationsWords = new SerializableDictionary<int, List<int>>(searchString.AssociationsWords);
+        }
         public void SetSearchStringWords(string searchString)
         {
             SearchStringWords = searchString.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList();            

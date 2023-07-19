@@ -1,4 +1,5 @@
 ﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -59,7 +60,9 @@ namespace READER_0._1.View.Elements
                 OnSelectedItemChanged(value);
             }
         }
+#pragma warning disable CS0109 // Член не скрывает унаследованный член: новое ключевое слово не требуется
         public new static readonly DependencyProperty DisplayMemberPathProperty = DependencyProperty.Register(nameof(DisplayMemberPath), typeof(string), typeof(CustomComboBox));
+#pragma warning restore CS0109 // Член не скрывает унаследованный член: новое ключевое слово не требуется
         public string DisplayMemberPath
         {
             get { return (string)GetValue(DisplayMemberPathProperty); }
@@ -75,7 +78,9 @@ namespace READER_0._1.View.Elements
                 OnSelectedValueChanged(value);
             }
         }
+#pragma warning disable CS0109 // Член не скрывает унаследованный член: новое ключевое слово не требуется
         public new static readonly DependencyProperty SelectedValuePathProperty = DependencyProperty.Register(nameof(SelectedValuePath), typeof(string), typeof(CustomComboBox));
+#pragma warning restore CS0109 // Член не скрывает унаследованный член: новое ключевое слово не требуется
         public string SelectedValuePath
         {
             get { return (string)GetValue(SelectedValuePathProperty); }

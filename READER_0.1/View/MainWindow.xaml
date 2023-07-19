@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodel="clr-namespace:READER_0._1.ViewModel"
+    xmlns:settingsViewModel="clr-namespace:READER_0._1.ViewModel.Settings"
     xmlns:views="clr-namespace:READER_0._1.View"
     xmlns:settings="clr-namespace:READER_0._1.View.Settings"
     Title="Window1"
@@ -26,7 +27,7 @@
             <DataTemplate DataType="{x:Type viewmodel:WordViewModel}">
                 <views:WordView />
             </DataTemplate>
-            <DataTemplate DataType="{x:Type viewmodel:SettingsViewModel}">
+            <DataTemplate DataType="{x:Type settingsViewModel:SettingsViewModel}">
                 <settings:SettingsView />
             </DataTemplate>
             <Storyboard x:Key="ShowMainMenu" Completed="ShowMainMenu_Completed">
@@ -93,6 +94,7 @@
                                 </TreeViewItem>
                                 <TreeViewItem Header="Test">Item 3</TreeViewItem>
                             </TreeView>
+                            <TextBlock TextWrapping="Wrap"  Text="{Binding Path}" Height="70" Background="AliceBlue"></TextBlock>
                             <Button
                                 Height="30"
                                 VerticalAlignment="Bottom"

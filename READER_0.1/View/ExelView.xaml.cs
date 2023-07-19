@@ -32,11 +32,11 @@ namespace READER_0._1.View
             InitializeComponent();
         }        
         public static readonly DependencyProperty FolderViewNameChangeProperty =
-           DependencyProperty.RegisterAttached("FolderViewNameChangeCommand", typeof(ICommand), typeof(ExelView), new PropertyMetadata(null));
+           DependencyProperty.RegisterAttached(nameof(FolderViewNameChangeCommand), typeof(ICommand), typeof(ExelView), new PropertyMetadata(null));
         public static readonly DependencyProperty DropFileCommandProperty =
-            DependencyProperty.RegisterAttached("DropFileCommand", typeof(ICommand), typeof(ExelView), new PropertyMetadata(null));      
+            DependencyProperty.RegisterAttached(nameof(DropFileCommand), typeof(ICommand), typeof(ExelView), new PropertyMetadata(null));      
         public static readonly DependencyProperty SizeChangeCommandProperty =
-           DependencyProperty.RegisterAttached("SizeChangeCommand", typeof(ICommand), typeof(ExelView), new PropertyMetadata(null));
+           DependencyProperty.RegisterAttached(nameof(SizeChangeCommand), typeof(ICommand), typeof(ExelView), new PropertyMetadata(null));
         public ICommand DropFileCommand
         {
             get

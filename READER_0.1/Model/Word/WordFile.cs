@@ -8,20 +8,7 @@ using System.Threading.Tasks;
 namespace READER_0._1.Model.Word
 {
     public class WordFile : File
-    {
-        private bool readed;
-        public bool Readed
-        {
-            get
-            {
-                return readed;
-            }
-            private set
-            {
-                readed = value;
-                OnPropertyChanged(nameof(Readed));
-            }
-        }
+    {      
         private List<ExelFilePageTable> tables;
         public List<ExelFilePageTable> Tables
         {

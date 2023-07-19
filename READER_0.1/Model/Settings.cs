@@ -1,5 +1,6 @@
 ﻿using READER_0._1.Model.Exel.Settings;
 using READER_0._1.Model.Settings.Word;
+using READER_0._1.Model.Word.Settings;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -29,23 +30,23 @@ namespace READER_0._1.Model.Settings
                 exelSettings = value;                
             }
         }
-        private WordSettingsRead wordSettingsRead;
-        public WordSettingsRead WordSettingsRead
+        private WordSettings wordSettings;
+        public WordSettings WordSettings
         {
             get
             {
-                return wordSettingsRead;
+                return wordSettings;
             }
             set
             {
-                wordSettingsRead = value;                
+                wordSettings = value;                
             }
         }
         [XmlIgnore]
         private string configFilePath;        
         public Settings()
         {
-            WordSettingsRead = new WordSettingsRead();            
+            WordSettings = new WordSettings();            
             ExelSettings = new ExelSettings();
             
         }        

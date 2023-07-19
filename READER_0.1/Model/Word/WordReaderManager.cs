@@ -32,7 +32,7 @@ namespace READER_0._1.Model.Word
                 }
                 Thread threadMain = Thread.CurrentThread;
                 string name = "Чтение Word файла" + "&&" + wordFile.Path;
-                threadMain.Name = name;
+                threadMain.Name = name;               
                 try
                 {
                     WordFileReader wordFileReader = new WordFileReader(wordFile, TempFolderPath, wordSettingsRead);
@@ -46,7 +46,7 @@ namespace READER_0._1.Model.Word
                 {
                     wordFile.Corrupted = true;
                     return false;
-                }
+                }                
                 return true;
             }
         }

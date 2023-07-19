@@ -8,29 +8,18 @@ namespace READER_0._1.Model.Exel
 {
     public class ExelFile : File
     {
-        public  List<ExelFilePage> ExelPages { get; private set; }
-
-        private bool readed; 
-        public bool Readed
-        {
-            get
-            {
-                return readed;
-            }
-            private set
-            {
-                readed = value;
-                OnPropertyChanged(nameof(Readed));
-            }
-        }
+        public  List<ExelFilePage> ExelPages { get; private set; }       
 
         public ExelFile(string path, string name, string format) : base(path, name, format)
         {
             ExelPages = new List<ExelFilePage>();
             Readed = false;
         }
-        public ExelFile()
+        public ExelFile(string path)
         {
+            Path = path;
+            Format =  System.IO.Path.GetExtension(path);
+            Name = System.IO.Path.GetFileNameWithoutExtension(path);
             ExelPages = new List<ExelFilePage>();
         }
         public ExelFile(ExelFile exelFile)

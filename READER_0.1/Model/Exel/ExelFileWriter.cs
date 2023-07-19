@@ -30,9 +30,30 @@ namespace READER_0._1.Model.Exel
             usedDocument = SpreadsheetDocument.Open(ExelFile.TempCopyPath, true);
         }
         public void Close()
-        {         
+        {            
             usedDocument.Save();
             usedDocument.Dispose();
+        }
+        public void TablesWrite(ExelFilePageTable exelFilePageTable, string startCell)
+        {
+            Borders borders = usedDocument.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders;            
+            string startColumn = SplitString(startCell).letters;
+            string currentCell = startCell;
+            for (int row = 0; row < exelFilePageTable.Rows.Count; row++)
+            {
+                (string letters, int number) coordinatesExcelSplit;
+                for (int cell = 0; cell < exelFilePageTable.Rows[row].RowData.Count; cell++)
+                {
+                    Cell cellTemp = GetCell(currentCell);
+                    cellTemp.CellValue = new CellValue(exelFilePageTable.Rows[row].RowData[cell].ToString());
+                    coordinatesExcelSplit = SplitString(currentCell);
+                    string newLetters = ConvertToLetter(ConvertToNumber(coordinatesExcelSplit.letters) + 1);            
+                    currentCell = newLetters + coordinatesExcelSplit.number;
+                }
+                coordinatesExcelSplit = SplitString(currentCell);
+                int newNumber = coordinatesExcelSplit.number + 1;
+                currentCell = startColumn + newNumber;
+            }           
         }
         public void RepaintRange((int row, int column) startCell, (int row, int column) endCell, string hexColor)
         {
@@ -207,6 +228,21 @@ namespace READER_0._1.Model.Exel
                 result = result * 26 + (c - 'A' + 1);
             }
             return result;
+        }
+        public static (string letters, int number) SplitString(string input)
+        {            
+            Regex regex = new Regex(@"^(?<letters>[A-Za-z]+)(?<number>\d+)$");
+
+            Match match = regex.Match(input);
+
+            if (match.Success)
+            {
+                string letters = match.Groups["letters"].Value;
+                int number = int.Parse(match.Groups["number"].Value);
+
+                return (letters, number);
+            }
+            return new (null, 0); 
         }
     }
 }

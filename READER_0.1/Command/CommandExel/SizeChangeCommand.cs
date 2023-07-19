@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace READER_0._1.Command.CommandExel
 {
-    class SizeChangeCommand : CommandBase
+    public class SizeChangeCommand : CommandBase
     {
         private readonly WindowFileBase windowFileBase;
         private readonly ViewModel.ExelViewModel exelViewModel;

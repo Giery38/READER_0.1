@@ -36,6 +36,7 @@ namespace READER_0._1.Tools
         public object Call(Type type, object obj, string func, object[] parameters)
         {           
             MethodInfo methInfo = type.GetMethod(func, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+#pragma warning disable CS0168 // Переменная объявлена, но не используется
             try
             {
                 if (methInfo != null)
@@ -48,6 +49,7 @@ namespace READER_0._1.Tools
             {
 
             }           
+#pragma warning restore CS0168 // Переменная объявлена, но не используется
             return null;
         }
 

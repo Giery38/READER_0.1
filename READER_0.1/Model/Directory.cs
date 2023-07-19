@@ -81,18 +81,21 @@ namespace READER_0._1.Model
         private List<Model.File> SearchFileToName(List<string> searchData, string formatsFileSearch, ConfigurationName configurationName)
         {            
             List<Model.File> result = new List<Model.File>();
-            if (filseModifiedName.Count > 0 || filseWithoutModifiedName.Count > 0)
+            if (false)//filseModifiedName.Count > 0 || filseWithoutModifiedName.Count > 0
             {
+#pragma warning disable CS0162 // Обнаружен недостижимый код
                 result = QuickSearch(searchData, formatsFileSearch, configurationName);
+#pragma warning restore CS0162 // Обнаружен недостижимый код
             }
             else
             {
                 for (int i = 0; i < searchData.Count; i++)
                 {
-                    Model.File file = Files.Find(file => file.Name == searchData[i]);
+                    Model.File file = Files.Find(item => item.Name == searchData[i]);
                     if (file == null)
                     {
-                        file = Files.Find(file => file.Name == configurationName.SetOrRemoveConfiguration(searchData[i]));
+                        string configurationNameString = configurationName.SetOrRemoveConfiguration(searchData[i]);
+                        file = Files.Find(item => item.Name == searchData[i] || item.Name == configurationNameString);
                     }  
                     
                     if (file != null && file.Format == formatsFileSearch)

@@ -14,6 +14,24 @@ namespace READER_0._1.Model
         public string Name { get; protected set; }
         public string Format { get; protected set; }
         public string TempCopyPath { get; protected set; }
+        public event EventHandler ReadEnd;
+        private bool readed;
+        public bool Readed
+        {
+            get
+            {
+                return readed;
+            }
+            protected set
+            {
+                readed = value;
+                OnPropertyChanged(nameof(Readed));
+                if (value == true)
+                {
+                    ReadEnd?.Invoke(this, new EventArgs());
+                }               
+            }
+        }
 
         private bool corrupted = false;
         public bool Corrupted
@@ -26,6 +44,10 @@ namespace READER_0._1.Model
             {
                 corrupted = value;
                 OnPropertyChanged(nameof(Corrupted));
+                if (value == false)
+                {
+                    ReadEnd?.Invoke(this, new EventArgs());
+                }
             }
         }
         public File(string path, string name, string format)

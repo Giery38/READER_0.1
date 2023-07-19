@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using READER_0._1.Model.Settings.Word;
+using READER_0._1.Model.Word.Settings;
 
 namespace READER_0._1.Model.Word
 {
@@ -15,16 +16,16 @@ namespace READER_0._1.Model.Word
         static public string TempFolderPath { get; private set; }
         public List<WordFile> WordFiles { get; private set; }
 
-        private readonly Settings.Word.WordSettingsRead wordSettingsRead;
+        private readonly WordSettings wordSettings;
         private List<Thread> threadsReadFiles;
 
         public WordReaderManager WordReaderManager { get; private set; }
 
-        public WordWindowFileBase(string tempFolderPath, Settings.Word.WordSettingsRead wordSettingsRead)
+        public WordWindowFileBase(string tempFolderPath, WordSettings wordSettings)
         {
             WordFiles = new List<WordFile>();
             threadsReadFiles = new List<Thread>();
-            this.wordSettingsRead = wordSettingsRead;
+            this.wordSettings = wordSettings;
             TempFolderPath = tempFolderPath;
             WordReaderManager = new WordReaderManager(tempFolderPath);
         }

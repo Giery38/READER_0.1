@@ -12,6 +12,7 @@ using System.IO;
 using Microsoft.Office.Interop.Word;
 using READER_0._1.Model.Exel;
 using System.Threading;
+using static READER_0._1.Model.Settings.Word.SearchParagraph;
 
 namespace READER_0._1.Model.Word
 {
@@ -25,8 +26,12 @@ namespace READER_0._1.Model.Word
 
         static private string TempFolderPath;
 
+#pragma warning disable CS0649 // Полю "WordFileReader.usedApplication" нигде не присваивается значение, поэтому оно всегда будет иметь значение по умолчанию null.
         private Application usedApplication;
+#pragma warning restore CS0649 // Полю "WordFileReader.usedApplication" нигде не присваивается значение, поэтому оно всегда будет иметь значение по умолчанию null.
+#pragma warning disable CS0649 // Полю "WordFileReader.usedDocument" нигде не присваивается значение, поэтому оно всегда будет иметь значение по умолчанию null.
         private Document usedDocument;
+#pragma warning restore CS0649 // Полю "WordFileReader.usedDocument" нигде не присваивается значение, поэтому оно всегда будет иметь значение по умолчанию null.
         public WordFileReader(WordFile wordFile, string tempFolderPath, WordSettingsRead settings)
         {
             WordFile = wordFile;
@@ -62,6 +67,7 @@ namespace READER_0._1.Model.Word
             wordDoc.Close();
             wordApp.Quit();
             List<ExelFilePageTable> exelFilePageTables = new List<ExelFilePageTable>();
+            
             foreach (SearchParagraph searchParagraph in settings.SearchParagraphs)
             {
                 exelFilePageTables.Add(SearchingParagraph(searchParagraph, SearchStringWords));
@@ -92,11 +98,11 @@ namespace READER_0._1.Model.Word
         {
             WordFileParagraph wordFileParagraph = new WordFileParagraph();
             List<SearchString> searchStringСandidates = new List<SearchString>();
-            List<SearchString> mainSearchStringСandidates = new List<SearchString>();                       
+            List<SearchString> mainSearchStringСandidates = new List<SearchString>();
             ExelFilePageTable exelFilePageTable = new ExelFilePageTable();
 
             List<int> ignorIndex = new List<int>();
-            List<SearchWord> mainSearchWords = new List<SearchWord>();            
+            List<SearchWord> mainSearchWords = new List<SearchWord>();
             List<SearchWord> subSearchWords = new List<SearchWord>();
             List<SearchWord> result = new List<SearchWord>();
 
@@ -108,7 +114,7 @@ namespace READER_0._1.Model.Word
                 mainSearchStrings.Add(searchString.Name, new List<SearchWord>());
             }
             for (int i = 0; i < searchStringWords.Length; i++)
-            {                               
+            {
                 mainSearchStringСandidates = searchParagraph.GetMainStrings(searchStringWords[i]);
                 for (int j = 0; j < mainSearchStringСandidates.Count; j++)
                 {
@@ -120,14 +126,21 @@ namespace READER_0._1.Model.Word
                     }
                 }
                 searchStringСandidates = searchParagraph.GetSearchStrings(searchStringWords[i]);
-                for (int j = 0; j < searchStringСandidates.Count; j++)
+                for (int p = 0; p < searchStringСandidates.Count; p++)
                 {
+                    if (searchStringСandidates[p].Active == false)
+                    {
+                        searchStringСandidates.Remove(searchStringСandidates[p]);
+                    }
+                }               
+                for (int j = 0; j < searchStringСandidates.Count; j++)
+                {                                                        
                     if (ignored.Find(item => item.searchString == mainSearchStringСandidates[j]).searchString == null &&
                         IsSearchString(searchStringWords, i, searchStringСandidates[j], out (List<int> ignoregIndexs, SearchString searchString) ignor) == true)
                     {
                         ignored.Add(ignor);
                         result.Clear();
-                        subSearchWords = GetSearchWord(searchStringWords, i, searchStringСandidates[j]);
+                        subSearchWords = GetSearchWord(searchStringWords, i, searchStringСandidates[j], searchParagraph.GetTypeSearchString(searchStringСandidates[j]));
                         if (subSearchWords != null)
                         {
                             result.AddRange(subSearchWords);
@@ -138,7 +151,7 @@ namespace READER_0._1.Model.Word
                             {
                                 result.AddRange(mainSearchStrings[key]);
                             }
-                        }                      
+                        }
                         if (result.Count > 0)
                         {
                             exelFilePageTable.AddRow(result);
@@ -151,9 +164,35 @@ namespace READER_0._1.Model.Word
                     {
                         ignored.Remove(ignored[j]);
                     }
-                }               
+                }
             }
             return exelFilePageTable;
+        }
+        private List<SearchWord> GetSearchWord(string[] SearchStringWords, int positionWord, SearchString searchString, TypeSearchStrings typeSearchStrings)//добавить тип к которому относиться стринг и получить его конфигурацию
+        {            
+            List<int> maskSearchWords = searchString.GetRelativeMaskSearchWords(SearchStringWords[positionWord]);
+            List<SearchWord> values = new List<SearchWord>();
+            for (int i = 0; i < maskSearchWords.Count; i++)
+            {
+                if (typeSearchStrings.Replacement.nameSearchWord == searchString.SearchWords[i].Name)
+                {
+                    values.Add(new SearchWord(searchString.SearchWords[i].Name, typeSearchStrings.Replacement.value));
+                }
+                else
+                {
+                    values.Add(new SearchWord(searchString.SearchWords[i].Name, SearchStringWords[positionWord + maskSearchWords[i]]));
+                }                
+            }
+            if (searchString.AssociationsWords.Count > 0)
+            {
+                foreach (var item in searchString.AssociationsWords.Values)
+                {
+                    List<SearchWord> result = values.Where((s, i) => item.Contains(i)).Skip(1).ToList();
+                    values[item.First()].CollapseSearchWord(result);
+                    values = values.Where((s, i) => i == item.First() || !item.Contains(i)).ToList();
+                }               
+            }
+            return values;
         }
         private List<SearchWord> GetSearchWord(string[] SearchStringWords, int positionWord, SearchString searchString)
         {
@@ -170,7 +209,7 @@ namespace READER_0._1.Model.Word
                     List<SearchWord> result = values.Where((s, i) => item.Contains(i)).Skip(1).ToList();
                     values[item.First()].CollapseSearchWord(result);
                     values = values.Where((s, i) => i == item.First() || !item.Contains(i)).ToList();
-                }               
+                }
             }
             return values;
         }

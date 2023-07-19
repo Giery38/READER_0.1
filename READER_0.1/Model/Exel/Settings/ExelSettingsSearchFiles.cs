@@ -79,9 +79,9 @@ namespace READER_0._1.Model.Exel.Settings
                 string result = new string(input);
                 if (CheckModifieds(input) == true)
                 {
-                    for (int i = 0; i < Modifieds.Count; i++)
+                    for (int i = Modifieds.Count - 1; i >= 0; i--)
                     {
-                        result.Remove(Modifieds[i].position, 1);
+                        result = result.Remove(Modifieds[i].position, 1);
                     }
                 }
                 else

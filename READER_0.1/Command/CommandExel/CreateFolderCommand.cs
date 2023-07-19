@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace READER_0._1.Command.CommandExel
 {
-    class CreateFolderCommand : CommandBase
+    public class CreateFolderCommand : CommandBase
     {
         private readonly ViewModel.ExelViewModel exelViewModel;
         public CreateFolderCommand(ExelViewModel exelViewModel)

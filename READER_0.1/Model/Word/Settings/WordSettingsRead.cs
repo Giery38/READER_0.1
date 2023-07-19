@@ -11,7 +11,7 @@ namespace READER_0._1.Model.Settings.Word
 {
     [Serializable]
     public class WordSettingsRead
-    {
+    {         
         private List<SearchParagraph> searchParagraphs;
         public List<SearchParagraph> SearchParagraphs
         {
@@ -23,7 +23,19 @@ namespace READER_0._1.Model.Settings.Word
             {
                 searchParagraphs = value;
             }
-        }        
+        }
+        private SearchString baseSearchString;
+        public SearchString BaseSearchString
+        {
+            get
+            {
+                return baseSearchString;
+            }
+            set
+            {
+                baseSearchString = value;
+            }
+        }
         public WordSettingsRead()
         {
             SearchParagraphs = new List<SearchParagraph>();

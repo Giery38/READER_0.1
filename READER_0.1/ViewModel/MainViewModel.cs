@@ -1,8 +1,10 @@
 ﻿using READER_0._1.Command;
 using READER_0._1.Model;
+using READER_0._1.ViewModel.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Windows.Input;
 
@@ -35,7 +37,13 @@ namespace READER_0._1.ViewModel
             //
             navigation.CurrentViewModelChanged += Navigation_CurrentViewModelChanged;
         }
-
+        public string Path
+        {
+            get
+            {
+                return Assembly.GetExecutingAssembly().Location;
+            }
+        }
         private void Navigation_CurrentViewModelChanged()
         {
             OnPropertyChanged(nameof(CurrentViewModel));

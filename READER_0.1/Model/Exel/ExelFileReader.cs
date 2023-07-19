@@ -119,7 +119,9 @@ namespace READER_0._1.Model.Exel
             {
                 if (usedDocument != null)
                 {
+#pragma warning disable CS0618 // Тип или член устарел
                     usedDocument.Close();
+#pragma warning restore CS0618 // Тип или член устарел
                     usedDocument.Dispose();
                     Marshal.ReleaseComObject(usedDocument);
                 }                
@@ -197,7 +199,9 @@ namespace READER_0._1.Model.Exel
             }
             if (usedDocument != null)
             {
+#pragma warning disable CS0618 // Тип или член устарел
                 usedDocument.Close();
+#pragma warning restore CS0618 // Тип или член устарел
                 usedDocument.Dispose();
             }
             usedDocument = null;

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace READER_0._1.Command.CommandExel
 {
-    class RemoveExelFileCommand : CommandBase
+    public class RemoveExelFileCommand : CommandBase
     {
         private readonly ExelViewModel exelViewModel;
 

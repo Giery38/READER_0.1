@@ -1,0 +1,143 @@
+﻿<UserControl
+    x:Class="READER_0._1.View.Settings.SettingsWordView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:READER_0._1.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:elements="clr-namespace:READER_0._1.View.Elements"
+    xmlns:local="clr-namespace:READER_0._1.View.Settings"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:settingsViewModel="clr-namespace:READER_0._1.ViewModel.Settings"
+    d:DataContext="{d:DesignInstance Type=settingsViewModel:SettingsWordViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <converters:SearchWordsConverter x:Key="SearchWordsConverter" />
+        <converters:AddSearchStringConverter x:Key="AddSearchStringConverter" />
+        <converters:ListStringsToStringConverter x:Key="ListStringsToStringConverter" />
+    </UserControl.Resources>
+    <StackPanel Background="AliceBlue">
+        <Border Padding="20" HorizontalAlignment="Left">
+            <StackPanel>
+                <ListView
+                    MinHeight="20"
+                    ItemsSource="{Binding SearchParagraphs}"
+                    SelectedItem="{Binding SelectedSearchParagraph}">
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel>
+                        <ListView
+                            MinWidth="150"
+                            MinHeight="150"
+                            ItemsSource="{Binding TypesSearchStrings}"
+                            SelectedItem="{Binding SelectedTypeSearchStrings}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBox Text="{Binding Name}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <elements:CustomButton
+                            Height="20"
+                            Background="Blue"
+                            Command="{Binding AddTypeSearchStringsCommand}" />
+                    </StackPanel>
+                    <StackPanel>
+                        <ListView
+                            MinWidth="150"
+                            MinHeight="150"
+                            ItemsSource="{Binding SearchStrings}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding KeyWords, Converter={StaticResource ListStringsToStringConverter}}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+        <StackPanel Width="200">
+            <Border>
+                <Grid>
+                    <TextBox
+                        x:Name="InputSearchStringsTextBox"
+                        Height="30"
+                        VerticalAlignment="Top"
+                        Panel.ZIndex="2"
+                        Background="AliceBlue"
+                        Text="{Binding InputSearchStringsText, UpdateSourceTrigger=PropertyChanged}" />
+                    <ListView
+                        x:Name="SearchStringsList"
+                        MinHeight="20"                        
+                        Panel.ZIndex="1"
+                        Background="Red"
+                        ItemsSource="{Binding SearchStringWords}"
+                        SelectionMode="Multiple">
+                        <ListView.Resources>
+                            <Style TargetType="{x:Type ListViewItem}">
+                                <Setter Property="IsSelected" Value="{Binding Item2, Mode=TwoWay}" />
+                            </Style>
+                        </ListView.Resources>
+                        <ListView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ListView.ItemsPanel>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock
+                                    MinWidth="10"
+                                    MinHeight="10"
+                                    Text="{Binding Item1}" >
+                                    <TextBlock.Resources>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Item2, Mode=OneWay}" Value="False">
+                                                    <Setter Property="Background" Value="Coral" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Item2, Mode=OneWay}" Value="True">
+                                                    <Setter Property="Background" Value="Beige" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Resources>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Border>
+            <StackPanel Orientation="Horizontal">
+                <elements:CustomButton
+                    x:Name="InputSearchStringsTextButton"
+                    Width="100"
+                    Height="20"
+                    HorizontalAlignment="Left"
+                    Click="InputSearchStringsTextButton_Click"
+                    Content="Ввести" />
+                <elements:CustomButton
+                    Width="100"
+                    Height="20"
+                    Click="CustomButton_Click"
+                    Command="{Binding AddSearchStringCommand}"
+                    Content="Сохранить" />
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

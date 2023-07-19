@@ -586,7 +586,9 @@ namespace READER_0._1.ViewModel
         }
         private CancellationTokenSource cancellationTokenLoadTabel;
         private Task changePageTablesTask;
+#pragma warning disable CS1998 // В асинхронном методе отсутствуют операторы await, будет выполнен синхронный метод
         private async void ChangePageTables()
+#pragma warning restore CS1998 // В асинхронном методе отсутствуют операторы await, будет выполнен синхронный метод
         {
             if (changePageTablesTask?.IsCompleted == false)
             {

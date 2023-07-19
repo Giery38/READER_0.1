@@ -26,7 +26,7 @@ namespace READER_0._1.Model
             TempFolderPath = tempFolderPath;
             this.settings = settings;
             exelWindowFileBase = new ExelWindowFileBase(TempFolderPath, settings.ExelSettings);
-            wordWindowFileBase = new WordWindowFileBase(TempFolderPath, settings.WordSettingsRead);            
+            wordWindowFileBase = new WordWindowFileBase(TempFolderPath, settings.WordSettings);            
         }                              
     }
     public class FilesReachedEventArgs : EventArgs

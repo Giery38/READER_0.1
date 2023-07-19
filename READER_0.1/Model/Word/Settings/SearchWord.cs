@@ -38,6 +38,11 @@ namespace READER_0._1.Model.Settings.Word
             Name = name;
             Data = data;
         }
+        public SearchWord(SearchWord searchWord)
+        {
+            Name = new string(searchWord.Name);
+            Data = new string(searchWord.Data);
+        }
         public SearchWord()
         {
 

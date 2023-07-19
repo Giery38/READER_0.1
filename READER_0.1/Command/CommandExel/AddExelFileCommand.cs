@@ -12,7 +12,7 @@ using File = READER_0._1.Model.File;
 
 namespace READER_0._1.Command.CommandExel
 {
-    class AddExelFileCommand : CommandBase
+    public class AddExelFileCommand : CommandBase
     {        
         private readonly ExelViewModel exelViewModel;
         public AddExelFileCommand(ExelViewModel exelViewModel)

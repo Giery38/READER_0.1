@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace READER_0._1.Command.CommandWord
 {
-    class AddSearchStringInSettingsCommand : CommandBase
+    public class AddSearchStringInSettingsCommand : CommandBase
     {
         private readonly WindowFileBase windowFileBase;
         private readonly WordViewModel wordViewModel;
@@ -23,7 +23,7 @@ namespace READER_0._1.Command.CommandWord
         {
             if (parameter is (SearchParagraph searchParagraph, string addedValue))
             {                               
-                searchParagraph.SearchStrings.Add(new SearchString());              
+               // searchParagraph.SearchStrings.Add(new SearchString());              
             }          
         }
     }

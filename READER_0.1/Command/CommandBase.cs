@@ -6,7 +6,7 @@ using System.Windows.Input;
 
 namespace READER_0._1.Command
 {
-    abstract class CommandBase : ICommand
+    public abstract class CommandBase : ICommand
     {
         public event EventHandler CanExecuteChanged;
 

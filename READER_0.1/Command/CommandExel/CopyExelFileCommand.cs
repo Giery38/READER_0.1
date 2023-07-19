@@ -11,7 +11,7 @@ using READER_0._1.Model.Exel;
 
 namespace READER_0._1.Command.CommandExel
 {
-    class CopyExelFileCommand : CommandBase
+    public class CopyExelFileCommand : CommandBase
     {
         private readonly ExelViewModel exelViewModel;
         public CopyExelFileCommand(ExelViewModel exelViewModel)

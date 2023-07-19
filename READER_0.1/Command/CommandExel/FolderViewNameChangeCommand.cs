@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace READER_0._1.Command.CommandExel
 {
-    class FolderViewNameChangeCommand : CommandBase
+    public class FolderViewNameChangeCommand : CommandBase
     {
         private readonly WindowFileBase windowFileBase;
         private readonly ExelViewModel exelViewModel;

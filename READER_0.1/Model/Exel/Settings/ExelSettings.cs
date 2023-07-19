@@ -32,14 +32,11 @@ namespace READER_0._1.Model.Exel.Settings
             {
                 exelSettingsSearchFiles = value;            
             }
-        }
-        public ExelSettings(ExelSettingsRead exelSettingsRead)
-        {
-            ExelSettingsRead = exelSettingsRead;
-        }
+        }      
         public ExelSettings()
         {
             ExelSettingsRead = new ExelSettingsRead();
+            ExelSettingsSearchFiles = new ExelSettingsSearchFiles();
         }
     }
 }

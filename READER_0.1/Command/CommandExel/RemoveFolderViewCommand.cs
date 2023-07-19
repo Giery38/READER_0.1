@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace READER_0._1.Command.CommandExel
 {
-    class RemoveFolderViewCommand : CommandBase
+    public class RemoveFolderViewCommand : CommandBase
     {        
         private readonly ExelViewModel exelViewModel;
         public RemoveFolderViewCommand(ExelViewModel exelViewModel)

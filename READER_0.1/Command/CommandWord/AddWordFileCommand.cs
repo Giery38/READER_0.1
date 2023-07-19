@@ -11,7 +11,7 @@ using System.IO;
 
 namespace READER_0._1.Command.CommandWord
 {
-    class AddWordFileCommand : CommandBase
+    public class AddWordFileCommand : CommandBase
     {
         private readonly WindowFileBase windowFileBase;
         private readonly WordViewModel wordViewModel;   

@@ -214,13 +214,11 @@
                 Name="BaseComboBox"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
-                
-                SelectedValuePath="{Binding SelectedValuePath, RelativeSource={RelativeSource AncestorType={x:Type local:CustomComboBox}}}"
-                SelectedValue="{Binding SelectedValue, RelativeSource={RelativeSource AncestorType={x:Type local:CustomComboBox}}}"
-                
                 DisplayMemberPath="{Binding DisplayMemberPath, RelativeSource={RelativeSource AncestorType={x:Type local:CustomComboBox}}}"
                 ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType={x:Type local:CustomComboBox}}}"
-                SelectedItem="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType={x:Type local:CustomComboBox}}}" />
+                SelectedItem="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType={x:Type local:CustomComboBox}}}"
+                SelectedValue="{Binding SelectedValue, RelativeSource={RelativeSource AncestorType={x:Type local:CustomComboBox}}}"
+                SelectedValuePath="{Binding SelectedValuePath, RelativeSource={RelativeSource AncestorType={x:Type local:CustomComboBox}}}" />
         </Border>
     </Grid>
 </UserControl>

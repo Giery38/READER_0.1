@@ -13,7 +13,7 @@ using READER_0._1.Model.Exel;
 
 namespace READER_0._1.Command.CommandExel
 {
-    class AddDirectoryCommand : CommandBase
+    public class AddDirectoryCommand : CommandBase
     {
         private readonly ExelViewModel exelViewModel;
         public AddDirectoryCommand(ExelViewModel exelViewModel)

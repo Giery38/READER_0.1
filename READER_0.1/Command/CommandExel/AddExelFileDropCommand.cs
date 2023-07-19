@@ -9,7 +9,7 @@ using File = READER_0._1.Model.File;
 
 namespace READER_0._1.Command.CommandExel
 {
-    class AddExelFileDropCommand : CommandBase
+    public class AddExelFileDropCommand : CommandBase
     {        
         private readonly ExelViewModel exelViewModel;
         public AddExelFileDropCommand(ExelViewModel exelViewModel) // добавляет все файлы, переопрелить для каждого окна

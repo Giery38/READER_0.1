@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace READER_0._1.Command
 {
-    class NavigateCommand : CommandBase
+    public class NavigateCommand : CommandBase
     {
         private readonly Navigation.Navigation navigation;
         private readonly ViewModelBase nextViewModel;

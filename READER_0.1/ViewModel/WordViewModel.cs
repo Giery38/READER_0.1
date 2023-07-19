@@ -12,28 +12,34 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using READER_0._1.Model.Settings.Word;
+using READER_0._1.Model.Word.Settings;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml;
+using Microsoft.Win32;
 
 namespace READER_0._1.ViewModel
 {
     public class WordViewModel : ViewModelBase
     {
         private readonly WindowFileBase windowFileBase;
-        public ObservableCollection<WordFile> WordFiles { get; set; } 
+        public ObservableCollection<WordFile> Files { get; set; } 
         public ICommand AddWordFileCommand { get; }
-        public ICommand ReadWordFileCommand { get; }
+        public ICommand ConvertWordFileToExcelCommand { get; }
         public ICommand AddSearchStringInSettingsCommand { get; }
         public WordViewModel(WindowFileBase windowFileBase)
         {
-            WordFiles = new ObservableCollection<WordFile>();            
+            Files = new ObservableCollection<WordFile>();            
             this.windowFileBase = windowFileBase;
             //
             AddWordFileCommand = new AddWordFileCommand(this, windowFileBase);
-            ReadWordFileCommand = new ReadWordFileCommand(this, windowFileBase);
+            ConvertWordFileToExcelCommand = new ConvertWordFileToExcelCommand(this, windowFileBase);
             AddSearchStringInSettingsCommand = new AddSearchStringInSettingsCommand(this, windowFileBase);
             //
-            SelectedSettings = windowFileBase.settings.WordSettingsRead;
-            SearchParagraphRates = SelectedSettings.SearchParagraphs.Find(item => item.Name == "Тарифы");
-            SearchParagraphStanding = SelectedSettings.SearchParagraphs.Find(item => item.Name == "Простои");
+            SelectedSettings = windowFileBase.settings.WordSettings;
+
+            SearchParagraphs = new ObservableCollection<SearchParagraph>(SelectedSettings.WordSettingsRead.SearchParagraphs);
+          
         }
         private WordFile selectedWordFile;
         public WordFile SelectedWordFile
@@ -53,8 +59,8 @@ namespace READER_0._1.ViewModel
                 }                    
             }            
         }
-        private WordSettingsRead selectedSettings;
-        public WordSettingsRead SelectedSettings
+        private WordSettings selectedSettings;
+        public WordSettings SelectedSettings
         {
             get
             {
@@ -67,51 +73,58 @@ namespace READER_0._1.ViewModel
             }
         }
 
-        private SearchParagraph searchParagraphRates;
-        public SearchParagraph SearchParagraphRates
+        private ObservableCollection<SearchParagraph> searchParagraphs;
+        public ObservableCollection<SearchParagraph> SearchParagraphs
         {
             get
             {
-                return searchParagraphRates;
+                return searchParagraphs;
             }
             set
             {
-                searchParagraphRates = value;
-                OnPropertyChanged(nameof(SearchParagraphRates));
+                searchParagraphs = value;
+                OnPropertyChanged(nameof(SearchParagraphs));
             }
-        }
-        private SearchParagraph searchParagraphStanding;
-        public SearchParagraph SearchParagraphStanding
-        {
-            get
+        }       
+       public void CreateExcelFile(WordFile wordFile)
+       {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.FileName = new string(wordFile.Name);
+            saveFileDialog.Filter = "Excel файлы(*.xlsx)|*.xlsx|Все файлы(*.*)|*.*";
+            if (saveFileDialog.ShowDialog() == true)
             {
-                return searchParagraphStanding;
+                using (SpreadsheetDocument document = SpreadsheetDocument.Create(saveFileDialog.FileName, SpreadsheetDocumentType.Workbook))
+                {
+                    // Добавляем рабочую книгу
+                    WorkbookPart workbookPart = document.AddWorkbookPart();
+                    workbookPart.Workbook = new Workbook();
+
+                    // Добавляем лист в рабочую книгу
+                    WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+                    worksheetPart.Worksheet = new Worksheet(new SheetData());
+
+                    // Добавляем ссылку на лист в рабочую книгу
+                    Sheets sheets = document.WorkbookPart.Workbook.AppendChild(new Sheets());
+                    Sheet sheet = new Sheet() { Id = document.WorkbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Лист1" };
+                    sheets.Append(sheet);
+                }
+
+                if (wordFile.Readed == true && wordFile.Corrupted == false) // убатьзависимость от выделения
+                {
+                    ExelFile exelFile = new ExelFile(saveFileDialog.FileName);
+                    exelFile.SetTempCopyPath(exelFile.Path);
+                    ExelFileWriter exelFileWriter = new ExelFileWriter(exelFile);
+                    exelFileWriter.Open();
+                    exelFileWriter.TablesWrite(wordFile.Tables[0], "A1");
+                    exelFileWriter.Close();
+                }
             }
-            set
-            {
-                searchParagraphStanding = value;
-                OnPropertyChanged(nameof(SearchParagraphStanding));
-            }
-        }
-        private SearchParagraph searchParagraphOther;
-        public SearchParagraph SearchParagraphOther
-        {
-            get
-            {
-                return searchParagraphOther;
-            }
-            set
-            {
-                searchParagraphOther = value;
-                OnPropertyChanged(nameof(SearchParagraphOther));
-            }
-        }      
-       
+       }
         public void UpdateFiles()
         {
-            WordFiles.Clear();
-            WordFiles = new ObservableCollection<WordFile>(windowFileBase.wordWindowFileBase.WordFiles);
-            OnPropertyChanged(nameof(WordFiles));
+            Files.Clear();
+            Files = new ObservableCollection<WordFile>(windowFileBase.wordWindowFileBase.WordFiles);
+            OnPropertyChanged(nameof(Files));
             SelectedWordFile = selectedWordFile;
         }
         public void ReadWordFile(WordFile AddedFile, WordSettingsRead wordSettingsRead)
