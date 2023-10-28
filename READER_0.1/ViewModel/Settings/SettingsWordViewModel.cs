@@ -1,5 +1,5 @@
 ﻿using READER_0._1.Command.Settings.SettingsWord;
-using READER_0._1.Model.Exel.Settings;
+using READER_0._1.Model.Excel.Settings;
 using READER_0._1.Model.Settings.Word;
 using READER_0._1.Model.Word.Settings;
 using READER_0._1.ViewModel.tools;
@@ -53,11 +53,11 @@ namespace READER_0._1.ViewModel.Settings
             {
                 selectedSearchParagraph = value;
                 OnPropertyChanged(nameof(SelectedSearchParagraph));
-                TypesSearchStrings = new ObservableCollection<TypeSearchStrings>(SelectedSearchParagraph.TypesSearchStrings);
+                TypesSearchStrings = new ObservableCollection<SearchString>(SelectedSearchParagraph.SubSearchStrings);
             }
         }
-        private ObservableCollection<TypeSearchStrings> typesSearchStrings;
-        public ObservableCollection<TypeSearchStrings> TypesSearchStrings
+        private ObservableCollection<SearchString> typesSearchStrings;
+        public ObservableCollection<SearchString> TypesSearchStrings
         {
             get
             {
@@ -69,8 +69,8 @@ namespace READER_0._1.ViewModel.Settings
                 OnPropertyChanged(nameof(TypesSearchStrings));               
             }
         }
-        private TypeSearchStrings selectedTypeSearchStrings;
-        public TypeSearchStrings SelectedTypeSearchStrings
+        private SearchString selectedTypeSearchStrings;
+        public SearchString SelectedTypeSearchStrings
         {
             get
             {
@@ -86,7 +86,7 @@ namespace READER_0._1.ViewModel.Settings
                 }
                 if (SelectedTypeSearchStrings != null)
                 {
-                    SearchStrings = new ObservableCollection<SearchString>(SelectedTypeSearchStrings.SearchStrings);
+                    SearchStrings = new ObservableCollection<SearchString>();///
                 }                
             }
         }

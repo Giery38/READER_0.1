@@ -1,4 +1,5 @@
-﻿using System;
+﻿using READER_0._1.Model.Word.Settings;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,8 +22,8 @@ namespace READER_0._1.Model.Settings.Word
                 name = value;
             }
         }
-        private string data;
-        public string Data
+        private object data;
+        public object Data
         {
             get
             {
@@ -33,27 +34,32 @@ namespace READER_0._1.Model.Settings.Word
                 data = value;
             }
         }
-        public SearchWord(string name, string data)
+        private DataTypes type;
+        public DataTypes Type
+        {
+            get
+            {
+                return type;
+            }
+            set
+            {
+                type = value;               
+            }
+        }
+        public SearchWord(string name, object data, DataTypes dataType)
         {
             Name = name;
             Data = data;
+            Type = dataType;
         }
         public SearchWord(SearchWord searchWord)
         {
             Name = new string(searchWord.Name);
-            Data = new string(searchWord.Data);
+            Data = new string(searchWord.Data?.ToString());
         }
         public SearchWord()
         {
 
-        }
-        public void CollapseSearchWord(List<SearchWord> searchWords)
-        {
-            foreach (SearchWord word in searchWords)
-            {
-                string result = string.Join(" ", word.Data);
-                Data = Data + " " + result;
-            }
         }
     }
 }

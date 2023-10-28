@@ -4,39 +4,39 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace READER_0._1.Model.Exel.Settings
+namespace READER_0._1.Model.Excel.Settings
 {
     [Serializable]
-    public class ExelSettings
+    public class ExcelSettings
     {
-       private ExelSettingsRead exelSettingsRead;
-       public ExelSettingsRead ExelSettingsRead
+       private ExcelSettingsRead excelSettingsRead;
+       public ExcelSettingsRead ExcelSettingsRead
         {
             get 
             { 
-                return exelSettingsRead; 
+                return excelSettingsRead; 
             }
             set
             {
-                exelSettingsRead = value;
+                excelSettingsRead = value;
             }
         }
-        private ExelSettingsSearchFiles exelSettingsSearchFiles;
-        public ExelSettingsSearchFiles ExelSettingsSearchFiles
+        private ExcelSettingsSearchFiles excelSettingsSearchFiles;
+        public ExcelSettingsSearchFiles ExcelSettingsSearchFiles
         {
             get 
             {
-                return exelSettingsSearchFiles;
+                return excelSettingsSearchFiles;
             }
             set
             {
-                exelSettingsSearchFiles = value;            
+                excelSettingsSearchFiles = value;            
             }
         }      
-        public ExelSettings()
+        public ExcelSettings()
         {
-            ExelSettingsRead = new ExelSettingsRead();
-            ExelSettingsSearchFiles = new ExelSettingsSearchFiles();
+            ExcelSettingsRead = new ExcelSettingsRead();
+            ExcelSettingsSearchFiles = new ExcelSettingsSearchFiles();
         }
     }
 }

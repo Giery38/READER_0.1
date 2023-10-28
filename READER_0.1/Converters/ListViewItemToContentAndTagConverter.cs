@@ -1,4 +1,4 @@
-﻿using READER_0._1.Model.Exel;
+﻿using READER_0._1.Model.Excel;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,7 +16,7 @@ namespace READER_0._1.Converters
         {
             if (value is ListViewItem listViewItem)
             {
-                return (listViewItem.Content as ExelFile, listViewItem.Tag.ToString());
+                return (listViewItem.Content as ExcelFile, (Guid)listViewItem.Tag);
             }
             return null;
         }

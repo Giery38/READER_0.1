@@ -9,29 +9,29 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Windows.Interop;
-using READER_0._1.Model.Exel;
+using READER_0._1.Model.Excel;
 
-namespace READER_0._1.Command.CommandExel
+namespace READER_0._1.Command.CommandExcel
 {
     public class AddDirectoryCommand : CommandBase
     {
-        private readonly ExelViewModel exelViewModel;
-        public AddDirectoryCommand(ExelViewModel exelViewModel)
+        private readonly ExcelViewModel excelViewModel;
+        public AddDirectoryCommand(ExcelViewModel excelViewModel)
         {
-            this.exelViewModel = exelViewModel;
-            exelViewModel.PropertyChanged += ExelViewModel_PropertyChanged;
+            this.excelViewModel = excelViewModel;
+            excelViewModel.PropertyChanged += ExcelViewModel_PropertyChanged;
         }
 
-        private void ExelViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void ExcelViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(exelViewModel.SelectedPage))
+            if (e.PropertyName == nameof(excelViewModel.SelectedPage))
             {
                 OnCanExecutedChanged();
             }           
         }       
         public override bool CanExecute(object parameter)
         {
-            if (exelViewModel.SelectedPage == null)
+            if (excelViewModel.SelectedPage == null)
             {
                 return false;
             }
@@ -52,18 +52,18 @@ namespace READER_0._1.Command.CommandExel
                 Task.Run(() =>
                 {                    
                     List<string> selectedFolders = customizedCommonOpenFileDialog.FilePaths;
-                    ExelFile binddingExelFile = exelViewModel.SelectedExelFile;                    
+                    ExcelFile bindingExcelFile = excelViewModel.SelectedExcelFile;                    
                     foreach (string directoryPath in selectedFolders)
                     {
-                        foreach (string extension in exelViewModel.windowFileBase.exelWindowFileBase.ExelSettings.ExelSettingsSearchFiles.FormatsSearch)
+                        foreach (string extension in excelViewModel.windowFileBase.excelWindowFileBase.ExcelSettings.ExcelSettingsSearchFiles.FormatsSearch)
                         {
-                            FindFiles(directoryPath, extension, binddingExelFile);
+                            FindFiles(directoryPath, extension, bindingExcelFile);
                         }
                     }
                 });
             }           
         }
-        private void FindFiles(string directoryPath, string extension, ExelFile exelFile)
+        private void FindFiles(string directoryPath, string extension, ExcelFile excelFile)
         {
             string directoryName = Path.GetFileName(directoryPath);
             string[] allFoundFiles = System.IO.Directory.GetFiles(directoryPath,"*" + extension, SearchOption.TopDirectoryOnly);
@@ -72,12 +72,12 @@ namespace READER_0._1.Command.CommandExel
             {
                 filesToDirectory.Add(new Model.File(allFoundFiles[i], Path.GetFileNameWithoutExtension(allFoundFiles[i]), extension));
             }
-            Model.Directory directory = new Model.Directory(directoryPath, directoryName, filesToDirectory);
-            if (exelViewModel.SelectedExelFile != null && exelViewModel.SelectedPage != null) // убрать это если нужно создать самодостаточную папку
+            Model.ModifiedDirectory directory = new Model.ModifiedDirectory(directoryPath, directoryName, filesToDirectory);
+            if (excelViewModel.SelectedExcelFile != null && excelViewModel.SelectedPage != null) // убрать это если нужно создать самодостаточную папку
             {
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
-                    exelViewModel.AddDirectory(directory, exelFile);
+                    excelViewModel.AddDirectory(directory, excelFile);
                 });                
             }
         }

@@ -1,5 +1,5 @@
-﻿using READER_0._1.Model.Exel.Settings;
-using READER_0._1.Model.Exel;
+﻿using READER_0._1.Model.Excel.Settings;
+using READER_0._1.Model.Excel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using READER_0._1.Model.Settings.Word;
 using READER_0._1.Model.Word.Settings;
+using MS.WindowsAPICodePack.Internal;
 
 namespace READER_0._1.Model.Word
 {
@@ -35,16 +36,9 @@ namespace READER_0._1.Model.Word
             WordFiles.AddRange(AddedFiles);            
         }
         
-        public bool TryReadWordFile(WordFile wordFile, WordSettingsRead wordSettingsRead)
+        public void ReadWordFile(WordFile wordFile, WordSettingsRead wordSettingsRead)
         {
-            bool result = false;
-            Thread readWordFile = new Thread(() =>
-            {
-                result = WordReaderManager.TryReadExelFile(wordFile, wordSettingsRead);
-            });
-            readWordFile.Start();
-            readWordFile.Join();
-            return result;
+           WordReaderManager.Read(wordFile, wordSettingsRead);           
         }
      
     }

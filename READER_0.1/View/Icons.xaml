@@ -47,4 +47,70 @@
             </Image.Source>
         </Image>
     </DataTemplate>
+    <DataTemplate x:Key="NotificationIcon">
+        <Image>
+            <Image.Source>
+                <DrawingImage>
+                    <DrawingImage.Drawing>
+                        <DrawingGroup ClipGeometry="M0,0 V24 H24 V0 H0 Z">
+                            <DrawingGroup Opacity="1">
+                                <DrawingGroup.ClipGeometry>
+                                    <RectangleGeometry
+                                        RadiusX="0"
+                                        RadiusY="0"
+                                        Rect="0,0,24,24" />
+                                </DrawingGroup.ClipGeometry>
+                                <GeometryDrawing Brush="#FFFFFFFF">
+                                    <GeometryDrawing.Geometry>
+                                        <RectangleGeometry
+                                            RadiusX="0"
+                                            RadiusY="0"
+                                            Rect="0,0,24,24" />
+                                    </GeometryDrawing.Geometry>
+                                </GeometryDrawing>
+                                <GeometryDrawing Geometry="F1 M24,24z M0,0z M9.5,19C8.89555,19 7.01237,19 5.61714,19 4.87375,19 4.39116,18.2177 4.72361,17.5528L5.57771,15.8446C5.85542,15.2892 6,14.6774 6,14.0564 6,13.2867 6,12.1434 6,11 6,9 7,5 12,5 17,5 18,9 18,11 18,12.1434 18,13.2867 18,14.0564 18,14.6774 18.1446,15.2892 18.4223,15.8446L19.2764,17.5528C19.6088,18.2177,19.1253,19,18.382,19L14.5,19 M9.5,19C9.5,21 10.5,22 12,22 13.5,22 14.5,21 14.5,19 M9.5,19C11.0621,19,14.5,19,14.5,19">
+                                    <GeometryDrawing.Pen>
+                                        <Pen
+                                            Brush="#FF000000"
+                                            EndLineCap="Flat"
+                                            LineJoin="Round"
+                                            StartLineCap="Flat"
+                                            Thickness="1" />
+                                    </GeometryDrawing.Pen>
+                                </GeometryDrawing>
+                                <GeometryDrawing Geometry="F1 M24,24z M0,0z M12,5L12,3">
+                                    <GeometryDrawing.Pen>
+                                        <Pen
+                                            Brush="#FF000000"
+                                            EndLineCap="Round"
+                                            LineJoin="Round"
+                                            MiterLimit="1"
+                                            StartLineCap="Round"
+                                            Thickness="1" />
+                                    </GeometryDrawing.Pen>
+                                </GeometryDrawing>
+                            </DrawingGroup>
+                        </DrawingGroup>
+                    </DrawingImage.Drawing>
+                </DrawingImage>
+            </Image.Source>
+        </Image>
+    </DataTemplate>
+    <DataTemplate x:Key="CrossIcon">
+        <Image>
+            <Image.Source>
+                <DrawingImage>
+                    <DrawingImage.Drawing>
+                        <DrawingGroup ClipGeometry="M0,0 V32 H32 V0 H0 Z">
+                            <DrawingGroup Opacity="1">
+                                <DrawingGroup Opacity="1" Transform="1,0,0,1,-204,-1035">
+                                    <GeometryDrawing Brush="#FF000000" Geometry="F0 M32,32z M0,0z M224.95,1046.05C224.559,1045.66,223.926,1045.66,223.536,1046.05L220,1049.59 216.464,1046.05C216.074,1045.66 215.441,1045.66 215.05,1046.05 214.66,1046.44 214.66,1047.07 215.05,1047.46L218.586,1051 215.05,1054.54C214.66,1054.93 214.66,1055.56 215.05,1055.95 215.441,1056.34 216.074,1056.34 216.464,1055.95L220,1052.41 223.536,1055.95C223.926,1056.34 224.559,1056.34 224.95,1055.95 225.34,1055.56 225.34,1054.93 224.95,1054.54L221.414,1051 224.95,1047.46C225.34,1047.07,225.34,1046.44,224.95,1046.05L224.95,1046.05z M234,1063C234,1064.1,233.104,1065,232,1065L208,1065C206.896,1065,206,1064.1,206,1063L206,1039C206,1037.9,206.896,1037,208,1037L232,1037C233.104,1037,234,1037.9,234,1039L234,1063 234,1063z M232,1035L208,1035C205.791,1035,204,1036.79,204,1039L204,1063C204,1065.21,205.791,1067,208,1067L232,1067C234.209,1067,236,1065.21,236,1063L236,1039C236,1036.79,234.209,1035,232,1035L232,1035z" />
+                                </DrawingGroup>
+                            </DrawingGroup>
+                        </DrawingGroup>
+                    </DrawingImage.Drawing>
+                </DrawingImage>
+            </Image.Source>
+        </Image>
+    </DataTemplate>
 </ResourceDictionary>

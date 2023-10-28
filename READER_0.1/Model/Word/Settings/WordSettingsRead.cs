@@ -24,7 +24,7 @@ namespace READER_0._1.Model.Settings.Word
                 searchParagraphs = value;
             }
         }
-        private SearchString baseSearchString;
+        private SearchString baseSearchString;//используется, как шаблон для создания новых строк(в новой реализации фактически не имеет смысла)
         public SearchString BaseSearchString
         {
             get

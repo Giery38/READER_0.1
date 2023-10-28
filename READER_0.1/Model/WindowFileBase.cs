@@ -1,4 +1,4 @@
-﻿using READER_0._1.Model.Exel;
+﻿using READER_0._1.Model.Excel;
 using READER_0._1.Model.Word;
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ namespace READER_0._1.Model
         public List<Directory> Directories { get; private set; }
         static public string TempFolderPath { get; private set; }
         public readonly Settings.Settings settings;
-        public readonly ExelWindowFileBase exelWindowFileBase;
+        public readonly ExcelWindowFileBase excelWindowFileBase;
         public readonly WordWindowFileBase wordWindowFileBase;
         public WindowFileBase(string tempFolderPath, Settings.Settings settings)
         {            
@@ -25,7 +25,7 @@ namespace READER_0._1.Model
             Directories = new List<Directory>();           
             TempFolderPath = tempFolderPath;
             this.settings = settings;
-            exelWindowFileBase = new ExelWindowFileBase(TempFolderPath, settings.ExelSettings);
+            excelWindowFileBase = new ExcelWindowFileBase(TempFolderPath, settings.ExcelSettings);
             wordWindowFileBase = new WordWindowFileBase(TempFolderPath, settings.WordSettings);            
         }                              
     }

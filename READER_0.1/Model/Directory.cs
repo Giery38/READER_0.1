@@ -1,4 +1,4 @@
-﻿using READER_0._1.Model.Exel;
+﻿using READER_0._1.Model.Excel;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms.Design;
-using static READER_0._1.Model.Exel.Settings.ExelSettingsSearchFiles;
+using static READER_0._1.Model.Excel.Settings.ExcelSettingsSearchFiles;
 
 namespace READER_0._1.Model
 {
@@ -16,32 +16,31 @@ namespace READER_0._1.Model
         public string Name { get; private set; }
         public List<File> Files { get; private set; }
 
-        private List<File> filseModifiedName;
-        private List<File> filseWithoutModifiedName;
-        public Directory(string path, string name, List<File> files)
+        public Guid Id { get; }
+        public Directory(string path, string name, List<File> files) 
         {
             Path = path;
             Name = name;
-            Files = files;
-            filseModifiedName = new List<File>();
-            filseWithoutModifiedName = new List<File>();
+            Files = files;    
+            Id = Guid.NewGuid();
         }
         public Directory(string name)
         {
             Name = name;
             Files = new List<File>();
+            Id = Guid.NewGuid();
         }
         public void AddFile(List<File> addedFiles)
         {
             Files.AddRange(addedFiles);
             
         }
-        public void AddFile(List<ExelFile> addedFiles)
+        public void AddFile(List<ExcelFile> addedFiles)
         {
             Files.AddRange(addedFiles);
 
         }
-        public void AddFile(ExelFile addedFile)
+        public void AddFile(ExcelFile addedFile)
         {
             Files.Add(addedFile);
 
@@ -49,25 +48,8 @@ namespace READER_0._1.Model
         public void SetName(string name)
         {
             Name = name;
-        }
-        public void SetFilseModifiedName(ConfigurationName configurationName)
-        {
-            for (int file = 0; file < Files.Count; file++)
-            {
-                if (configurationName.CheckModifieds(Files[file].Name) == true)
-                {
-                    filseModifiedName.Add(Files[file]);
-                }
-                else
-                {
-                    filseWithoutModifiedName.Add(Files[file]);
-                }
-            }
-            filseModifiedName.Sort((x, y) => x.Name.CompareTo(y.Name));
-            filseWithoutModifiedName.Sort((x, y) => x.Name.CompareTo(y.Name));
-        }
-
-        public List<Model.File> SearchFileToName(List<string> searchData, string formatsFileSearch, List<ConfigurationName> configurationName)
+        }       
+        public List<Model.File> SearchFileToName(List<string> searchData, string formatsFileSearch, List<ConfigurationName> configurationName) //переписать тут 
         {
             List<string> tempSearchData = new List<string>(searchData);
             List<Model.File> result = new List<Model.File>();
@@ -78,58 +60,28 @@ namespace READER_0._1.Model
             return result;
         }
 
-        private List<Model.File> SearchFileToName(List<string> searchData, string formatsFileSearch, ConfigurationName configurationName)
+        private List<Model.File> SearchFileToName(List<string> searchData, string formatsFileSearch, ConfigurationName configurationName)// и тут
         {            
             List<Model.File> result = new List<Model.File>();
-            if (false)//filseModifiedName.Count > 0 || filseWithoutModifiedName.Count > 0
-            {
-#pragma warning disable CS0162 // Обнаружен недостижимый код
-                result = QuickSearch(searchData, formatsFileSearch, configurationName);
-#pragma warning restore CS0162 // Обнаружен недостижимый код
-            }
-            else
-            {
-                for (int i = 0; i < searchData.Count; i++)
-                {
-                    Model.File file = Files.Find(item => item.Name == searchData[i]);
-                    if (file == null)
-                    {
-                        string configurationNameString = configurationName.SetOrRemoveConfiguration(searchData[i]);
-                        file = Files.Find(item => item.Name == searchData[i] || item.Name == configurationNameString);
-                    }  
-                    
-                    if (file != null && file.Format == formatsFileSearch)
-                    {
-                        searchData.RemoveAt(i);
-                        result.Add(file);
-                    }
-                }
-            }
-            return result;
-        }
-        private List<Model.File> QuickSearch(List<string> searchData, string formatsFileSearch, ConfigurationName configurationName)
-        {
-            List<Model.File> result = new List<Model.File>();
-            Model.File file;
             for (int i = 0; i < searchData.Count; i++)
             {
-                if (configurationName.CheckModifieds(searchData[i]) == true)
+                Model.File file = Files.Find(item => item.Name == searchData[i]);
+                if (file == null)
                 {
-                    file = BinarySearch(filseModifiedName, searchData[i]);                                       
+                    string configurationNameString = configurationName.SetOrRemoveConfiguration(searchData[i]);
+                    file = Files.Find(item => item.Name == searchData[i] || item.Name == configurationNameString);
                 }
-                else
-                {
-                    file = BinarySearch(filseWithoutModifiedName, searchData[i]);
-                }
+
                 if (file != null && file.Format == formatsFileSearch)
                 {
                     searchData.RemoveAt(i);
+                    i--;
                     result.Add(file);
                 }
             }
             return result;
-        }
-        private Model.File BinarySearch(List<Model.File> files, string name)
+        }       
+        protected Model.File BinarySearch(List<Model.File> files, string name)
         {
             int left = 0;
             int right = files.Count - 1;
@@ -156,7 +108,11 @@ namespace READER_0._1.Model
         {
             throw new NotImplementedException();
         }
-       
+        /// <summary>
+        /// Метод сравнивает фактическое равенство файлов, а не их равенство в программе, то есть сравнивает их пути
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             try

@@ -161,48 +161,30 @@
                             <Border
                                 Name="Border"
                                 Padding="2"
+                                Background="Transparent"
                                 SnapsToDevicePixels="true">
                                 <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <Grid
-                                        Grid.Column="0"
+                                    <ContentPresenter HorizontalAlignment="Left" />
+                                    <local:CustomCheakBox
+                                        x:Name="cheakBox"
                                         Margin="0,0,5,0"
-                                        SnapsToDevicePixels="True">
-                                        <Ellipse
-                                            x:Name="Circle"
-                                            Width="18"
-                                            Height="18"
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Center"
-                                            Fill="Transparent"
-                                            SnapsToDevicePixels="True"
-                                            Stroke="#8A7777"
-                                            StrokeThickness="1" />
-                                        <Ellipse
-                                            x:Name="Dot"
-                                            Width="10"
-                                            Height="10"
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Center"
-                                            Fill="White"
-                                            Opacity="0"
-                                            SnapsToDevicePixels="True" />
-                                    </Grid>
-                                    <ContentPresenter Grid.Column="1" />
+                                        HorizontalAlignment="Right"
+                                        IsChecked="{TemplateBinding IsSelected}"
+                                        IsHitTestVisible="False"
+                                        SnapsToDevicePixels="True" />
                                 </Grid>
                             </Border>
                             <ControlTemplate.Triggers>
-                                <Trigger Property="IsHighlighted" Value="true">
-                                    <Setter TargetName="Dot" Property="Opacity" Value="0.5" />
-                                    <Setter Property="Cursor" Value="Hand" />
-                                </Trigger>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter TargetName="Dot" Property="Fill" Value="White" />
-                                    <Setter TargetName="Dot" Property="Opacity" Value="1" />
-                                </Trigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsMouseOver" Value="True" />
+                                        <Condition Property="IsSelected" Value="False" />
+                                    </MultiTrigger.Conditions>
+                                    <MultiTrigger.Setters>
+                                        <Setter TargetName="cheakBox" Property="IsFocusable" Value="True" />
+                                        <Setter Property="Cursor" Value="Hand" />
+                                    </MultiTrigger.Setters>
+                                </MultiTrigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>

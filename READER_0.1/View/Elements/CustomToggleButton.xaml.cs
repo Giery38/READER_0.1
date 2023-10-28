@@ -15,7 +15,7 @@ using System.Windows.Shapes;
 
 namespace READER_0._1.View.Elements
 {
-    public partial class ToggleButton : UserControl
+    public partial class CustomToggleButton : UserControl
     {
         /*
        public static readonly DependencyProperty CommandProperty = DependencyProperty.Register("Command", typeof(ICommand), typeof(ToggleButton));
@@ -32,19 +32,19 @@ namespace READER_0._1.View.Elements
            set { SetValue(CommandParameterProperty, value); }
        }
        */
-        public new static readonly DependencyProperty BackgroundProperty = DependencyProperty.Register("Background", typeof(Brush), typeof(ToggleButton));
+        public new static readonly DependencyProperty BackgroundProperty = DependencyProperty.Register("Background", typeof(Brush), typeof(CustomToggleButton));
         public new Brush Background
         {
             get { return (Brush)GetValue(BackgroundProperty); }
             set { SetValue(BackgroundProperty, value); }
         }
-        public new static readonly DependencyProperty BorderBrushProperty = DependencyProperty.Register("BorderBrush", typeof(Brush), typeof(ToggleButton));
+        public new static readonly DependencyProperty BorderBrushProperty = DependencyProperty.Register("BorderBrush", typeof(Brush), typeof(CustomToggleButton));
         public new Brush BorderBrush
         {
             get { return (Brush)GetValue(BorderBrushProperty); }
             set { SetValue(BorderBrushProperty, value); }
         }
-        public static readonly DependencyProperty ToggledProperty = DependencyProperty.Register("Toggled", typeof(bool), typeof(ToggleButton));
+        public static readonly DependencyProperty ToggledProperty = DependencyProperty.Register("Toggled", typeof(bool), typeof(CustomToggleButton));
         public bool Toggled
         {
             get { return (bool)GetValue(ToggledProperty); }
@@ -56,7 +56,7 @@ namespace READER_0._1.View.Elements
                 }              
             }
         }
-        public static readonly DependencyProperty CornerRadiusProperty = DependencyProperty.Register("CornerRadius", typeof(CornerRadius), typeof(ToggleButton));
+        public static readonly DependencyProperty CornerRadiusProperty = DependencyProperty.Register("CornerRadius", typeof(CornerRadius), typeof(CustomToggleButton));
         public CornerRadius CornerRadius
         {
             get { return (CornerRadius)GetValue(CornerRadiusProperty); }
@@ -69,7 +69,7 @@ namespace READER_0._1.View.Elements
         private SolidColorBrush On = new SolidColorBrush(Color.FromRgb(130, 190, 125));
         private Brush startBackBorderBrush;
 
-        public ToggleButton()
+        public CustomToggleButton()
         {
             InitializeComponent();
             Back.Background = Off;                  
@@ -80,7 +80,14 @@ namespace READER_0._1.View.Elements
         private void ToggleButton_Loaded(object sender, RoutedEventArgs e)
         {
             double dotWidth = (Back.ActualWidth / 2) - Back.BorderThickness.Top - Back.Padding.Top;
-            Dot.Width = dotWidth;            
+            if (dotWidth > 0 )
+            {
+                Dot.Width = dotWidth;
+            }
+            else
+            {
+                Dot.Width = 0; 
+            }
             LeftSide = new Thickness((int)-dotWidth, 0, 0, 0);
             RightSide = new Thickness(0, 0, (int)-dotWidth, 0);
             Dot.Margin = LeftSide;

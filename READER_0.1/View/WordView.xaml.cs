@@ -1,4 +1,5 @@
-﻿using System;
+﻿using READER_0._1.View.Tools;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,12 @@ namespace READER_0._1.View
         public WordView()
         {
             InitializeComponent();
+            Loaded += WordView_Loaded;
+        }
+
+        private void WordView_Loaded(object sender, RoutedEventArgs e)
+        {
+                       
         }
 
         private void CustomButton_MouseLeave(object sender, MouseEventArgs e)

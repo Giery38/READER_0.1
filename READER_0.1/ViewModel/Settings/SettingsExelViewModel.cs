@@ -3,17 +3,17 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using static READER_0._1.Model.Exel.Settings.ExelSettingsRead;
-using READER_0._1.Model.Exel.Settings;
-using static READER_0._1.Model.Exel.Settings.ExelSettingsSearchFiles;
+using static READER_0._1.Model.Excel.Settings.ExcelSettingsRead;
+using READER_0._1.Model.Excel.Settings;
+using static READER_0._1.Model.Excel.Settings.ExcelSettingsSearchFiles;
 using System.Windows.Input;
-using READER_0._1.Command.Settings.SettingsExel;
+using READER_0._1.Command.Settings.SettingsExcel;
 
 namespace READER_0._1.ViewModel.Settings
 {
-    public class SettingsExelViewModel : ViewModelBase
+    public class SettingsExcelViewModel : ViewModelBase
     {
-        private readonly ExelSettings settings;
+        private readonly ExcelSettings settings;
         //commands
         public ICommand AddConfigurationsNameCommand { get; }   
         public ICommand AddSearchingColumnNameCommand { get; }
@@ -23,9 +23,9 @@ namespace READER_0._1.ViewModel.Settings
         public ICommand RemoveSelectedSearchingColumnNameValueCommand { get; }
         public ICommand RemoveSearchingFormatCommand { get; }
         public ICommand RemoveConfigurationNameCommand { get; }
-        public SettingsExelViewModel(ExelSettings exelSettings)
+        public SettingsExcelViewModel(ExcelSettings excelSettings)
         {           
-            settings = exelSettings;
+            settings = excelSettings;
             //commands
             AddConfigurationsNameCommand = new AddConfigurationsNameCommand(this, settings);
             AddSearchingColumnNameCommand = new AddSearchingColumnNameCommand(this, settings);
@@ -36,10 +36,10 @@ namespace READER_0._1.ViewModel.Settings
             RemoveSearchingFormatCommand = new RemoveSearchingFormatCommand(this, settings);
             RemoveConfigurationNameCommand = new RemoveConfigurationNameCommand(this, settings);
             //obs
-            SearchingColumnNames = new ObservableCollection<SearchingColumnName>(settings.ExelSettingsRead.SearchingColumnNames);
+            SearchingColumnNames = new ObservableCollection<SearchingColumnName>(settings.ExcelSettingsRead.SearchingColumnNames);
             SelectedSearchingColumnNameValues = new ObservableCollection<StringContainer>();
-            SearchingFormats = new ObservableCollection<StringContainer>(settings.ExelSettingsSearchFiles.FormatsSearch.Select(item => new StringContainer(item, settings.ExelSettingsSearchFiles.FormatsSearch)));
-            ConfigurationNames = new ObservableCollection<ConfigurationName>(settings.ExelSettingsSearchFiles.Configurations);
+            SearchingFormats = new ObservableCollection<StringContainer>(settings.ExcelSettingsSearchFiles.FormatsSearch.Select(item => new StringContainer(item, settings.ExcelSettingsSearchFiles.FormatsSearch)));
+            ConfigurationNames = new ObservableCollection<ConfigurationName>(settings.ExcelSettingsSearchFiles.Configurations);
         }
         private ObservableCollection<SearchingColumnName> searchingColumnNames;
         public ObservableCollection<SearchingColumnName> SearchingColumnNames

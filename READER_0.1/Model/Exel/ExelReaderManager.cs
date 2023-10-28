@@ -1,68 +1,82 @@
-﻿using READER_0._1.Model.Exel.Settings;
+﻿using READER_0._1.Model.Excel.Settings;
+using READER_0._1.ViewModel.ViewElement;
+using READER_0._1.ViewModel;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using READER_0._1.Tools;
+using READER_0._1.Tools.ThreadManagers;
 
-namespace READER_0._1.Model.Exel
+namespace READER_0._1.Model.Excel
 {
-    public class ExelReaderManager
+    public class ExcelReaderManager
     {
-        public List<ExelFileReader> ExelFileReaders { get; private set; }
-        public string TempFolderPath { get; private set; }        
-        private bool close = false;
+        public List<ExcelFileReader> ExcelFileReaders { get; private set; }
+        public string TempFolderPath { get; private set; }
 
-        public ExelReaderManager(string tempFolderPath)
+        private bool close = false;
+        private QueueManager readManager;
+
+        public ExcelReaderManager(string tempFolderPath)
         {
             TempFolderPath = tempFolderPath;            
-            ExelFileReaders = new List<ExelFileReader>();
+            ExcelFileReaders = new List<ExcelFileReader>();
+            readManager = new QueueManager("ReadExcelManager");      
         }       
-        public bool TryReadExelFile(ExelFile exelFile, ExelSettingsRead exelSettingsRead)
+        public void Read(ExcelFile excelFile, ExcelSettingsRead excelSettingsRead)
         {
-            lock (this)
-            {
-                if (close == true)
-                {
-                    return false;
-                }
-                Thread threadMain = Thread.CurrentThread;
-                string name = "Чтение Excel файла" + "&&" + exelFile.Path;
-                threadMain.Name = name;
-                try
-                {
-                    ExelFileReader exelFileReader = new ExelFileReader(exelFile, TempFolderPath, exelSettingsRead);
-                    ExelFileReaders.Add(exelFileReader);
-                    exelFile.AddPage(exelFileReader.Read());
-                    exelFileReader.Close();                    
-                    ExelFileReaders.Remove(exelFileReader);
-                    exelFile.SetReaded(true);
-                }
-                catch (Exception)
-                {
-                    exelFile.Corrupted = true; 
-                    return false;
-                }
-                return true;
-            }            
-        }     
-        public void RemoveExelFileReader(ExelFile RemovedFile)
+            readManager.AddFunc(new Func<ExcelFile, ExcelSettingsRead, Exception>(ReadExcelFileBody), excelFile, "Чтение Excel файла" + "&&" + excelFile.Path, new object[] { excelFile, excelSettingsRead });
+        }
+        private Exception ReadExcelFileBody(ExcelFile excelFile, ExcelSettingsRead excelSettingsRead)
         {
-            ExelFileReader exelFileReader = ExelFileReaders.Find(item => item.ExelFile == RemovedFile);
-            if (exelFileReader != null)
+            Exception exception = null;
+            if (close == true)
             {
-                exelFileReader.Close();                               
-                ExelFileReaders.Remove(exelFileReader);
+                return exception;
+            }           
+              try
+              {
+                  ExcelFileReader excelFileReader = new ExcelFileReader(excelFile, TempFolderPath, excelSettingsRead);
+                  ExcelFileReaders.Add(excelFileReader);
+                  excelFile.AddPage(excelFileReader.Read());
+                  excelFileReader.Close();
+                  ExcelFileReaders.Remove(excelFileReader);
+                  excelFile.SetReaded(true);
+              }
+              catch (Exception e)
+              {
+                  exception = e;
+                  excelFile.SetCorrupted(true);                
+              }
+            
+            return exception;
+        }    
+        public void RemoveExcelFileReader(ExcelFile RemovedFile)
+        {
+            ExcelFileReader excelFileReader = ExcelFileReaders.Find(item => item.ExcelFile == RemovedFile);
+            if (excelFileReader != null)
+            {
+                excelFileReader.Close();                               
+                ExcelFileReaders.Remove(excelFileReader);
             }
+            readManager.RemoveItem(RemovedFile);
         }
         public void Close()
         {
-            ExelFileReaders.ForEach(reader => reader.Close());
-            ExelFileReaders.Clear();
+            ExcelFileReaders.ForEach(reader => reader.Close());
+            ExcelFileReaders.Clear();
+            readManager.Close();
             close = true;       
+        }
+        public void QueuesManagerStart()
+        {
+
         }
     }
 }

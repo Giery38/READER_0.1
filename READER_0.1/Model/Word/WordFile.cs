@@ -1,4 +1,5 @@
-﻿using READER_0._1.Model.Exel;
+﻿using READER_0._1.Model.Excel;
+using READER_0._1.Model.Excel.TableData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,8 @@ namespace READER_0._1.Model.Word
 {
     public class WordFile : File
     {      
-        private List<ExelFilePageTable> tables;
-        public List<ExelFilePageTable> Tables
+        private List<Table> tables;
+        public List<Table> Tables
         {
             get
             {

@@ -14,8 +14,8 @@
     mc:Ignorable="d">
     <Grid x:Name="MainGrid" Background="White">
         <Grid.Resources>
-            <DataTemplate DataType="{x:Type settingsViewModel:SettingsExelViewModel}">
-                <viewsSettings:SettingsExelView />
+            <DataTemplate DataType="{x:Type settingsViewModel:SettingsExcelViewModel}">
+                <viewsSettings:SettingsExcelView />
             </DataTemplate>
             <DataTemplate DataType="{x:Type settingsViewModel:SettingsWordViewModel}" >
                 <viewsSettings:SettingsWordView/>

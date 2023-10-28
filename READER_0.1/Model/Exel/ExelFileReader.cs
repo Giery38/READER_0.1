@@ -1,4 +1,4 @@
-﻿using Excel = Microsoft.Office.Interop.Excel;
+﻿using ExcelInterop = Microsoft.Office.Interop.Excel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,83 +8,90 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Packaging;
 using System.Text.RegularExpressions;
 using System.IO;
-using READER_0._1.Model.Exel.Settings;
-using static READER_0._1.Model.Exel.Settings.ExelSettingsRead;
+using READER_0._1.Model.Excel.Settings;
+using static READER_0._1.Model.Excel.Settings.ExcelSettingsRead;
+using DocumentFormat.OpenXml.Drawing.Charts;
+using READER_0._1.Model.Excel.TableData;
+using DevExpress.Data.Extensions;
+using OpenXml = DocumentFormat.OpenXml.Spreadsheet;
+using ModelTable = READER_0._1.Model.Excel.TableData;
+using System.Threading;
 
-namespace READER_0._1.Model.Exel
+namespace READER_0._1.Model.Excel
 {
-    public class ExelFileReader
+    public class ExcelFileReader
     {
-        public ExelFile ExelFile { get; private set; }
+        public ExcelFile ExcelFile { get; private set; }
 
-        private ExelSettingsRead settings;
+        private ExcelSettingsRead settings;
 
         private WorkbookPart workbookPart;
 
         static private string TempFolderPath;
 
+        private Cell[] currentCells;
+
         public bool Closed { get; private set; } = false;
 
-        private Excel.Application usedAppliacation;
-        private Excel.Workbook usedWorkbook;
+        private ExcelInterop.Application usedApplication;
+        private ExcelInterop.Workbook usedWorkbook;
         private Process usedProcess;
         private SpreadsheetDocument usedDocument;
         public bool isUsedApplicationNull;
 
-        public ExelFileReader(ExelFile exelFile, string tempFolderPath, ExelSettingsRead settings)
+        public ExcelFileReader(ExcelFile excelFile, string tempFolderPath, ExcelSettingsRead settings)
         {
-            ExelFile = exelFile;
+            ExcelFile = excelFile;
             this.settings = settings;
             TempFolderPath = tempFolderPath;
         }
         [DllImport("user32.dll")]
         static extern int GetWindowThreadProcessId(int hWnd, out int lpdwProcessId);       
-        static Process GetExcelProcess(Excel.Application exelApplication)
+        static Process GetExcelProcess(ExcelInterop.Application excelApplication)
         {
-            GetWindowThreadProcessId(exelApplication.Hwnd, out int id);
+            GetWindowThreadProcessId(excelApplication.Hwnd, out int id);
             return Process.GetProcessById(id);
         }   
         
-        public List<ExelFilePage> Read()
-        {            
-            Excel.Application exelApplication = new Excel.Application();
-            usedAppliacation = exelApplication;
-            Excel.Workbook exelWorkbook = exelApplication.Workbooks.Open(ExelFile.Path, ReadOnly: true);
-            usedWorkbook = exelWorkbook;
-            Process applicationProcess = GetExcelProcess(exelApplication);
+        public List<Page> Read()
+        {
+            ExcelInterop.Application excelApplication = new ExcelInterop.Application();
+            usedApplication = excelApplication;
+            ExcelInterop.Workbook excelWorkbook = excelApplication.Workbooks.Open(ExcelFile.Path, ReadOnly: true);
+            usedWorkbook = excelWorkbook;
+            Process applicationProcess = GetExcelProcess(excelApplication);
             usedProcess = applicationProcess;
             if (Closed == true)
             {
                 return null;
             }           
-            string tempFilePath = CreateTempFile(exelApplication, exelWorkbook);
-            exelWorkbook.Close();
+            string tempFilePath = CreateTempFile(excelApplication, excelWorkbook);
+            excelWorkbook.Close();
 
-            exelWorkbook = exelApplication.Workbooks.Open(tempFilePath);
-            List<Excel.Worksheet> exelWorksheets = GetWorksheets(exelWorkbook);
-            Dictionary<int, object[,]> DataInPage = GetDataInPages(exelWorksheets);
-            exelWorksheets = null;
-            exelWorkbook.Close();
-            exelApplication.Quit();
+            excelWorkbook = excelApplication.Workbooks.Open(tempFilePath);
+            List<ExcelInterop.Worksheet> excelWorksheets = GetWorksheets(excelWorkbook);
+            Dictionary<int, object[,]> DataInPage = GetDataInPages(excelWorksheets);
+            excelWorksheets = null;
+            excelWorkbook.Close();
+            excelApplication.Quit();
             applicationProcess.Kill();
             usedProcess = null;
-            Marshal.ReleaseComObject(exelWorkbook);
+            Marshal.ReleaseComObject(excelWorkbook);
             usedWorkbook = null;
-            Marshal.ReleaseComObject(exelApplication);
-            usedAppliacation = null;     
-            
-            GC.Collect();       
-            List<ExelFilePage> exelFilePages = ReadWorksheets(DataInPage);           
-            return exelFilePages;
+            Marshal.ReleaseComObject(excelApplication);
+            usedApplication = null;
+         
+            List<Page> pages = ReadWorksheets(DataInPage);           
+            return pages;
         }       
         public void Close()
         {            
             try
             {
-                if (usedAppliacation != null)
+                if (usedApplication != null)
                 {
-                    usedAppliacation.Quit();
-                    Marshal.ReleaseComObject(usedAppliacation);
+                    usedApplication.Quit();
+                    Marshal.ReleaseComObject(usedApplication);
                 }                
             }
             catch (Exception)
@@ -118,10 +125,7 @@ namespace READER_0._1.Model.Exel
             try
             {
                 if (usedDocument != null)
-                {
-#pragma warning disable CS0618 // Тип или член устарел
-                    usedDocument.Close();
-#pragma warning restore CS0618 // Тип или член устарел
+                {                   
                     usedDocument.Dispose();
                     Marshal.ReleaseComObject(usedDocument);
                 }                
@@ -132,47 +136,47 @@ namespace READER_0._1.Model.Exel
             }
             Closed = true;
         }
-        private string CreateTempFile(Excel.Application exelApplication, Excel.Workbook exelWorkbook)
+        private string CreateTempFile(ExcelInterop.Application excelApplication, ExcelInterop.Workbook excelWorkbook)
         {
-            GetWindowThreadProcessId(exelApplication.Hwnd, out int idProcess);
-            string tempName = "id022-" + idProcess + "id022-" + ExelFile.Name + "-temp" + "." + ExelFile.Format.ToString();
+            GetWindowThreadProcessId(excelApplication.Hwnd, out int idProcess);
+            string tempName = "id022-" + idProcess + "id022-" + ExcelFile.Name + "-temp" + "." + ExcelFile.Format.ToString();
             string tempFilePath = Path.Combine(TempFolderPath, tempName);            
             while (System.IO.File.Exists(tempFilePath))
             {
                 tempName += "1";
-                tempFilePath = Path.Combine(TempFolderPath, tempName + ExelFile.Format.ToString());
+                tempFilePath = Path.Combine(TempFolderPath, tempName + ExcelFile.Format.ToString());
             }
             try
             {
-                exelWorkbook.SaveCopyAs(tempFilePath);
+                excelWorkbook.SaveCopyAs(tempFilePath);
                 
             }
             catch (Exception)
             {
                 System.IO.File.Delete(tempFilePath);
-                exelWorkbook.SaveCopyAs(tempFilePath);
+                excelWorkbook.SaveCopyAs(tempFilePath);
             }
             System.IO.File.SetAttributes(tempFilePath, FileAttributes.Hidden);
-            ExelFile.SetTempCopyPath(tempFilePath);
+            ExcelFile.SetTempCopyPath(tempFilePath);
             return tempFilePath;
         }
 
-        private List<Excel.Worksheet> GetWorksheets(Excel.Workbook exelWorkbook)
+        private List<ExcelInterop.Worksheet> GetWorksheets(ExcelInterop.Workbook excelWorkbook)
         {
-            List<Excel.Worksheet> exelWorksheets = new List<Excel.Worksheet>();
-            for (int page = 1; page < exelWorkbook.Sheets.Count + 1; page++)
+            List<ExcelInterop.Worksheet> excelWorksheets = new List<ExcelInterop.Worksheet>();
+            for (int page = 1; page < excelWorkbook.Sheets.Count + 1; page++)
             {
-                exelWorksheets.Add((Excel.Worksheet)exelWorkbook.Sheets[page]);
+                excelWorksheets.Add((ExcelInterop.Worksheet)excelWorkbook.Sheets[page]);
             }
-            return exelWorksheets;
+            return excelWorksheets;
         }
 
-        private Dictionary<int, object[,]> GetDataInPages(List<Excel.Worksheet> exelWorksheets)
+        private Dictionary<int, object[,]> GetDataInPages(List<ExcelInterop.Worksheet> excelWorksheets)
         {
             Dictionary<int, object[,]> DataInPage = new Dictionary<int, object[,]>();
-            for (int page = 0; page < exelWorksheets.Count; page++)
+            for (int page = 0; page < excelWorksheets.Count; page++)
             {
-                DataInPage.TryAdd(exelWorksheets[page].Index, GetDataInPage(exelWorksheets[page]));
+                DataInPage.TryAdd(excelWorksheets[page].Index, GetDataInPage(excelWorksheets[page]));
                 if (settings.MultiWorksheet == false)
                 {
                     break;
@@ -180,32 +184,32 @@ namespace READER_0._1.Model.Exel
             }
             return DataInPage;
         }
-        private List<ExelFilePage> ReadWorksheets(Dictionary<int, object[,]> DataInPage)
+        private List<Page> ReadWorksheets(Dictionary<int, object[,]> DataInPage)
         {
             if (Closed == true)
             {
                 return null;
             }
-            List<ExelFilePage> exelFilePages = new List<ExelFilePage>();
-            usedDocument = SpreadsheetDocument.Open(ExelFile.TempCopyPath, false);            
+            List<Page> pages = new List<Page>();
+            usedDocument = SpreadsheetDocument.Open(ExcelFile.TempCopyPath, false);            
             this.workbookPart = usedDocument.WorkbookPart;
+            
             foreach (int index in DataInPage.Keys)
             {                
                 if (DataInPage[index] != null)
-                {                    
-                    exelFilePages.Add(ReadWorksheetExel(workbookPart.GetPartById("rId" + index.ToString()) as WorksheetPart, DataInPage[index]));
+                {
+                    WorksheetPart worksheetPart = workbookPart.GetPartById("rId" + index.ToString()) as WorksheetPart;
+                    currentCells = worksheetPart.Worksheet.Descendants<Cell>().ToArray();
+                    pages.Add(ReadWorksheetExcel(worksheetPart, DataInPage[index]));
                 }
 
             }
             if (usedDocument != null)
             {
-#pragma warning disable CS0618 // Тип или член устарел
-                usedDocument.Close();
-#pragma warning restore CS0618 // Тип или член устарел
                 usedDocument.Dispose();
             }
             usedDocument = null;
-            return exelFilePages;
+            return pages;
         }
 
         private static string ConvertToLetter(int columnNumber)
@@ -232,52 +236,52 @@ namespace READER_0._1.Model.Exel
             }
             return result;
         }       
-        private object[,] GetDataInPage(Excel.Worksheet worksheet)
+        private object[,] GetDataInPage(ExcelInterop.Worksheet worksheet)
         {
-            Excel.Range last = worksheet.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell, Type.Missing);
+            ExcelInterop.Range last = worksheet.Cells.SpecialCells(ExcelInterop.XlCellType.xlCellTypeLastCell, Type.Missing);
             string range1 = last.AddressLocal;
-            Excel.Range rangeExel = worksheet.get_Range("A1", last);
-            string range = rangeExel.AddressLocal;
+            ExcelInterop.Range rangeExcel = worksheet.get_Range("A1", last);
+            string range = rangeExcel.AddressLocal;
             object[,] arrData = (object[,])worksheet.Range[range].Value;
             return arrData;
         }
 
-        private ExelFilePage ReadWorksheetExel(WorksheetPart worksheetPart, object[,] arrData)
+        private Page ReadWorksheetExcel(WorksheetPart worksheetPart, object[,] arrData)
         {            
             List<(int row, int column)> positions = SearchPositionColumnName(arrData, settings.SearchableColumn);            
             string relationshipId = workbookPart.GetIdOfPart(worksheetPart);
             Sheet sheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => s.Id == relationshipId);
-            ExelFilePage exelFilePage = new ExelFilePage(sheet.Name);          
+            Page page = new Page(sheet.Name);          
             foreach ((int row, int column) position in positions)
             {
-                exelFilePage.AddTabel(CreateTable(position, arrData, worksheetPart));                                
+                ModelTable.Table table = CreateTable(position, arrData, worksheetPart);          
+                page.AddTable(table);                                
             }
-            return exelFilePage;
-        }        
-        private ExelFilePageTable CreateTable((int row, int column) positionNameColumn, object[,] arrData, WorksheetPart worksheetPart)
+            return page;
+        }      
+        private ModelTable.Table CreateTable((int row, int column) positionNameColumn, object[,] arrData, WorksheetPart worksheetPart)
         {
             Dictionary<string, (int row, int column)> titlePositions = ReadTableHeader(positionNameColumn,arrData, worksheetPart);
             int startRow = GetFirstRowInTable(titlePositions, worksheetPart);
             int lastRow  = GetLastRowInTable(new Tuple<int, int>(startRow, titlePositions.Values.First().Item2), arrData, worksheetPart);            
-            ExelFilePageTable exelFilePageTable = new ExelFilePageTable(titlePositions.Keys.ToList());
-            exelFilePageTable.SetRangeBody(GetRangeBodyTable(positionNameColumn, arrData, startRow, lastRow, worksheetPart));
+            ModelTable.Table table = new ModelTable.Table(titlePositions.Keys.ToList());
+            table.SetRangeBody(GetRangeBodyTable(positionNameColumn, arrData, startRow, lastRow, worksheetPart));
             foreach (string key in titlePositions.Keys)
             {
-                exelFilePageTable.AddColumn(ReadColumn(titlePositions[key],startRow,lastRow, arrData, worksheetPart), key);
-            }
-            
-            return exelFilePageTable;
+                int counter = 0;
+                table.AddDataToColumn(ReadColumn(titlePositions[key],startRow,lastRow, arrData, worksheetPart, ref counter), key);
+            }           
+            return table;
         }
-        private Exel.Range GetRangeBodyTable((int row, int column) positionNameColumn, object[,] arrData, int startRow, int lastRow, WorksheetPart worksheetPart)
+        private ModelTable.Range GetRangeBodyTable((int row, int column) positionNameColumn, object[,] arrData, int startRow, int lastRow, WorksheetPart worksheetPart)
         {
-            Exel.Range headerRange =  GetTableHeaderRange(positionNameColumn, arrData, worksheetPart);
+            ModelTable.Range headerRange =  GetTableHeaderRange(positionNameColumn, arrData, worksheetPart);
             (int row, int column) firstCell = headerRange.Start;
             (int row, int column) lastCell = headerRange.End;
-            Exel.Range rangeBody = new Exel.Range(new (startRow, firstCell.Item2), new (lastRow, lastCell.Item2));
+            ModelTable.Range rangeBody = new ModelTable.Range(new (startRow, firstCell.Item2), new (lastRow, lastCell.Item2));
             return rangeBody;
         }
-
-        private List<object> ReadColumn((int row, int column) titlePosition,int startRow,int lastRow, object[,] arrData, WorksheetPart worksheetPart)
+        private List<object> ReadColumn((int row, int column) titlePosition,int startRow,int lastRow, object[,] arrData, WorksheetPart worksheetPart, ref int counter)// добавить предыдущую клетку
         {
             (int row, int column) ReadCell = titlePosition;
             List<object> DataColumn = new List<object>();
@@ -293,27 +297,34 @@ namespace READER_0._1.Model.Exel
             {
                 ReadCell = new (row, titlePosition.Item2);
                 value = arrData[ReadCell.Item1, ReadCell.Item2];
+                counter++;
                 if (value == null && mergeCells != null)
-                {
-                    cell = worksheetPart.Worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == ConvertToLetter(ReadCell.Item2) + ReadCell.Item1.ToString());
+                {                                      
+                    for (int i = counter; i < currentCells.Count(); i++)
+                    {
+                        if (currentCells[i].CellReference == ConvertToLetter(ReadCell.Item2) + ReadCell.Item1.ToString())
+                        {
+                            cell = currentCells[i];
+                        }
+                    }
                     mergeCell = GetCellInMergeCells(cell, mergeCells);
                     if (mergeCell != null)
                     {
-                        value = GetVelueMergeCell(GetCellInMergeCells(cell, mergeCells), arrData);
+                        value = GetValueMergeCell(GetCellInMergeCells(cell, mergeCells), arrData);
                     }
                     
                 }
                 if (value != null && value.ToString() == "-2146826246")
                 {
                     value = null;
-                }
+                }              
                 DataColumn.Add(value);
-            }
+            }            
             return DataColumn;
         }
         private Dictionary<string, (int row, int column)> ReadTableHeader((int row, int column) positionNameColumn, object[,] arrData, WorksheetPart worksheetPart)
-        {            
-            Exel.Range headerRange =  GetTableHeaderRange(positionNameColumn, arrData, worksheetPart);
+        {
+            ModelTable.Range headerRange =  GetTableHeaderRange(positionNameColumn, arrData, worksheetPart);
             (int row, int column) firstCell = headerRange.Start;
             (int row, int column) lastCell = headerRange.End;
             Dictionary<string, (int row, int column)> titlePosition = new Dictionary<string, (int row, int column)>();
@@ -327,7 +338,7 @@ namespace READER_0._1.Model.Exel
             }
             return titlePosition;
         }
-        private Exel.Range GetTableHeaderRange((int row, int column) positionNameColumn, object[,] arrData, WorksheetPart worksheetPart)///////////////////////////////////////////////
+        private ModelTable.Range GetTableHeaderRange((int row, int column) positionNameColumn, object[,] arrData, WorksheetPart worksheetPart)
         {
             (int row, int column) firstCell = positionNameColumn;
             (int row, int column) lastCell = positionNameColumn;
@@ -339,7 +350,9 @@ namespace READER_0._1.Model.Exel
             bool isLastCell = false;
             int rowIndex = positionNameColumn.Item1;
             int startColumn = positionNameColumn.Item2;
-            Row row = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex == rowIndex);
+            OpenXml.Row row = sheetData.Elements<OpenXml.Row>().FirstOrDefault(r => r.RowIndex == rowIndex);
+            int maxRow = positionNameColumn.row;
+            int minRow = positionNameColumn.row;
             List<Cell> cells = row.Elements<Cell>().ToList();
             string columnName;
             string cellReference;
@@ -348,12 +361,28 @@ namespace READER_0._1.Model.Exel
             {
                 columnName = ConvertToLetter(startColumn);
                 cellReference = columnName + rowIndex.ToString();
-                cell = cells.Find(cell => cell.CellReference == cellReference);
+                cell = cells.Find(cell => cell.CellReference == cellReference);               
                 if (cell == null)
                 {
                     isLastCell = true;
                     rightBorderEnd = startColumn - 1;
                     lastCell = new(rowIndex, rightBorderEnd);
+                }
+                else if (mergeCells != null)
+                {
+                    DocumentFormat.OpenXml.Spreadsheet.MergeCell mergeCell = GetCellInMergeCells(cell, mergeCells);
+                    if (mergeCell != null)
+                    {
+                        (int minRow, int maxRow) rowsNumber = GetRowsInMergeCell(mergeCell);
+                        if (rowsNumber.maxRow > maxRow)
+                        {
+                            maxRow = rowsNumber.maxRow;
+                        }
+                        if (rowsNumber.minRow < minRow)
+                        {
+                            minRow = rowsNumber.minRow;
+                        }
+                    }                   
                 }
                 startColumn++;
             }
@@ -363,19 +392,37 @@ namespace READER_0._1.Model.Exel
             {
                 columnName = ConvertToLetter(startColumn);
                 cellReference = columnName + rowIndex.ToString();
-                cell = cells.Find(cell => cell.CellReference == cellReference);
+                cell = cells.Find(cell => cell.CellReference == cellReference);               
                 if (cell == null)
                 {
                     isLastCell = true;
                     leftBorderEnd = startColumn + 1;
                     firstCell = new (rowIndex, leftBorderEnd);
                 }
+                else if(mergeCells != null)
+                {
+                    DocumentFormat.OpenXml.Spreadsheet.MergeCell mergeCell = GetCellInMergeCells(cell, mergeCells);
+                    if (mergeCell != null)
+                    {
+                        (int minRow, int maxRow) rowsNumber = GetRowsInMergeCell(mergeCell);
+                        if (rowsNumber.maxRow > maxRow)
+                        {
+                            maxRow = rowsNumber.maxRow;
+                        }
+                        if (rowsNumber.minRow < minRow)
+                        {
+                            minRow = rowsNumber.minRow;
+                        }
+                    }
+                }
                 startColumn--;
             }
-            return new Exel.Range(firstCell, lastCell);
+            firstCell.row = minRow;
+            lastCell.row = maxRow;
+            return new ModelTable.Range(firstCell, lastCell);
         }
         
-        private object GetVelueMergeCell(DocumentFormat.OpenXml.Spreadsheet.MergeCell mergeCell, object[,] arrData)
+        private object GetValueMergeCell(DocumentFormat.OpenXml.Spreadsheet.MergeCell mergeCell, object[,] arrData)
         {
             string[] mergeCellReference = mergeCell.Reference.Value.Split(':');
             (string column, int row) = GetColumnAndRow(mergeCellReference[0]);           
@@ -436,71 +483,61 @@ namespace READER_0._1.Model.Exel
                 }
             }
             return positions;
-        }                          
-        private int GetLastRowInTable(Tuple<int, int> startCell, object[,] arrData, WorksheetPart worksheetPart)
-        {
-            var rows = arrData.GetLength(0);
-            Cell cell = worksheetPart.Worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == "A1");
-            SheetData sheetData = worksheetPart.Worksheet.Elements<SheetData>().First();            
-            string columnName;
-            string cellReference;
-            Border border = new Border();
-            for (int i = startCell.Item1; i <= rows; i++)
-            {                
-                if (arrData[startCell.Item1, startCell.Item2] == null)
-                {
-                    columnName = ConvertToLetter(startCell.Item2);
-                    cellReference = columnName + startCell.Item1.ToString();
-                    cell = worksheetPart.Worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == cellReference);
-                    if (cell != null)
-                    {
-                        border = GetBorder(cell,worksheetPart);
-                        if (border.TopBorder != null && border.BottomBorder == null)
-                        {
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }                                         
-                startCell = new Tuple<int, int>(startCell.Item1 + 1, startCell.Item2);
-            }
-            if (startCell.Item1 -  1 >=  1)
-            {
-                return startCell.Item1 - 1 - settings.FooterLength;
-            }
-            return 1;
-        }
+        }                                 
 
-        private Border GetBorder(Cell cell, WorksheetPart worksheetPart)
+        private Border GetBorder(Cell cell, WorksheetPart worksheetPart) 
         {          
             if (cell == null)
             {
                 return null;
-            }
+            }           
             Border result = new Border();
             (string column, int row) = GetColumnAndRow(cell.CellReference);
-            Cell cellTop = worksheetPart.Worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == column + (row - 1).ToString());
-            Cell cellBottom = worksheetPart.Worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == column + (row + 1).ToString());
+            int cellPosition = currentCells.FindIndex(c => c.CellReference == column + row.ToString());
+            Cell cellTop = null;
+            for (int i = cellPosition; i > 0; i--)
+            {
+                if (currentCells[i].CellReference == column + (row - 1).ToString())
+                {
+                    cellTop = currentCells[i];
+                    break;
+                }
+            }
+            Cell cellBottom = null;
+            for (int i = 0; i < currentCells.Length; i++)
+            {
+                if (currentCells[i].CellReference == column + (row + 1).ToString())
+                {
+                    cellBottom = currentCells[i];
+                    break;
+                }
+
+            }
             Border cellTopBorder = GetImaginaryBorder(cellTop);
             Border cellBorder = GetImaginaryBorder(cell);           
             Border cellBottomBorder = GetImaginaryBorder(cellBottom);
-            if (cellTopBorder != null)
+            if (cellBorder.TopBorder != null)
+            {
+                result.TopBorder = new TopBorder();
+            }
+            else if(cellTopBorder != null)
             {
                 if (cellBorder.TopBorder != null || cellTopBorder.BottomBorder != null)
                 {
                     result.TopBorder = new TopBorder();
-                }                
+                }
             }
-            if (cellBottomBorder != null)
+            if (cellBorder.BottomBorder != null)
+            {
+                result.BottomBorder = new BottomBorder();
+            } 
+            else if(cellBottomBorder != null)
             {
                 if (cellBorder.BottomBorder != null || cellBottomBorder.TopBorder != null)
                 {
                     result.BottomBorder = new BottomBorder();
                 }
-            }
+            }                             
             return result;
         }
         private Border GetImaginaryBorder(Cell cell)
@@ -531,7 +568,44 @@ namespace READER_0._1.Model.Exel
             }
             return result;
         }
-
+        private int GetLastRowInTable(Tuple<int, int> startCell, object[,] arrData, WorksheetPart worksheetPart)// добавить предыдущую клетку 
+        {
+            var rows = arrData.GetLength(0);
+            Cell cell = currentCells[0];
+            SheetData sheetData = worksheetPart.Worksheet.Elements<SheetData>().First();
+            string columnName;
+            string cellReference;
+            Border border = new Border();
+            int counter = 0;
+            for (int i = startCell.Item1; i <= rows; i++)
+            {
+                counter++;
+                if (arrData[startCell.Item1, startCell.Item2] == null)
+                {
+                    columnName = ConvertToLetter(startCell.Item2);
+                    cellReference = columnName + startCell.Item1.ToString();
+                    cell = currentCells.FirstOrDefault(c => c.CellReference == cellReference);
+                    if (cell != null)
+                    {
+                        border = GetBorder(cell, worksheetPart);
+                        if (border.TopBorder != null && border.BottomBorder == null)
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                startCell = new Tuple<int, int>(startCell.Item1 + 1, startCell.Item2);
+            }
+            if (startCell.Item1 - 1 >= 1)
+            {
+                return startCell.Item1 - 1 - settings.FooterLength;
+            }
+            return 1;
+        }
         private int GetFirstRowInTable(Dictionary<string, (int row, int column)> titlePosition, WorksheetPart worksheetPart)
         {            
             Worksheet worksheet = worksheetPart.Worksheet;
@@ -552,11 +626,11 @@ namespace READER_0._1.Model.Exel
                 {
                     columnName = ConvertToLetter(titlePosition[title].column);
                     cellReference = columnName + titlePosition[title].row.ToString();
-                    cell = worksheet.Descendants<Cell>().FirstOrDefault(c => c.CellReference == cellReference);                    
+                    cell = currentCells.FirstOrDefault(c => c.CellReference == cellReference);                    
                     mergeCell = GetCellInMergeCells(cell, mergeCells);
                     if (mergeCell != null)
                     {
-                        maxRowInMergeCell = GetLastRowInMergeCell(mergeCell);
+                        maxRowInMergeCell = GetRowsInMergeCell(mergeCell).maxRow;
                         if (maxRowInMergeCell > maxRow)
                         {
                             maxRow = maxRowInMergeCell;
@@ -570,17 +644,33 @@ namespace READER_0._1.Model.Exel
             }
             return maxRow + 1;
         }
-
-        private int GetLastRowInMergeCell(DocumentFormat.OpenXml.Spreadsheet.MergeCell mergeCell)
+        private (string firstCell , string lastCell) GetReferencesMergeCell(DocumentFormat.OpenXml.Spreadsheet.MergeCell mergeCell)
         {
+            (string firstCell, string lastCell) references;
             string input = mergeCell.Reference;
             string[] parts = input.Split(':');
-            string firstCoordinate = Regex.Match(parts[0], @"\d+").Value;
-            string secondCoordinate = Regex.Match(parts[1], @"\d+").Value;
+            references.firstCell = parts[0];
+            references.lastCell = parts[1];
+            return references;
+        }
+        private (int minRow, int maxRow) GetRowsInMergeCell(DocumentFormat.OpenXml.Spreadsheet.MergeCell mergeCell)
+        {
+            (int minRow, int maxRow) result;
+            (string firstCell, string lastCell) references = GetReferencesMergeCell(mergeCell);
+            string firstCoordinate = Regex.Match(references.firstCell, @"\d+").Value;
+            string secondCoordinate = Regex.Match(references.lastCell, @"\d+").Value;
             int firstNumber = int.Parse(firstCoordinate);
             int secondNumber = int.Parse(secondCoordinate);
             int maxNumber = Math.Max(firstNumber, secondNumber);
-            return maxNumber;
+            if (maxNumber == firstNumber)
+            {
+                result = (secondNumber, maxNumber);
+            }
+            else
+            {
+                result = (firstNumber, maxNumber);
+            }
+            return result;
         }               
         private (int row, int column) CheckRealPositionNameColumn((int row, int column) nameColumnPosition, object[,] arrData)
         {
@@ -615,7 +705,22 @@ namespace READER_0._1.Model.Exel
                 }                                              
             }
             return false;
-        }              
+        }
+        public static (string letters, int number) SplitString(string input)
+        {
+            Regex regex = new Regex(@"^(?<letters>[A-Za-z]+)(?<number>\d+)$");
+
+            Match match = regex.Match(input);
+
+            if (match.Success)
+            {
+                string letters = match.Groups["letters"].Value;
+                int number = int.Parse(match.Groups["number"].Value);
+
+                return (letters, number);
+            }
+            return new(null, 0);
+        }
     }
 }
 

@@ -1,5 +1,5 @@
 ﻿using READER_0._1.Model;
-using READER_0._1.Model.Exel;
+using READER_0._1.Model.Excel;
 using READER_0._1.ViewModel;
 using System;
 using System.Collections.Generic;
@@ -7,19 +7,19 @@ using System.IO;
 using System.Text;
 using File = READER_0._1.Model.File;
 
-namespace READER_0._1.Command.CommandExel
+namespace READER_0._1.Command.CommandExcel
 {
-    public class AddExelFileDropCommand : CommandBase
+    public class AddExcelFileDropCommand : CommandBase
     {        
-        private readonly ExelViewModel exelViewModel;
-        public AddExelFileDropCommand(ExelViewModel exelViewModel) // добавляет все файлы, переопрелить для каждого окна
+        private readonly ExcelViewModel excelViewModel;
+        public AddExcelFileDropCommand(ExcelViewModel excelViewModel) 
         {
-            this.exelViewModel = exelViewModel;
+            this.excelViewModel = excelViewModel;
         }
         public override void Execute(object parameter)
         {
-            (string folderName, string[] filePaths) addedFiles = ((string, string[]))parameter;            
-            List<ExelFile> files = new List<ExelFile>();
+            (Guid folderId, string[] filePaths) addedFiles = ((Guid, string[]))parameter;            
+            List<ExcelFile> files = new List<ExcelFile>();
             File file;
             string extension;
             for (int i = 0; i < addedFiles.filePaths.Length; i++)
@@ -28,10 +28,10 @@ namespace READER_0._1.Command.CommandExel
                 file = new File(addedFiles.filePaths[i], Path.GetFileNameWithoutExtension(addedFiles.filePaths[i]), extension);
                 if (file.Format == ".xls" || file.Format == ".xlsx")
                 {
-                    files.Add(file.ToExelFile());
+                    files.Add(file.ToExcelFile());
                 }
             }
-            exelViewModel.AddExelFile(files, addedFiles.folderName);
+            excelViewModel.AddExcelFile(files, addedFiles.folderId);
         }
     }
 }

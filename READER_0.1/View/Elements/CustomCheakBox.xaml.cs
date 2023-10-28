@@ -50,6 +50,10 @@ namespace READER_0._1.View.Elements
             {
                 IsFocusable = false;
             }
+            else
+            {
+                IsFocusable = true;
+            }
         }                 
         private void Circle_MouseMove(object sender, MouseEventArgs e)
         {

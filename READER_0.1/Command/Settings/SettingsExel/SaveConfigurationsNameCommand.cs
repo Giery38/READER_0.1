@@ -1,7 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Office2013.Drawing.ChartStyle;
 using DocumentFormat.OpenXml.Wordprocessing;
-using READER_0._1.Model.Exel.Settings;
+using READER_0._1.Model.Excel.Settings;
 using READER_0._1.Model.Settings;
 using READER_0._1.ViewModel;
 using READER_0._1.ViewModel.Settings;
@@ -12,27 +12,27 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using static READER_0._1.Model.Exel.Settings.ExelSettingsSearchFiles;
+using static READER_0._1.Model.Excel.Settings.ExcelSettingsSearchFiles;
 
-namespace READER_0._1.Command.Settings.SettingsExel
+namespace READER_0._1.Command.Settings.SettingsExcel
 {
     class AddConfigurationsNameCommand : CommandBase
     {
-        private readonly SettingsExelViewModel settingsExelViewModel;
-        private readonly ExelSettings settings;
-        public AddConfigurationsNameCommand(SettingsExelViewModel settingsExelViewModel, ExelSettings settings)
+        private readonly SettingsExcelViewModel settingsExcelViewModel;
+        private readonly ExcelSettings settings;
+        public AddConfigurationsNameCommand(SettingsExcelViewModel settingsExcelViewModel, ExcelSettings settings)
         {
-            this.settingsExelViewModel = settingsExelViewModel;
+            this.settingsExcelViewModel = settingsExcelViewModel;
             this.settings = settings;
         }
         public override void Execute(object parameter)
         {
             ConfigurationName addedConfigurationName = new ConfigurationName();
-            for (int i = 0; i < settingsExelViewModel.InputConfigurationsNameFragmented.Count; i++)
+            for (int i = 0; i < settingsExcelViewModel.InputConfigurationsNameFragmented.Count; i++)
             {
-                if (settingsExelViewModel.InputConfigurationsNameFragmented[i].Item2 is bool && (bool)settingsExelViewModel.InputConfigurationsNameFragmented[i].Item2 == true)
+                if (settingsExcelViewModel.InputConfigurationsNameFragmented[i].Item2 is bool && (bool)settingsExcelViewModel.InputConfigurationsNameFragmented[i].Item2 == true)
                 {
-                    string temp = settingsExelViewModel.InputConfigurationsNameFragmented[i].Item1 as string;
+                    string temp = settingsExcelViewModel.InputConfigurationsNameFragmented[i].Item1 as string;
                     addedConfigurationName.Modifieds.Add(new(i, temp.ToCharArray()[0]));
                 }
             }
@@ -50,8 +50,8 @@ namespace READER_0._1.Command.Settings.SettingsExel
                 nameFragment.Add('X');
             }
             addedConfigurationName.Name = new string(nameFragment.ToArray());
-            settingsExelViewModel.ConfigurationNames.Add(addedConfigurationName);
-            settings.ExelSettingsSearchFiles.Configurations.Add(addedConfigurationName);
+            settingsExcelViewModel.ConfigurationNames.Add(addedConfigurationName);
+            settings.ExcelSettingsSearchFiles.Configurations.Add(addedConfigurationName);
             //settings.SaveSettings();
         }
     }

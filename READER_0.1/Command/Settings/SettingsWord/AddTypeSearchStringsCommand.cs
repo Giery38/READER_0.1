@@ -22,9 +22,11 @@ namespace READER_0._1.Command.Settings.SettingsWord
         }
         public override void Execute(object parameter)
         {
+            /*
             settingsWordViewModel.TypesSearchStrings.Add(new TypeSearchStrings());
             SearchParagraph searchParagraph = settingsWordViewModel.SelectedSearchParagraph;
-            wordSettings.WordSettingsRead.SearchParagraphs.Find(item => item == searchParagraph).TypesSearchStrings.Add(new TypeSearchStrings());
+            wordSettings.WordSettingsRead.SearchParagraphs.Find(item => item == searchParagraph).SubTypesSearchStrings.Add(new TypeSearchStrings());
+            */
         }
     }
 }

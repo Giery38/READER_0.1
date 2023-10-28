@@ -1,5 +1,5 @@
-﻿using READER_0._1.Model.Exel.Settings;
-using READER_0._1.Model.Exel;
+﻿using READER_0._1.Model.Excel.Settings;
+using READER_0._1.Model.Excel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,33 +22,40 @@ namespace READER_0._1.Model.Word
             TempFolderPath = tempFolderPath;
             WordFileReaders = new List<WordFileReader>();
         }
-        public bool TryReadExelFile(WordFile wordFile, WordSettingsRead wordSettingsRead)
+        public void Read(WordFile wordFile, WordSettingsRead wordSettingsRead)
         {
-            lock (this)
+            if (close == true)
             {
-                if (close == true)
-                {
-                    return false;
-                }
-                Thread threadMain = Thread.CurrentThread;
-                string name = "Чтение Word файла" + "&&" + wordFile.Path;
-                threadMain.Name = name;               
-                try
-                {
-                    WordFileReader wordFileReader = new WordFileReader(wordFile, TempFolderPath, wordSettingsRead);
-                    WordFileReaders.Add(wordFileReader);
-                    wordFile.Tables = wordFileReader.Read();
-                    wordFileReader.Close();
-                    WordFileReaders.Remove(wordFileReader);
-                    wordFile.SetReaded(true);
-                }
-                catch (Exception)
-                {
-                    wordFile.Corrupted = true;
-                    return false;
-                }                
-                return true;
+                return;
             }
+            WordFileReader wordFileReader = new WordFileReader(wordFile, TempFolderPath, wordSettingsRead);
+            wordFileReader.ReadEnd += ReadEnd;
+            WordFileReaders.Add(wordFileReader);
+            wordFileReader.Read();           
+        }
+
+        private void ReadEnd(object sender, IReader<List<Excel.TableData.Table>>.ReadEventArgs e)
+        {
+            WordFileReader wordFileReader = sender as WordFileReader;
+            if (wordFileReader == null)
+            {
+                return;
+            }
+            try
+            {
+                if (e.Exception != null)
+                {
+                    wordFileReader.WordFile.SetCorrupted(true);
+                    return;
+                }
+                wordFileReader.Close();
+                WordFileReaders.Remove(wordFileReader);
+                wordFileReader.WordFile.SetReaded(true);
+            }
+            catch (Exception)
+            {
+               
+            }           
         }
     }
 }

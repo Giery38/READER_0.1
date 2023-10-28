@@ -24,7 +24,7 @@ namespace READER_0._1.Model.Word.Settings
         }
         public WordSettings()
         {
-            WordSettingsRead = new WordSettingsRead();
+            WordSettingsRead = new WordSettingsRead();            
         }
     }
 }

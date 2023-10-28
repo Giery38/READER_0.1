@@ -1,7 +1,7 @@
 ﻿using READER_0._1.Command.CommandWord;
 using READER_0._1.Model;
-using READER_0._1.Model.Exel.Settings;
-using READER_0._1.Model.Exel;
+using READER_0._1.Model.Excel.Settings;
+using READER_0._1.Model.Excel;
 using READER_0._1.Model.Word;
 using System;
 using System.Collections.Generic;
@@ -17,6 +17,10 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml;
 using Microsoft.Win32;
+using Microsoft.Office.Interop.Word;
+using DocumentFormat.OpenXml.Drawing;
+using READER_0._1.Tools;
+using System.Windows.Media;
 
 namespace READER_0._1.ViewModel
 {
@@ -37,10 +41,15 @@ namespace READER_0._1.ViewModel
             AddSearchStringInSettingsCommand = new AddSearchStringInSettingsCommand(this, windowFileBase);
             //
             SelectedSettings = windowFileBase.settings.WordSettings;
-
-            SearchParagraphs = new ObservableCollection<SearchParagraph>(SelectedSettings.WordSettingsRead.SearchParagraphs);
-          
+            SearchParagraphs = (SearchParagraph[])SelectedSettings.WordSettingsRead.SearchParagraphs.ToArray().Clone();
+            if (SearchParagraphs.Length > 2)
+            {               
+                SearchParagraphOne = SearchParagraphs[0];
+                SearchParagraphTwo = SearchParagraphs[1];
+                SearchParagraphProvider = SearchParagraphs[2];
+            }            
         }
+        public SearchParagraph[] SearchParagraphs { get; private set; }
         private WordFile selectedWordFile;
         public WordFile SelectedWordFile
         {
@@ -73,19 +82,45 @@ namespace READER_0._1.ViewModel
             }
         }
 
-        private ObservableCollection<SearchParagraph> searchParagraphs;
-        public ObservableCollection<SearchParagraph> SearchParagraphs
+        private SearchParagraph searchParagraphOne;
+        public SearchParagraph SearchParagraphOne
         {
             get
             {
-                return searchParagraphs;
+                return searchParagraphOne;
             }
             set
             {
-                searchParagraphs = value;
-                OnPropertyChanged(nameof(SearchParagraphs));
+                searchParagraphOne = value;
+                OnPropertyChanged(nameof(SearchParagraphOne));
             }
-        }       
+        }
+        private SearchParagraph searchParagraphTwo;
+        public SearchParagraph SearchParagraphTwo
+        {
+            get
+            {
+                return searchParagraphTwo;
+            }
+            set
+            {
+                searchParagraphTwo = value;
+                OnPropertyChanged(nameof(SearchParagraphTwo));
+            }
+        }
+        private SearchParagraph searchParagraphProvider;
+        public SearchParagraph SearchParagraphProvider
+        {
+            get
+            {
+                return searchParagraphProvider;
+            }
+            set
+            {
+                searchParagraphProvider = value;
+                OnPropertyChanged(nameof(SearchParagraphProvider));
+            }
+        }          
        public void CreateExcelFile(WordFile wordFile)
        {
             SaveFileDialog saveFileDialog = new SaveFileDialog();
@@ -93,30 +128,14 @@ namespace READER_0._1.ViewModel
             saveFileDialog.Filter = "Excel файлы(*.xlsx)|*.xlsx|Все файлы(*.*)|*.*";
             if (saveFileDialog.ShowDialog() == true)
             {
-                using (SpreadsheetDocument document = SpreadsheetDocument.Create(saveFileDialog.FileName, SpreadsheetDocumentType.Workbook))
-                {
-                    // Добавляем рабочую книгу
-                    WorkbookPart workbookPart = document.AddWorkbookPart();
-                    workbookPart.Workbook = new Workbook();
-
-                    // Добавляем лист в рабочую книгу
-                    WorksheetPart worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
-                    worksheetPart.Worksheet = new Worksheet(new SheetData());
-
-                    // Добавляем ссылку на лист в рабочую книгу
-                    Sheets sheets = document.WorkbookPart.Workbook.AppendChild(new Sheets());
-                    Sheet sheet = new Sheet() { Id = document.WorkbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Лист1" };
-                    sheets.Append(sheet);
-                }
-
+                ExcelFile excelFile = new ExcelFile(saveFileDialog.FileName, true);
+                excelFile.SetTempCopyPath(excelFile.Path);
+                ExcelFileWriter excelFileWriter = new ExcelFileWriter(excelFile);               
                 if (wordFile.Readed == true && wordFile.Corrupted == false) // убатьзависимость от выделения
-                {
-                    ExelFile exelFile = new ExelFile(saveFileDialog.FileName);
-                    exelFile.SetTempCopyPath(exelFile.Path);
-                    ExelFileWriter exelFileWriter = new ExelFileWriter(exelFile);
-                    exelFileWriter.Open();
-                    exelFileWriter.TablesWrite(wordFile.Tables[0], "A1");
-                    exelFileWriter.Close();
+                {                  
+                    excelFileWriter.Open();
+                    excelFileWriter.TablesWrite(wordFile.Tables[0],0, "B2");
+                    excelFileWriter.Close();
                 }
             }
        }
@@ -127,18 +146,13 @@ namespace READER_0._1.ViewModel
             OnPropertyChanged(nameof(Files));
             SelectedWordFile = selectedWordFile;
         }
-        public void ReadWordFile(WordFile AddedFile, WordSettingsRead wordSettingsRead)
+        public void ReadWordFile(WordFile readFile, WordSettingsRead wordSettingsRead)
         {
-            bool result = false;
-            Thread readWordFile = new Thread(() =>
+            if (windowFileBase.wordWindowFileBase.WordReaderManager.WordFileReaders.Find(item => item.WordFile == readFile) != null)
             {
-                result = windowFileBase.wordWindowFileBase.TryReadWordFile(AddedFile, wordSettingsRead);
-            });
-            readWordFile.Start();
-            if (result == false)
-            {
-
+               
             }
+            windowFileBase.wordWindowFileBase.ReadWordFile(readFile, wordSettingsRead);                      
         }        
     }
 }

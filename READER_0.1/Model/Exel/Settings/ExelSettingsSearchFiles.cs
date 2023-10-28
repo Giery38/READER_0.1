@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace READER_0._1.Model.Exel.Settings
+namespace READER_0._1.Model.Excel.Settings
 {
     [Serializable]
-    public class ExelSettingsSearchFiles
+    public class ExcelSettingsSearchFiles
     {
         private List<string> formatsSearch;
         public List<string> FormatsSearch
@@ -34,7 +34,7 @@ namespace READER_0._1.Model.Exel.Settings
                 configurations = value;
             }
         }
-        public ExelSettingsSearchFiles()
+        public ExcelSettingsSearchFiles()
         {
             Configurations = new List<ConfigurationName>();
             FormatsSearch = new List<string>();

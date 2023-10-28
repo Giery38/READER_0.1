@@ -1,4 +1,4 @@
-﻿using READER_0._1.Model.Exel;
+﻿using READER_0._1.Model.Excel;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,13 +8,60 @@ using READER_0._1.Model.Word;
 
 namespace READER_0._1.Model
 {
-    public class File : INotifyPropertyChanged
+    public class File : ModelPropertyChanged
     {
-        public string Path { get; protected set; }
-        public string Name { get; protected set; }
-        public string Format { get; protected set; }
-        public string TempCopyPath { get; protected set; }
-        public event EventHandler ReadEnd;
+        private string path;
+        public string Path 
+        { 
+            get
+            {
+                return path;
+            }
+            protected set 
+            { 
+                path = value;
+                OnPropertyChanged(nameof(Path));
+            }
+        }
+        private string name;
+        public string Name
+        {
+            get
+            {
+                return name;                
+            }
+            protected set 
+            { 
+                name = value;
+                OnPropertyChanged(nameof(Name));
+            }
+        }
+        private string format;
+        public string Format 
+        { 
+            get 
+            { 
+                return format;
+            }
+            protected set 
+            {
+                format = value;
+                OnPropertyChanged(nameof(Format));
+            }
+        }
+        private string tempCopyPath;
+        public string TempCopyPath 
+        {
+            get 
+            {
+                return tempCopyPath;
+            }
+            protected set 
+            {
+                tempCopyPath = value;
+                OnPropertyChanged(nameof(TempCopyPath));
+            }
+        }
         private bool readed;
         public bool Readed
         {
@@ -25,11 +72,7 @@ namespace READER_0._1.Model
             protected set
             {
                 readed = value;
-                OnPropertyChanged(nameof(Readed));
-                if (value == true)
-                {
-                    ReadEnd?.Invoke(this, new EventArgs());
-                }               
+                OnPropertyChanged(nameof(Readed));                             
             }
         }
 
@@ -40,21 +83,20 @@ namespace READER_0._1.Model
             {
                 return corrupted;
             }
-            set
+            protected set
             {
                 corrupted = value;
-                OnPropertyChanged(nameof(Corrupted));
-                if (value == false)
-                {
-                    ReadEnd?.Invoke(this, new EventArgs());
-                }
+                OnPropertyChanged(nameof(Corrupted));                
             }
         }
+
+        public Guid Id { get; }
         public File(string path, string name, string format)
         {
             Path = path;
             Name = name;
             Format = format;
+            Id = Guid.NewGuid();
         }
 
         public File()
@@ -62,26 +104,28 @@ namespace READER_0._1.Model
             Path = "";
             Name = "";
             Format = null;
+            Id = Guid.NewGuid();
         }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged(string propertyName)
+        public void SetReaded(bool value)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }        
-
+            Readed = value;
+        }
+        public void SetCorrupted(bool value) 
+        {
+            Corrupted = value;
+        }
         public void SetTempCopyPath(string tempCopyPath) 
         {
             TempCopyPath = tempCopyPath;
         }
 
-        public ExelFile ToExelFile()
+        public ExcelFile ToExcelFile()
         {
             if (this.Format == ".xlsx" ||
                 this.Format == ".xls")
             {
-                ExelFile exelFile = new ExelFile(Path, Name, this.Format);
-                return exelFile;
+                ExcelFile excelFile = new ExcelFile(Path, Name, this.Format);
+                return excelFile;
             }
             else
             {
@@ -103,6 +147,11 @@ namespace READER_0._1.Model
             }
 
         }
+        /// <summary>
+        /// Метод сравнивает фактическое равенство файлов, а не их равенство в программе, то есть сравнивает их пути
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         public override bool Equals(object obj)
         {
             try

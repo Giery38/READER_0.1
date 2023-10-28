@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:READER_0._1.View.Elements"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    SnapsToDevicePixels="True"
     mc:Ignorable="d">
     <Button
         x:Name="button"
@@ -16,7 +17,8 @@
         Command="{Binding Command, RelativeSource={RelativeSource AncestorType=local:CustomButton}}"
         CommandParameter="{Binding CommandParameter, RelativeSource={RelativeSource AncestorType=local:CustomButton}}"
         Content="{Binding Content, RelativeSource={RelativeSource AncestorType=local:CustomButton}}"
-        Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=local:CustomButton}}">
+        Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=local:CustomButton}}"
+        SnapsToDevicePixels="True">
         <Button.Resources>
             <Style TargetType="Button">
                 <Setter Property="Template">

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Win32;
 using READER_0._1.Model;
-using READER_0._1.Model.Exel;
+using READER_0._1.Model.Excel;
 using READER_0._1.View.Elements;
 using READER_0._1.ViewModel;
 using System;
@@ -10,28 +10,19 @@ using System.Linq;
 using System.Text;
 using File = READER_0._1.Model.File;
 
-namespace READER_0._1.Command.CommandExel
+namespace READER_0._1.Command.CommandExcel
 {
-    public class AddExelFileCommand : CommandBase
+    public class AddExcelFileCommand : CommandBase
     {        
-        private readonly ExelViewModel exelViewModel;
-        public AddExelFileCommand(ExelViewModel exelViewModel)
+        private readonly ExcelViewModel excelViewModel;
+        public AddExcelFileCommand(ExcelViewModel excelViewModel)
         {
-            this.exelViewModel = exelViewModel;
+            this.excelViewModel = excelViewModel;
            
-        }       
-        private int GetRowSum(int[,] arr, int row)
-        {
-            int rowSum = 0;
-            for (int j = 0; j < arr.GetLength(1); j++)
-            {
-                rowSum += arr[row, j];               
-            }
-            return rowSum;
-        }       
+        }                     
         public override void Execute(object parameter)
         {           
-            List<ExelFile> files = new List<ExelFile>();
+            List<ExcelFile> files = new List<ExcelFile>();
             File file;
             OpenFileDialog openFileDialog = new OpenFileDialog
             {                
@@ -40,8 +31,8 @@ namespace READER_0._1.Command.CommandExel
                 Title = "Выберите файлы",
                 Filter = "Excel Files|*.xls;*.xlsx"                
             };           
-            bool? respons = openFileDialog.ShowDialog();
-            if (respons == true)
+            bool? response = openFileDialog.ShowDialog();
+            if (response == true)
             {
                 string[] filePath = openFileDialog.FileNames;
                 string extension;
@@ -51,11 +42,11 @@ namespace READER_0._1.Command.CommandExel
                     file = new File(filePath[i], Path.GetFileNameWithoutExtension(filePath[i]), extension);
                     if (file.Format == ".xls" || file.Format == ".xlsx")
                     {
-                        files.Add(file.ToExelFile());
+                        files.Add(file.ToExcelFile());
                     }                    
                 }                
             }
-            exelViewModel.AddExelFile(files, (string)parameter);
+            excelViewModel.AddExcelFile(files, (Guid)parameter);
         }       
     }
 }

@@ -7,28 +7,28 @@ using WinForms = System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.IO;
 using System.Windows;
-using READER_0._1.Model.Exel;
+using READER_0._1.Model.Excel;
 
-namespace READER_0._1.Command.CommandExel
+namespace READER_0._1.Command.CommandExcel
 {
-    public class CopyExelFileCommand : CommandBase
+    public class CopyExcelFileCommand : CommandBase
     {
-        private readonly ExelViewModel exelViewModel;
-        public CopyExelFileCommand(ExelViewModel exelViewModel)
+        private readonly ExcelViewModel excelViewModel;
+        public CopyExcelFileCommand(ExcelViewModel excelViewModel)
         {
-            this.exelViewModel = exelViewModel;
-            exelViewModel.PropertyChanged += ExelViewModel_PropertyChanged;
+            this.excelViewModel = excelViewModel;
+            excelViewModel.PropertyChanged += ExcelViewModel_PropertyChanged;
         }
-        private void ExelViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void ExcelViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(exelViewModel.ExelFilesСontentInDirectoriesEquals))
+            if (e.PropertyName == nameof(excelViewModel.ExcelFilesСontentInDirectoriesEquals))
             {
                 OnCanExecutedChanged();
             }
         }
         public override bool CanExecute(object parameter)
         {
-            if (exelViewModel.ExelFilesСontentInDirectoriesEquals.Count > 0)
+            if (excelViewModel.ExcelFilesСontentInDirectoriesEquals.Count > 0)
             {
                 return true;
             }
@@ -43,8 +43,8 @@ namespace READER_0._1.Command.CommandExel
             WinForms.DialogResult dialogResult = folderBrowserDialog.ShowDialog();
             if (dialogResult == WinForms.DialogResult.OK)
             {
-                SearchFilesResult searchFilesResult = exelViewModel.windowFileBase.exelWindowFileBase.SearchFilesResults
-   .Find(item => item.ExelFile == exelViewModel.SelectedExelFile && item.NameColumn == exelViewModel.SelectedColumnName);
+                SearchFilesResult searchFilesResult = excelViewModel.windowFileBase.excelWindowFileBase.SearchFilesResults
+   .Find(item => item.ExcelFile == excelViewModel.SelectedExcelFile && item.NameColumn == excelViewModel.SelectedColumnName);
                 string directoryPath = folderBrowserDialog.SelectedPath;
                 foreach (List<Model.File> files in searchFilesResult.FilesInDirectory.Values)
                 {

@@ -18,7 +18,7 @@ namespace READER_0._1.ViewModel.Settings
         {
             this.settings = settings;
             //vm
-            SettingsExelViewModel settingsExelViewModel = new SettingsExelViewModel(settings.ExelSettings)
+            SettingsExcelViewModel settingsExcelViewModel = new SettingsExcelViewModel(settings.ExcelSettings)
             {
                 Name = "Настройки Excel"
             };
@@ -28,7 +28,7 @@ namespace READER_0._1.ViewModel.Settings
             };
             SettingsWindows = new ObservableCollection<ViewModelBase>()
             {
-                settingsExelViewModel,
+                settingsExcelViewModel,
                 settingsWordViewModel
             };
             //nav

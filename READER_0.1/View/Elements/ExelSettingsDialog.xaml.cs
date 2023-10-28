@@ -1,4 +1,4 @@
-﻿using READER_0._1.Model.Exel.Settings;
+﻿using READER_0._1.Model.Excel.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,19 +16,19 @@ using System.Windows.Shapes;
 namespace READER_0._1.View.Elements
 {
     /// <summary>
-    /// Логика взаимодействия для ExelSettingsDialog.xaml
+    /// Логика взаимодействия для ExcelSettingsDialog.xaml
     /// </summary>
-    public partial class ExelSettingsDialog : Window
+    public partial class ExcelSettingsDialog : Window
     {
-        public static readonly DependencyProperty ExelSettingsReadProperty = DependencyProperty.Register(nameof(ExelSettingsRead), typeof(ExelSettingsRead), typeof(ExelSettingsDialog));
-        public ExelSettingsRead ExelSettingsRead
+        public static readonly DependencyProperty ExcelSettingsReadProperty = DependencyProperty.Register(nameof(ExcelSettingsRead), typeof(ExcelSettingsRead), typeof(ExcelSettingsDialog));
+        public ExcelSettingsRead ExcelSettingsRead
         {
-            get { return (ExelSettingsRead)GetValue(ExelSettingsReadProperty); }
-            set { SetValue(ExelSettingsReadProperty, value); }
+            get { return (ExcelSettingsRead)GetValue(ExcelSettingsReadProperty); }
+            set { SetValue(ExcelSettingsReadProperty, value); }
         }
-        public ExelSettingsDialog()
+        public ExcelSettingsDialog()
         {
-            ExelSettingsRead = new ExelSettingsRead();            
+            ExcelSettingsRead = new ExcelSettingsRead();            
             InitializeComponent();
         }       
     }

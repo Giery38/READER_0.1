@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace READER_0._1.Model.Exel
+namespace READER_0._1.Model.Excel.TableData
 {
     public class MergeCell
     {

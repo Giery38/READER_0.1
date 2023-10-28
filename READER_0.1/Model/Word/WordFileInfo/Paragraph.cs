@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace READER_0._1.Model.Word
 {
-    public class WordFileParagraph
+    public class Paragraph
     {
         private string title;
         public string Title 
@@ -32,11 +32,11 @@ namespace READER_0._1.Model.Word
                 statementTitle = value;
             }
         }
-        public WordFileParagraph()
+        public Paragraph()
         {
             StatementTitle = new List<string>();
         }
-        public WordFileParagraph(string title)
+        public Paragraph(string title)
         {
             Title = title;
             StatementTitle = new List<string>();

@@ -46,14 +46,14 @@ namespace READER_0._1.Command.Settings.SettingsWord
                 if (selected == true)
                 {
                     searchString.KeyWords.Add(value);
-                    searchString.SearchWords.Add(new SearchWord(keyWordName, value));
+                    searchString.SearchWords.Add(new SearchWord(keyWordName, value, Model.DataTypes.None));
                     associationsWords.Add(settingsWordViewModel.SearchStringWords.IndexOf(word));
                 }
                 else
                 {
                     if (counter < countSearchWordsWithoutKeys)
                     {
-                        searchString.SearchWords.Add(new SearchWord(baseWords[counter].Name, value));
+                        searchString.SearchWords.Add(new SearchWord(baseWords[counter].Name, value, Model.DataTypes.None));
                         counter++;
                     }                    
                 }                

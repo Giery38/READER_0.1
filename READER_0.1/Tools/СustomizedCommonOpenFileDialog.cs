@@ -113,8 +113,7 @@ namespace READER_0._1.Tools
             IntPtr hToken,
             uint dwFlags,
             [Out] StringBuilder pszPath
-            );
-
+            );            
         public static string GetLocalizedPath(Environment.SpecialFolder folder)
         {            
             var builder = new StringBuilder();
@@ -247,10 +246,10 @@ namespace READER_0._1.Tools
             return path;
         }
         private void SizeRepeating(IntPtr windowParant, IntPtr windowChild)
-        {
+        {           
             GetWindowRect(windowParant, out RECT startSize);
             while (IsWindow(window) == true)
-            {
+            {              
                 GetWindowRect(windowParant, out RECT newSize);
                 if (newSize.Width != startSize.Width)
                 {
@@ -273,30 +272,30 @@ namespace READER_0._1.Tools
             }
             CopySize(comboBox, customEdit);
             List<string> selectedFoldersPath = GetSelectedFoldersPath();            
-            List<string> fildersName = new List<string>();
+            List<string> foldersName = new List<string>();
             foreach (string folderPath in selectedFoldersPath)
             {
                 DirectoryInfo directoryInfo = new DirectoryInfo(folderPath);
                 ShellObject folder = ShellObject.FromParsingName(directoryInfo.FullName);
-                string displayedFilderName = folder.GetDisplayName(DisplayNameType.Default);
-                if (displayedFilderName != null)
+                string displayedFolderName = folder.GetDisplayName(DisplayNameType.Default);
+                if (displayedFolderName != null)
                 {
-                    fildersName.Add(displayedFilderName);
+                    foldersName.Add(displayedFolderName);
                 }
                 else
                 {
-                    fildersName.Add(directoryInfo.Name);
+                    foldersName.Add(directoryInfo.Name);
                 }
                   
             }
             FilePaths = selectedFoldersPath;
-            string result = string.Join(",", fildersName.Select(name => $"\"{name}\""));
-            if (fildersName.Count > 1)
+            string result = string.Join(",", foldersName.Select(name => $"\"{name}\""));
+            if (foldersName.Count > 1)
             {
                 int lastCommaIndex = result.LastIndexOf(",");
                 result = result.Substring(0, lastCommaIndex) + "," + result.Substring(lastCommaIndex + 1);
             }
-            if (fildersName.Count == 0)
+            if (foldersName.Count == 0)
             {
                 result = GetFolder();
                 FilePaths = new List<string>() { result };
@@ -314,7 +313,7 @@ namespace READER_0._1.Tools
         }       
         private List<string> GetSelectedFoldersPath()
         {
-            List<string> allSelctedItemNames = GetAllSelctedItemNames();
+            List<string> allSelctedItemNames = GetAllSelectedItemNames();
             List<string> selectedFoldersPath = new List<string>();
             string folderPath = GetFolder();
             string filePath = null;           
@@ -387,9 +386,9 @@ namespace READER_0._1.Tools
             return PtInRect(okButtonRECT, mousePosition);
 
         }
-        private List<string> GetAllSelctedItemNames() //первая проблема секторы элементов по дате изменения это отдельные объекты, вторая некоторые папки имеют не отображаемое имя
+        private List<string> GetAllSelectedItemNames() 
         {
-            List<string> allSelctedItemNames = new List<string>();
+            List<string> allSelectedItemNames = new List<string>();
             List<IntPtr> allChildWindows = GetAllChildWindows(window);
                      
             IntPtr filesList = allChildWindows.FirstOrDefault(w => GetClassName(w) == "SHELLDLL_DefView");
@@ -421,21 +420,21 @@ namespace READER_0._1.Tools
                     listViewItem.TryGetCurrentPattern(SelectionItemPattern.Pattern, out object tempObject);
                     SelectionItemPattern selectPattern = tempObject as SelectionItemPattern;
                     if (selectPattern == null)
-                    {
+                    {                        
                         continue;
                     }
                     if (selectPattern.Current.IsSelected == true)
                     {                       
-                        allSelctedItemNames.Add(listViewItem.Current.Name);                       
+                        allSelectedItemNames.Add(listViewItem.Current.Name);                       
                     }
                 }
             }
-            return allSelctedItemNames;
+            return allSelectedItemNames;
         }       
         private void CreateCustomElements()
         {
             CreateCustomEdit();
-            new Thread(() => SizeRepeating(comboBox, customEdit)).Start();
+            new Thread(() => SizeRepeating(comboBox, customEdit)).Start();           
             AutomationElement automationElement = AutomationElement.FromHandle(FindWindowEx(window, IntPtr.Zero, "Button", OkButtonLabel));
             var invokePattern = automationElement.GetCurrentPattern(InvokePattern.Pattern) as InvokePattern;
             Automation.AddAutomationEventHandler(InvokePattern.InvokedEvent, automationElement, TreeScope.Element, (sender, e) =>
@@ -446,12 +445,14 @@ namespace READER_0._1.Tools
                 }
                 Close();
             });
+           
         }
         //Event
         public EventHandler<CancelEventArgs> FileOk;
         private void CommonOpenFileDialog_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            FileOk?.Invoke(sender, e);
+        {           
+            FileOk?.Invoke(sender, e);            
+            Close();
         }
         public EventHandler SelectionChanged;
         private void CommonOpenFileDialog_SelectionChanged(object sender, EventArgs e)
@@ -471,7 +472,7 @@ namespace READER_0._1.Tools
         public EventHandler FolderChanging;
         private void CommonOpenFileDialog_FolderChanging(object sender, EventArgs e)
         {
-            FolderChanging?.Invoke(sender, e);
+            FolderChanging?.Invoke(sender, e);         
         }
         // Properties
 
@@ -494,11 +495,7 @@ namespace READER_0._1.Tools
                     reflector.Call(typeFileDialogCustomize, customize, "AddEditBox", new object[] { customEditId, "CustomEdit" });
                     AddToMostRecentlyUsedList = false;
                     SelectionChanged += OnCustomFolderPicker;
-                    FolderChanging += OnCustomFolderPicker;
-                    CommonOpenFileDialogBase.FileOk += (sender, e) =>
-                    {
-                        e.Cancel = true;
-                    };
+                    FolderChanging += OnCustomFolderPicker;                   
                 }
                 folderPicker = value;
 

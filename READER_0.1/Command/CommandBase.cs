@@ -16,7 +16,7 @@ namespace READER_0._1.Command
         }
         public abstract void Execute(object parameter);
 
-        public virtual void OnCanExecutedChanged()
+        public virtual void OnCanExecutedChanged() ///переодически remove excel file вызывает этот метод и вызыает ошибку из-за защиты основного потока
         {
             CanExecuteChanged?.Invoke(this, new EventArgs());
         }

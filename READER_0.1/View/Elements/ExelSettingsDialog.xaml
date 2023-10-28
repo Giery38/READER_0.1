@@ -1,5 +1,5 @@
 ﻿<Window
-    x:Class="READER_0._1.View.Elements.ExelSettingsDialog"
+    x:Class="READER_0._1.View.Elements.ExcelSettingsDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -13,14 +13,14 @@
     <Border Background="#644D4D" Padding="10">
         <StackPanel >
         <TextBlock Text="Поиск по всем сраницам" />
-        <elements:ToggleButton
+            <elements:CustomToggleButton
             HorizontalAlignment="Left"
             Width="40"
             Height="25"
             Margin="0,0,10,0"
             BorderThickness="2"
             CornerRadius="7"
-            Toggled="{Binding ExelSettingsRead.MultiWorksheet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource AncestorType=local:ExelSettingsDialog}}" />
+            Toggled="{Binding ExcelSettingsRead.MultiWorksheet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource AncestorType=local:ExcelSettingsDialog}}" />
         <TextBlock Text="Главный искомый столбец" />
         <elements:CustomComboBox
             Background="#644D4D"
@@ -28,11 +28,11 @@
             BorderBrush="#888888"
             CornerRadius="10"
             DisplayMemberPath="Name"
-            ItemsSource="{Binding ExelSettingsRead.SearchingColumnNames, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource AncestorType=local:ExelSettingsDialog}}"
-            SelectedValue="{Binding ExelSettingsRead.SearchableColumn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource AncestorType=local:ExelSettingsDialog}}"
+            ItemsSource="{Binding ExcelSettingsRead.SearchingColumnNames, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource AncestorType=local:ExcelSettingsDialog}}"
+            SelectedValue="{Binding ExcelSettingsRead.SearchableColumn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource AncestorType=local:ExcelSettingsDialog}}"
             SelectedValuePath="Name" />
         <TextBlock Text="Искомые столбцы" />
-        <ListView Background="Transparent"  d:ItemsSource="{d:SampleData}" ItemsSource="{Binding ExelSettingsRead.SearchingColumnNames, RelativeSource={RelativeSource AncestorType=local:ExelSettingsDialog}}">
+        <ListView Background="Transparent"  d:ItemsSource="{d:SampleData}" ItemsSource="{Binding ExcelSettingsRead.SearchingColumnNames, RelativeSource={RelativeSource AncestorType=local:ExcelSettingsDialog}}">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
@@ -43,7 +43,7 @@
             </ListView.ItemTemplate>
         </ListView>
         <TextBlock Text="Размер колонтитула" />
-        <TextBox Background="Transparent" Text="{Binding ExelSettingsRead.FooterLength, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource AncestorType=local:ExelSettingsDialog}}" />
+        <TextBox Background="Transparent" Text="{Binding ExcelSettingsRead.FooterLength, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource AncestorType=local:ExcelSettingsDialog}}" />
     </StackPanel>
     </Border>
 </Window>

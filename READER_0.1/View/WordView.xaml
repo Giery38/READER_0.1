@@ -9,8 +9,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodel="clr-namespace:READER_0._1.ViewModel"
     d:DataContext="{d:DesignInstance Type=viewmodel:WordViewModel}"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    d:DesignHeight="730"
+    d:DesignWidth="900"
     mc:Ignorable="d">
     <UserControl.Resources>
         <converters:SearchWordsConverter x:Key="SearchWordsConverter" />
@@ -38,7 +38,7 @@
         <Grid
             Grid.Column="0"
             Height="Auto"
-            Background="#FF606060"
+            Background="{StaticResource SubBackgroundColor}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
             <Grid.RowDefinitions>
                 <RowDefinition />
@@ -135,138 +135,226 @@
         </Grid>
         <Grid Grid.Column="1" Background="#644D4D">
             <ScrollViewer>
-                <Border Padding="20">
+                <Border Padding="20" Background="{StaticResource MainBackgroundColor}">
                     <StackPanel>
-                        <ListView
-                            MinHeight="200"
-                            d:ItemsSource="{d:SampleData}"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            ItemsSource="{Binding SearchParagraphs}"
-                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                            ScrollViewer.IsDeferredScrollingEnabled="True"
-                            ScrollViewer.PanningMode="None"
-                            ScrollViewer.VerticalScrollBarVisibility="Disabled">
-                            <ListView.Resources>
-                                <Style TargetType="ListView">
-                                    <Setter Property="AllowDrop" Value="True" />
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="{x:Type ListView}">
-                                                <Border
-                                                    Padding="{TemplateBinding Padding}"
-                                                    Background="{TemplateBinding Background}"
-                                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                                    BorderThickness="{TemplateBinding BorderThickness}">
-                                                    <ItemsPresenter />
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </ListView.Resources>
-                            <ListView.ItemContainerStyle>
-                                <Style TargetType="{x:Type ListViewItem}">
-                                    <Setter Property="Padding" Value="0" />
-                                    <Setter Property="Margin" Value="5" />
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="{x:Type ListViewItem}">
-                                                <Border
-                                                    x:Name="border"
-                                                    Padding="{TemplateBinding Padding}"
-                                                    Background="{TemplateBinding Background}"
-                                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                                    CornerRadius="6"
-                                                    SnapsToDevicePixels="true">
-                                                    <ContentPresenter
-                                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </ListView.ItemContainerStyle>
-                            <ListView.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel Background="Transparent" Orientation="Horizontal" />
-                                </ItemsPanelTemplate>
-                            </ListView.ItemsPanel>
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
+                        <Grid Margin="0,0,0,20" VerticalAlignment="Top">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="340" />
+                                <ColumnDefinition Width="340" />
+                            </Grid.ColumnDefinitions>
+                            <Grid Grid.Column="0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="300" />
+                                    <RowDefinition Height="300" />
+                                </Grid.RowDefinitions>
+                                <Border
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Width="320"
+                                    Margin="0,0,0,20"
+                                    VerticalAlignment="Stretch"
+                                    Background="{StaticResource InfoBlockColor}"
+                                    CornerRadius="10">
+                                    <StackPanel>
+                                        <Border
+                                            Height="25"
+                                            Padding="5,5,0,0"
+                                            Background="{StaticResource InfoBlockHeaderColor}"
+                                            CornerRadius="10,10,0,0"
+                                            DockPanel.Dock="Top">
+                                            <TextBlock Text="{Binding SearchParagraphOne.Name}" />
+                                        </Border>
+                                        <ListView
+                                            Height="260"
+                                            HorizontalContentAlignment="Stretch"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            DockPanel.Dock="Top"
+                                            ItemsSource="{Binding SearchParagraphOne.SubSearchStrings}">
+                                            <ListView.ItemContainerStyle>
+                                                <Style TargetType="{x:Type ListViewItem}">
+                                                    <Setter Property="Padding" Value="0" />
+                                                    <Setter Property="Margin" Value="5" />
+                                                    <Setter Property="BorderBrush" Value="#8A8888" />
+                                                    <Setter Property="BorderThickness" Value="2" />
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="{x:Type ListViewItem}">
+                                                                <Border
+                                                                    x:Name="border"
+                                                                    Padding="{TemplateBinding Padding}"
+                                                                    Background="{TemplateBinding Background}"
+                                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                                    CornerRadius="6"
+                                                                    SnapsToDevicePixels="true">
+                                                                    <ContentPresenter
+                                                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                                                </Border>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </ListView.ItemContainerStyle>
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate>
+                                                    <DockPanel LastChildFill="False">
+                                                        <TextBlock
+                                                            MaxWidth="270"
+                                                            Padding="6"
+                                                            DockPanel.Dock="Left"
+                                                            Text="{Binding Name}"
+                                                            TextWrapping="Wrap" />
+                                                        <elements:CustomCheakBox DockPanel.Dock="Right" IsChecked="{Binding Active}" />
+                                                    </DockPanel>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
+                                    </StackPanel>
+                                </Border>
+                                <Border
+                                    Grid.Row="1"
+                                    Width="320"
+                                    VerticalAlignment="Stretch"
+                                    Background="{StaticResource InfoBlockColor}"
+                                    CornerRadius="10">
+                                    <StackPanel>
+                                        <Border
+                                            Height="25"
+                                            Padding="5,5,0,0"
+                                            Background="{StaticResource InfoBlockHeaderColor}"
+                                            CornerRadius="10,10,0,0">
+                                            <TextBlock Text="{Binding SearchParagraphProvider.Name}" />
+                                        </Border>
+                                        <ListView
+                                            Height="270"
+                                            HorizontalContentAlignment="Stretch"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            ItemsSource="{Binding SearchParagraphProvider.MainSearchStrings}">
+                                            <ListView.ItemContainerStyle>
+                                                <Style TargetType="{x:Type ListViewItem}">
+                                                    <Setter Property="Padding" Value="0" />
+                                                    <Setter Property="Margin" Value="5" />
+                                                    <Setter Property="BorderBrush" Value="#8A8888" />
+                                                    <Setter Property="BorderThickness" Value="2" />
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="{x:Type ListViewItem}">
+                                                                <Border
+                                                                    x:Name="border"
+                                                                    Padding="{TemplateBinding Padding}"
+                                                                    Background="{TemplateBinding Background}"
+                                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                                    CornerRadius="6"
+                                                                    SnapsToDevicePixels="true">
+                                                                    <ContentPresenter
+                                                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                                                </Border>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </ListView.ItemContainerStyle>
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate>
+                                                    <DockPanel LastChildFill="False">
+                                                        <TextBlock
+                                                            MaxWidth="270"
+                                                            Padding="6"
+                                                            DockPanel.Dock="Left"
+                                                            Text="{Binding Name}"
+                                                            TextWrapping="Wrap" />
+                                                        <elements:CustomCheakBox DockPanel.Dock="Right" IsChecked="{Binding Active}" />
+                                                    </DockPanel>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                            <Border
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Width="320"
+                                VerticalAlignment="Top"
+                                Background="{StaticResource InfoBlockColor}"
+                                CornerRadius="10">
+                                <StackPanel>
                                     <Border
-                                        MinHeight="200"
-                                        Background="#463535"
-                                        CornerRadius="10">
-                                        <DockPanel Width="330" LastChildFill="False">
-                                            <Border
-                                                Height="25"
-                                                Padding="5,5,0,0"
-                                                Background="#7A6C6C"
-                                                CornerRadius="10,10,0,0"
-                                                DockPanel.Dock="Top">
-                                                <TextBlock Text="{Binding Name}" />
-                                            </Border>
-                                            <ListView
-                                                HorizontalContentAlignment="Stretch"
-                                                Background="Transparent"
-                                                BorderThickness="0"
-                                                DockPanel.Dock="Top"
-                                                ItemsSource="{Binding TypesSearchStrings}">
-                                                <ListView.ItemContainerStyle>
-                                                    <Style TargetType="{x:Type ListViewItem}">
-                                                        <Setter Property="Padding" Value="0" />
-                                                        <Setter Property="Margin" Value="5" />
-                                                        <Setter Property="BorderBrush" Value="#8A8888" />
-                                                        <Setter Property="BorderThickness" Value="2" />
-                                                        <Setter Property="Template">
-                                                            <Setter.Value>
-                                                                <ControlTemplate TargetType="{x:Type ListViewItem}">
-                                                                    <Border
-                                                                        x:Name="border"
-                                                                        Padding="{TemplateBinding Padding}"
-                                                                        Background="{TemplateBinding Background}"
-                                                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                                                        CornerRadius="6"
-                                                                        SnapsToDevicePixels="true">
-                                                                        <ContentPresenter
-                                                                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                                                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                                                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
-                                                                    </Border>
-                                                                </ControlTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                    </Style>
-                                                </ListView.ItemContainerStyle>
-                                                <ListView.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <DockPanel LastChildFill="False">
-                                                            <TextBlock
-                                                                Padding="6"
-                                                                DockPanel.Dock="Left"
-                                                                Text="{Binding Name}" />
-                                                            <elements:CustomCheakBox DockPanel.Dock="Right" IsChecked="{Binding Active}" />
-                                                        </DockPanel>
-                                                    </DataTemplate>
-                                                </ListView.ItemTemplate>
-                                            </ListView>
-                                        </DockPanel>
+                                        Height="25"
+                                        Padding="5,5,0,0"
+                                        Background="{StaticResource InfoBlockHeaderColor}"
+                                        CornerRadius="10,10,0,0"
+                                        DockPanel.Dock="Top">
+                                        <TextBlock Text="{Binding SearchParagraphTwo.Name}" />
                                     </Border>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
+                                    <ListView
+                                        Height="570"
+                                        HorizontalContentAlignment="Stretch"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        DockPanel.Dock="Top"
+                                        ItemsSource="{Binding SearchParagraphTwo.SubSearchStrings}">
+                                        <ListView.ItemContainerStyle>
+                                            <Style TargetType="{x:Type ListViewItem}">
+                                                <Setter Property="Padding" Value="0" />
+                                                <Setter Property="Margin" Value="5" />
+                                                <Setter Property="BorderBrush" Value="#8A8888" />
+                                                <Setter Property="BorderThickness" Value="2" />
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="{x:Type ListViewItem}">
+                                                            <Border
+                                                                x:Name="border"
+                                                                Padding="{TemplateBinding Padding}"
+                                                                Background="{TemplateBinding Background}"
+                                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                                CornerRadius="6"
+                                                                SnapsToDevicePixels="true">
+                                                                <ContentPresenter
+                                                                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                    VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                                    SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </ListView.ItemContainerStyle>
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate>
+                                                <DockPanel LastChildFill="False">
+                                                    <TextBlock
+                                                        MaxWidth="270"
+                                                        Padding="6"
+                                                        DockPanel.Dock="Left"
+                                                        Text="{Binding Name}"
+                                                        TextWrapping="Wrap" />
+                                                    <elements:CustomCheakBox DockPanel.Dock="Right" IsChecked="{Binding Active}" />
+                                                </DockPanel>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                         <elements:CustomButton
+                            Grid.Row="2"
+                            Grid.Column="0"
                             Width="100"
                             Height="30"
-                            CornerRadius="5"
-                            HorizontalAlignment="Left"                            
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
                             Command="{Binding ConvertWordFileToExcelCommand}"
-                            Content="Прочитать" />
+                            Content="Прочитать"
+                            CornerRadius="5" />
                     </StackPanel>
                 </Border>
             </ScrollViewer>

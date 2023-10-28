@@ -1,4 +1,7 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:viewelements="clr-namespace:READER_0._1.View.Elements">
     <ControlTemplate x:Key="ListViewItemTemplate" TargetType="{x:Type ListViewItem}">
         <Border
             x:Name="border"
@@ -20,8 +23,47 @@
                 <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource FocusableItemColor}" />
             </Trigger>
             <Trigger Property="IsSelected" Value="True">
-                <Setter TargetName="border" Property="Background" Value="{DynamicResource SelectedItemColor}"></Setter>
+                <Setter TargetName="border" Property="Background" Value="{DynamicResource SelectedItemColor}" />
             </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+    <ControlTemplate x:Key="ListViewItemToggled" TargetType="{x:Type ListViewItem}">
+        <Border
+            x:Name="border"
+            Padding="{TemplateBinding Padding}"
+            Background="{TemplateBinding Background}"
+            BorderBrush="{TemplateBinding BorderBrush}"
+            BorderThickness="{TemplateBinding BorderThickness}"
+            CornerRadius="6"
+            SnapsToDevicePixels="true">
+            <Grid MinHeight="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ContentPresenter
+                    Grid.Column="0"
+                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                    VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                    SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                <viewelements:CustomCheakBox
+                    x:Name="cheakBox"
+                    Grid.Column="1"
+                    IsChecked="{TemplateBinding IsSelected}"
+                    IsHitTestVisible="False" />
+            </Grid>
+        </Border>
+        <ControlTemplate.Triggers>
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="IsMouseOver" Value="True" />
+                    <Condition Property="IsSelected" Value="False" />
+                </MultiTrigger.Conditions>
+                <MultiTrigger.Setters>
+                    <Setter TargetName="cheakBox" Property="IsFocusable" Value="True" />
+                    <Setter Property="Cursor" Value="Hand" />
+                </MultiTrigger.Setters>
+            </MultiTrigger>
         </ControlTemplate.Triggers>
     </ControlTemplate>
 </ResourceDictionary>

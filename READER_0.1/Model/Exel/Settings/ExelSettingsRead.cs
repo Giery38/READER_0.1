@@ -11,10 +11,10 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace READER_0._1.Model.Exel.Settings
+namespace READER_0._1.Model.Excel.Settings
 {
     [Serializable]
-    public class ExelSettingsRead
+    public class ExcelSettingsRead
     {
         private bool multiWorksheet;
         public bool MultiWorksheet
@@ -65,23 +65,23 @@ namespace READER_0._1.Model.Exel.Settings
             }
         }
 
-        public ExelSettingsRead()
+        public ExcelSettingsRead()
         {
             SearchingColumnNames =  new List<SearchingColumnName>();
             MultiWorksheet = true;
             FooterLength = 1;
         }
-        public ExelSettingsRead(ExelSettingsRead exelSettingsRead)
+        public ExcelSettingsRead(ExcelSettingsRead excelSettingsRead)
         {
-            SearchingColumnNames = exelSettingsRead.SearchingColumnNames.Select(item => new SearchingColumnName
+            SearchingColumnNames = excelSettingsRead.SearchingColumnNames.Select(item => new SearchingColumnName
             {
                 Name = item.Name,
                 Active = item.Active,
                 Values = item.Values.Select(item => new string(item)).ToList()
             }).ToList();
-            SearchableColumn = new string(exelSettingsRead.SearchableColumn);
-            MultiWorksheet = exelSettingsRead.MultiWorksheet;
-            FooterLength = exelSettingsRead.FooterLength;
+            SearchableColumn = new string(excelSettingsRead.SearchableColumn);
+            MultiWorksheet = excelSettingsRead.MultiWorksheet;
+            FooterLength = excelSettingsRead.FooterLength;
         }
 
         public class SearchingColumnName

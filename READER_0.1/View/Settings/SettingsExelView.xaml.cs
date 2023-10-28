@@ -1,4 +1,4 @@
-﻿using READER_0._1.Command.CommandExel;
+﻿using READER_0._1.Command.CommandExcel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,11 +17,11 @@ using System.Windows.Shapes;
 namespace READER_0._1.View.Settings
 {
     /// <summary>
-    /// Логика взаимодействия для SettingsExelView.xaml
+    /// Логика взаимодействия для SettingsExcelView.xaml
     /// </summary>
-    public partial class SettingsExelView : UserControl
+    public partial class SettingsExcelView : UserControl
     {   
-        public SettingsExelView()
+        public SettingsExcelView()
         {
             InitializeComponent();
         }

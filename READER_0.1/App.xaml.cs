@@ -1,5 +1,7 @@
 ﻿using READER_0._1.Model;
 using READER_0._1.Model.Settings;
+using READER_0._1.Model.Settings.Word;
+using READER_0._1.Model.Word.Settings;
 using READER_0._1.View;
 using READER_0._1.ViewModel;
 using System;
@@ -7,9 +9,11 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography.Xml;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -27,13 +31,22 @@ namespace READER_0._1
         private static string tempFolderPath;
         private string configFilePath;
         public App()
-        {                    
+        {
+            this.Dispatcher.UnhandledException += Dispatcher_UnhandledException;
             tempFolderPath = CreateTempFolder();
             CleansingTempFolder();
             SetSettings();
-            windowFileBase = new WindowFileBase(tempFolderPath, settings);
-           
-        }        
+            windowFileBase = new WindowFileBase(tempFolderPath, settings);                     
+        }
+
+        private void Dispatcher_UnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+
+            string errorMessage = string.Format("An unhandled exception occurred: {0}", e.Exception.Message);
+            MessageBox.Show(errorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            e.Handled = true;
+        }
+
         protected override void OnStartup(StartupEventArgs e)
         {
            
@@ -48,7 +61,7 @@ namespace READER_0._1
         protected override void OnExit(ExitEventArgs e)
         {
             CleansingTempFolder();
-            windowFileBase.exelWindowFileBase.ExelReaderManager.Close();
+            windowFileBase.excelWindowFileBase.ExcelReaderManager.Close();
             base.OnExit(e);
         }
         private void SetSettings()
@@ -65,10 +78,10 @@ namespace READER_0._1
             {
 
             }
-            stream.Close();
-
+            stream.Close();                      
             this.settings = settings;
             this.settings.SetConfigFilePath(configFilePath);
+           // settings.SaveSettings();
 
         }
 

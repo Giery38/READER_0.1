@@ -1,4 +1,5 @@
-﻿using System;
+﻿using READER_0._1.Model.Exel.Table;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -6,20 +7,33 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace READER_0._1.Model.Exel
+namespace READER_0._1.Model.Excel.TableData
 {
-    public class ExelFilePageTableRow
+    public class Row
     {       
-        public List<object> RowData { get; private set; }
+        public List<Cell> RowData { get; private set; }
         public int Number { get; private set; }
-        public ExelFilePageTableRow(List<object> rowData, int number)
+        public Row(List<Cell> rowData, int number)
         {
             RowData = rowData;
             Number = number;
-        }       
-        public void AddRowData(object AddedObject)
+        }
+        public Row(List<object> rowData, int number)
         {
-            RowData.Add(AddedObject);
+            for (int i = 0; i < rowData.Count; i++)
+            {
+                RowData.Add(new Cell(rowData[i], i));
+            }            
+            Number = number;
+        }
+        public Row(int number)
+        {
+            RowData = new List<Cell>();
+            Number = number;
+        }
+        public void AddRowData(object AddedObject, int position)
+        {
+            RowData.Add(new Cell(AddedObject, position));
         }       
         public object SearchCell(object cellData)
         {
@@ -32,11 +46,18 @@ namespace READER_0._1.Model.Exel
             }
             return null;
         }
+        public void SetRowData(List<object> rowData)
+        {
+            for (int i = 0; i < rowData.Count; i++)
+            {
+                RowData.Add(new Cell(rowData[i], i));
+            }            
+        }
         
         public override bool Equals(object obj)
         {
           
-            if ((obj is ExelFilePageTableRow other) == false)
+            if ((obj is Row other) == false)
             {
                 return false;
             }

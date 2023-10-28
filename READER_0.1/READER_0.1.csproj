@@ -10,6 +10,14 @@
 	<AnalysisLevel>6.0</AnalysisLevel>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="WindowsAPICodePack\**" />
     <EmbeddedResource Remove="WindowsAPICodePack\**" />
@@ -21,6 +29,7 @@
     <None Remove="settings.xml" />
     <None Remove="View\Elements\ColorPicker\Images\CircularHueGradient.png" />
     <None Remove="View\Elements\ColorPicker\Images\transparentbg_mini.png" />
+    <None Remove="View\icon.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -74,6 +83,7 @@
 
   <ItemGroup>
     <Resource Include="View\Elements\ColorPicker\Images\CircularHueGradient.png" />
+    <Resource Include="View\icon.png" />
   </ItemGroup>
 
 </Project>

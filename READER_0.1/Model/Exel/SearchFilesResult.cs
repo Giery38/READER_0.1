@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace READER_0._1.Model.Exel
+namespace READER_0._1.Model.Excel
 {
     public class SearchFilesResult
     {
-        public ExelFile ExelFile { get; private set; }
+        public ExcelFile ExcelFile { get; private set; }
         public Dictionary<Directory, List<Model.File>> FilesInDirectory { get; private set; }        
         public string NameColumn { get; private set; }      
 
@@ -16,9 +16,15 @@ namespace READER_0._1.Model.Exel
         {           
             FilesInDirectory = new Dictionary<Directory, List<Model.File>>();
         }
-        public void SetExelFile(ExelFile exelFile)
+        public SearchFilesResult(ExcelFile excelFile, string nameColumn)
         {
-            ExelFile = exelFile;
+            ExcelFile = excelFile;
+            NameColumn = nameColumn;
+            FilesInDirectory = new Dictionary<Directory, List<Model.File>>();
+        }
+        public void SetExcelFile(ExcelFile excelFile)
+        {
+            ExcelFile = excelFile;
         }
         public void SetNameColumn(string nameColumn)
         {
@@ -40,14 +46,14 @@ namespace READER_0._1.Model.Exel
             }
 
             SearchFilesResult other = (SearchFilesResult)obj;
-            return ExelFile.Equals(other.ExelFile) &&
+            return ExcelFile.Equals(other.ExcelFile) &&
                    FilesInDirectory.Equals(other.FilesInDirectory) &&
                    NameColumn.Equals(other.NameColumn);
         }
         public override int GetHashCode()
         {
             int hash = 17;
-            hash = hash * 31 + ExelFile.GetHashCode();
+            hash = hash * 31 + ExcelFile.GetHashCode();
             hash = hash * 31 + FilesInDirectory.GetHashCode();
             hash = hash * 31 + NameColumn.GetHashCode();
             return hash;

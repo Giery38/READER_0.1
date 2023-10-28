@@ -1,5 +1,5 @@
 ﻿using READER_0._1.Model;
-using READER_0._1.Model.Exel.Settings;
+using READER_0._1.Model.Excel.Settings;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,13 +12,35 @@ using System.Threading.Tasks;
 namespace READER_0._1.ViewModel.ViewElement
 {
     public class FolderView : INotifyPropertyChanged
-    {
-        public ObservableCollection<object> Files { get; private set; }
-        private Type type;                                                                      
+    {        
+        public ObservableCollection<object> Files { get; private  set; }
+        private Type type;
+        public Guid Id { get; }
         public FolderView(string name) // общая папка
         {
             Name = name;
-            Files = new ObservableCollection<object>();           
+            Files = new ObservableCollection<object>();  
+            Id = Guid.NewGuid();
+        }
+        public FolderView(string name, Guid id) // общая папка
+        {
+            Name = name;
+            Files = new ObservableCollection<object>();
+            Id = id;
+        }
+        public FolderView(string name, Type type) //форматная папка
+        {
+            Name = name;
+            Files = new ObservableCollection<object>();
+            this.type = type;
+            Id = Guid.NewGuid();
+        }
+        public FolderView(string name, Type type, Guid id) //форматная папка
+        {
+            Name = name;
+            Files = new ObservableCollection<object>();
+            this.type = type;
+            Id = id;
         }
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string propertyName)
@@ -52,25 +74,19 @@ namespace READER_0._1.ViewModel.ViewElement
                 OnPropertyChanged(nameof(CorrectName));
             }
         }
-        private ExelSettingsRead exelSettingsRead;
-        public ExelSettingsRead ExelSettingsRead
+        private object parameter;
+        public object Parameter
         {
             get
             {
-                return exelSettingsRead;
+                return parameter;
             }
             set
             {
-                exelSettingsRead = value;
-                OnPropertyChanged(nameof(ExelSettingsRead));
+                parameter = value;
+                OnPropertyChanged(nameof(Parameter));
             }
-        }
-        public FolderView(string name, Type type) //форматная папка
-        {
-            Name = name;
-            Files = new ObservableCollection<object>();
-            this.type = type;
-        } 
+        }      
         public void AddFile(object file)
         {
             if (type != null)
